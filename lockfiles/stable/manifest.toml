@@ -1,0 +1,20 @@
+[stack]
+blessed_date = "2026-06-16"
+blessed_by = "eyeai-infra"
+python = "3.12"
+
+[versions]
+"eye-ai" = "v1.5.3"
+"deriva-ml" = "v1.17.10"
+
+[sources]
+"eye-ai" = "git+https://github.com/eye-ai-usc/eye-ai-ml.git@v1.5.3"
+"deriva-ml" = "git+https://github.com/informatics-isi-edu/deriva-ml.git@v1.17.10"
+
+[notes]
+summary = "Initial blessed stack. Baseline from existing active researcher environments."
+breaking_changes = "None"
+migration_required = false
+
+# MCP stack is installed separately via 'uv tool install'.
+# See docs/onboarding/mcp-setup.md.
