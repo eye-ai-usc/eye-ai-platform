@@ -1,0 +1,8 @@
+{
+  "project_name": "eyeai-research-my-subproject",
+  "researcher_name": "your_name",
+  "subproject_description": "One sentence describing the research question",
+  "eye_ai_version": "v1.5.3",
+  "deriva_ml_version": "v1.17.10",
+  "python_version": "3.12"
+}

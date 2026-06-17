@@ -1,0 +1,13 @@
+# Data export configuration
+# Defines which catalog tables and columns to include in the BDBag export.
+#
+# See eye_ai.export_dataset() for usage.
+
+hostname: www.eye-ai.org
+catalog_id: 1
+
+# dataset_rid: fill in the RID of the dataset you want to export
+dataset_rid: null
+
+# output_dir: local directory for BDBag output
+output_dir: ./data/bags/

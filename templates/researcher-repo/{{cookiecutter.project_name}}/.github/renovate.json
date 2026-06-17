@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["eye-ai", "deriva-ml"],
+      "groupName": "EyeAI core stack",
+      "prTitle": "chore: update EyeAI core stack",
+      "prBody": "Check the [compatibility matrix](https://github.com/eye-ai-usc/eye-ai-platform/blob/main/docs/releases/compatibility-matrix.md) before merging.",
+      "schedule": ["after 9am on monday"]
+    }
+  ]
+}

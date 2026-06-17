@@ -1,0 +1,40 @@
+[project]
+name = "{{ cookiecutter.project_name }}"
+dynamic = ["version"]
+description = "{{ cookiecutter.subproject_description }}"
+readme = "README.md"
+requires-python = ">={{ cookiecutter.python_version }}"
+license = "Apache-2.0"
+
+dependencies = [
+    "eye-ai",
+    "deriva-ml",
+    "pandas",
+    "ipykernel>=7.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-coverage",
+    "ruff",
+    "ipython",
+    "pip-system-certs",
+]
+jupyter = ["ipykernel", "jupyter"]
+
+[tool.uv]
+python-preference = "only-managed"
+default-groups = ["dev", "jupyter"]
+package = true
+
+[tool.uv.sources]
+eye-ai = { git = "https://github.com/eye-ai-usc/eye-ai-ml.git", tag = "{{ cookiecutter.eye_ai_version }}" }
+deriva-ml = { git = "https://github.com/informatics-isi-edu/deriva-ml.git", tag = "{{ cookiecutter.deriva_ml_version }}" }
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel"]
+build-backend = "setuptools.build_meta"
