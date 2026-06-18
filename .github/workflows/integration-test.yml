@@ -18,7 +18,7 @@ jobs:
 
       - name: Install with latest upstream
         working-directory: lockfiles/stable
-        run: uv sync --upgrade-package eye-ai --upgrade-package deriva-ml
+        run: uv sync --upgrade-package eye-ai
 
       - name: Run smoke tests
         working-directory: lockfiles/stable

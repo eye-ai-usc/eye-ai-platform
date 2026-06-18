@@ -1,0 +1,12 @@
+[project]
+name = "eyeai-stable"
+version = "0.1.0"
+description = "Blessed stack lockfile project — used only for uv sync and integration testing."
+requires-python = ">=3.12"
+dependencies = [
+    "eye-ai",
+    "pytest",
+]
+
+[tool.uv.sources]
+eye-ai = { git = "https://github.com/eye-ai-usc/eye-ai-ml.git", rev = "v1.5.3" }
