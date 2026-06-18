@@ -1,0 +1,21 @@
+name: Notify on Blessed Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post to Slack
+        # TODO: add SLACK_WEBHOOK_URL secret in org Settings -> Secrets -> Actions
+        uses: slackapi/slack-github-action@v2
+        with:
+          payload: |
+            {
+              "text": "New EyeAI stack blessed: ${{ github.event.release.tag_name }}. Changelog: ${{ github.event.release.html_url }}. To update: uv sync --frozen"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

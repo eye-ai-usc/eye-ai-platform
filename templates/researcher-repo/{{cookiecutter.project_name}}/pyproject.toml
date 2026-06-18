@@ -29,8 +29,8 @@ default-groups = ["dev", "jupyter"]
 package = true
 
 [tool.uv.sources]
+# Pin only eye-ai by tag; deriva-ml resolves transitively from it (no independent tag available).
 eye-ai = { git = "https://github.com/eye-ai-usc/eye-ai-ml.git", tag = "{{ cookiecutter.eye_ai_version }}" }
-deriva-ml = { git = "https://github.com/informatics-isi-edu/deriva-ml.git", tag = "{{ cookiecutter.deriva_ml_version }}" }
 
 [tool.setuptools_scm]
 version_scheme = "post-release"

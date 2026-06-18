@@ -5,11 +5,14 @@ python = "3.12"
 
 [versions]
 "eye-ai" = "v1.5.3"
-"deriva-ml" = "v1.17.10"
+# deriva-ml resolves transitively via eye-ai@v1.5.3 (which pins git-main, not a tag).
+# Actual resolved version in uv.lock: 1.51.2, commit 3bf7f007bef8f5d93371ee3e8bf14efec41e3c88
+"deriva-ml" = "1.51.2"
 
 [sources]
 "eye-ai" = "git+https://github.com/eye-ai-usc/eye-ai-ml.git@v1.5.3"
-"deriva-ml" = "git+https://github.com/informatics-isi-edu/deriva-ml.git@v1.17.10"
+# deriva-ml comes transitively; cannot be independently pinned alongside eye-ai@v1.5.3
+"deriva-ml" = "git+https://github.com/informatics-isi-edu/deriva-ml.git#3bf7f007bef8f5d93371ee3e8bf14efec41e3c88"
 
 [notes]
 summary = "Initial blessed stack. Baseline from existing active researcher environments."
