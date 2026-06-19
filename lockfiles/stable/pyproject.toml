@@ -10,3 +10,9 @@ dependencies = [
 
 [tool.uv.sources]
 eye-ai = { git = "https://github.com/eye-ai-usc/eye-ai-ml.git", rev = "v1.5.3" }
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Pydantic V2 deprecation warnings from deriva_ml internals — upstream issue, not ours
+    "ignore::pydantic.warnings.PydanticDeprecatedSince20",
+]

@@ -50,16 +50,35 @@ This caches credentials in `~/.deriva/credential.json`, which the MCP server rea
 
 ## Step 3 — Register with Claude Code
 
+**On your local machine** (browser login available):
+
 ```bash
-claude mcp add -t stdio deriva -- deriva-mcp-core --transport stdio
+claude mcp add -t http mcp-eye-ai-org https://mcp.eye-ai.org/mcp \
+  --client-id deriva-mcp --callback-port 8080 -s user
 ```
 
-Verify the server appears in the tool list:
+Then authenticate: open a Claude session, run `/mcp`, choose `mcp-eye-ai-org` → Authenticate,
+and complete the web login in your browser.
+
+**On a compute node** (no browser available):
+
+```bash
+# From inside an eye-ai project repo, obtain a bearer token:
+uv sync
+uv run deriva-credenza-auth-utils --host www.eye-ai.org login \
+  --resource https://mcp.eye-ai.org/mcp --refresh --show-token
+
+# Add the server using the token printed above:
+claude mcp add --transport http www-eye-ai-org https://mcp.eye-ai.org/mcp \
+  --header "Authorization: Bearer <TOKEN VALUE>"
+```
+
+Verify either setup:
 ```bash
 claude mcp list
 ```
 
-You should see `deriva: deriva-mcp-core --transport stdio (stdio) - ✓ Connected`.
+You should see the server listed with `✓ Connected`.
 
 ---
 
