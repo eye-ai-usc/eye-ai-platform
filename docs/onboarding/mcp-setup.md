@@ -104,11 +104,101 @@ Restart Claude Code. You should now have access to commands like:
 
 ## Updating the MCP stack
 
+There are two separate things to update: the **MCP server registration** in Claude Code
+(which server Claude connects to and how it authenticates) and the **underlying package**
+(the `uv tool` install that runs the server). Do them in order.
+
+### Update the package
+
 ```bash
 uv tool upgrade deriva-mcp-core
 ```
 
 This upgrades all three components in the same tool venv.
+
+### Update the MCP server registration — local machine
+
+Use this flow when running Claude Code on your own laptop or desktop.
+
+**\[Claude session\]** Ask Claude: `"delete the mcp-eye-ai-org MCP server"`
+
+**\[Claude session\]** Verify with `/mcp` — confirm `mcp-eye-ai-org` is no longer listed
+
+**\[Terminal\]** Re-add the server with the OAuth flow:
+
+```bash
+claude mcp add -t http mcp-eye-ai-org https://mcp.eye-ai.org/mcp \
+  --client-id deriva-mcp --callback-port 8080 -s user
+```
+
+**\[Claude session\]** Authenticate: `/mcp` → choose `mcp-eye-ai-org` → Authenticate →
+complete the web login in your browser
+
+### Update the MCP server registration — compute node
+
+Use this flow when running Claude Code on a remote compute node where a browser login
+is not possible.
+
+**\[Claude session\]** Ask Claude: `"delete the www-eye-ai-org MCP server"`
+
+**\[Claude session\]** Verify with `/mcp` — confirm `www-eye-ai-org` is no longer listed
+
+**\[Terminal\]** Obtain a bearer token (run from inside an eye-ai project repo):
+
+```bash
+uv sync
+uv run deriva-credenza-auth-utils --host www.eye-ai.org login \
+  --resource https://mcp.eye-ai.org/mcp --refresh --show-token
+```
+
+Copy the token printed to stdout.
+
+**\[Terminal\]** Add the MCP server using the token:
+
+```bash
+claude mcp add --transport http www-eye-ai-org https://mcp.eye-ai.org/mcp \
+  --header "Authorization: Bearer <TOKEN VALUE>"
+```
+
+**\[Terminal\]** Verify the connection:
+
+```bash
+claude mcp list
+```
+
+You should see `www-eye-ai-org` with a `✓ Connected` status.
+
+---
+
+## Updating skills
+
+Run this whenever the skills plugins have been updated upstream or if something
+seems broken with skill commands.
+
+**\[Claude session\]** Ask Claude:
+`"delete all old deriva-related skills and marketplace"`
+
+Claude will check and clean up `installed_plugins.json`, `settings.json`,
+`known_marketplaces.json`, and the plugin cache.
+
+**\[Claude session\]** Re-add the marketplace:
+
+```
+/plugin marketplace add informatics-isi-edu/deriva-plugins
+```
+
+**\[Claude session\]** Reinstall the plugins:
+
+```
+/plugin install deriva@deriva-plugins
+/plugin install deriva-ml@deriva-plugins
+```
+
+**\[Claude session\]** Reload:
+
+```
+/reload-plugins
+```
 
 ---
 
