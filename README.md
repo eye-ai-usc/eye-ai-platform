@@ -10,8 +10,8 @@ management over a shared [Deriva](https://deriva.isi.edu) catalog.
 ## Getting Started
 
 - **New researcher?** → [docs/onboarding/quickstart.md](docs/onboarding/quickstart.md)
+- **Updating your environment?** → [docs/onboarding/update-env.md](docs/onboarding/update-env.md)
 - **Setting up the MCP agent?** → [docs/onboarding/mcp-setup.md](docs/onboarding/mcp-setup.md)
-- **Updating MCP or skills?** → [docs/onboarding/mcp-setup.md#updating-the-mcp-stack](docs/onboarding/mcp-setup.md#updating-the-mcp-stack)
 - **Starting a new research repo?** → [templates/researcher-repo/](templates/researcher-repo/)
 - **Requesting catalog changes?** → [Open a Feature Registration Request](https://github.com/eye-ai-usc/data-curation/issues/new?template=feature-registration.md)
 - **Maintaining this repo?** → [docs/MAINTENANCE.md](docs/MAINTENANCE.md)
