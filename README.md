@@ -55,6 +55,6 @@ Deriva                       — data catalog platform and asset management
 
 ## Dependency Management
 
-The blessed research stack is governed by [`lockfiles/stable/manifest.toml`](lockfiles/stable/manifest.toml).
+The stable research stack is governed by [`lockfiles/stable/manifest.toml`](lockfiles/stable/manifest.toml).
 See [`docs/releases/compatibility-matrix.md`](docs/releases/compatibility-matrix.md) for version history
 and [`docs/onboarding/quickstart.md`](docs/onboarding/quickstart.md) for installation instructions.

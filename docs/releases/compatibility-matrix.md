@@ -6,7 +6,7 @@ Known-good combinations of `eye-ai` and `deriva-ml` for EyeAI research repos.
 > is installed separately via `uv tool install` and is not version-pinned here.
 > See [mcp-setup.md](../onboarding/mcp-setup.md).
 
-| Stack Tag | eye-ai | deriva-ml | Python | Status | Date Blessed | Notes |
+| Stack Tag | eye-ai | deriva-ml | Python | Status | Release Date | Notes |
 |---|---|---|---|---|---|---|
 | `stable-2026-06-16` | v1.5.3 | 1.51.2 (git main) | 3.12 | Stable | 2026-06-16 | Initial blessed stack. `deriva-ml` resolves transitively via `eye-ai@v1.5.3`; no independent tag pin possible. |
 

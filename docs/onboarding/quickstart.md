@@ -100,14 +100,14 @@ pattern documented in [docs/guides/experiment-tracing.md](../guides/experiment-t
 
 ## Keeping dependencies up to date
 
-When a new blessed stack is published, a Renovate PR will be opened in your research repo
+When a new stack release is published, a Renovate PR will be opened in your research repo
 automatically. Before merging, check the
 [compatibility matrix](../releases/compatibility-matrix.md) for any breaking changes.
 
 To update manually:
 
 ```bash
-uv sync --upgrade-package eye-ai --upgrade-package deriva-ml
+uv sync --upgrade-package eye-ai
 ```
 
 ---

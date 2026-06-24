@@ -1,6 +1,6 @@
 [stack]
-blessed_date = "2026-06-16"
-blessed_by = "eyeai-infra"
+release_date = "2026-06-16"
+released_by = "eyeai-infra"
 python = "3.12"
 
 [versions]
@@ -15,7 +15,7 @@ python = "3.12"
 "deriva-ml" = "git+https://github.com/informatics-isi-edu/deriva-ml.git#3bf7f007bef8f5d93371ee3e8bf14efec41e3c88"
 
 [notes]
-summary = "Initial blessed stack. Baseline from existing active researcher environments."
+summary = "Initial stable stack release. Baseline from existing active researcher environments."
 breaking_changes = "None"
 migration_required = false
 

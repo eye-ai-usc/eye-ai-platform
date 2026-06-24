@@ -1,6 +1,6 @@
 # lockfiles/stable/
 
-The current blessed dependency stack for EyeAI research repos.
+The current stable dependency stack for EyeAI research repos.
 
 ## Files
 

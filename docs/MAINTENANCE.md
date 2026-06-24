@@ -1,7 +1,7 @@
 # Maintenance Guide
 
 This document explains how to keep `eye-ai-platform` up to date as the upstream stack evolves.
-It covers what is automated, what requires manual action, and the full procedure for blessing a new stack version.
+It covers what is automated, what requires manual action, and the full procedure for releasing a new stack version.
 
 ---
 
@@ -10,7 +10,7 @@ It covers what is automated, what requires manual action, and the full procedure
 `eye-ai-platform` owns three things:
 
 1. **Onboarding documentation** — `docs/onboarding/`, `docs/guides/`
-2. **Blessed dependency stack** — `lockfiles/stable/uv.lock`, `lockfiles/stable/manifest.toml`
+2. **Stable dependency stack** — `lockfiles/stable/uv.lock`, `lockfiles/stable/manifest.toml`
 3. **Researcher repo template** — `templates/researcher-repo/`
 
 None of these change on their own. Every update is triggered by one of two events: an upstream package release, or a change in team practice (new tool, new workflow, new onboarding step).
@@ -28,7 +28,7 @@ None of these change on their own. Every update is triggered by one of two event
 
 ---
 
-## Procedure: blessing a new stack version
+## Procedure: releasing a new stack version
 
 This is the main recurring task. It happens when a new `eye-ai` release is ready for the team to adopt.
 
@@ -37,12 +37,12 @@ This is the main recurring task. It happens when a new `eye-ai` release is ready
 The weekly CI run (`integration-test.yml`) tests the latest upstream and opens a PR to `lockfile/testing` if it passes.
 
 - If the PR is open and green: proceed to Step 2.
-- If tests are failing: open an issue upstream (or ping the Deriva maintainer) and stay on the current blessed stack. Do not bless a broken stack.
+- If tests are failing: open an issue upstream (or ping the Deriva maintainer) and stay on the current stable stack. Do not release a broken stack.
 - To trigger the test manually before Monday: go to **Actions → Integration Test - Latest Stack → Run workflow**.
 
 ### Step 2 — Soak period (1–2 weeks)
 
-Before blessing, let one or two active research repos test against `lockfiles/testing/uv.lock`:
+Before releasing, let one or two active research repos test against `lockfiles/testing/uv.lock`:
 
 1. In a research repo, temporarily replace `uv.lock` with the testing lockfile.
 2. Ask a researcher to run their usual workflow and confirm nothing is broken.
@@ -73,7 +73,7 @@ Copy the new lockfile:
 cp /tmp/eyeai-newstack/uv.lock /path/to/eye-ai-platform/lockfiles/stable/uv.lock
 ```
 
-Archive the old lockfile (use the date it was blessed, e.g. `2026-Q2`):
+Archive the old lockfile (use the release quarter, e.g. `2026-Q2`):
 
 ```bash
 cp lockfiles/stable/uv.lock lockfiles/archive/uv.lock-2026-Q2
@@ -81,7 +81,7 @@ cp lockfiles/stable/uv.lock lockfiles/archive/uv.lock-2026-Q2
 
 Update `lockfiles/stable/manifest.toml`:
 
-- `blessed_date` → today's date
+- `release_date` → today's date
 - `[versions] "eye-ai"` → new tag
 - `[versions] "deriva-ml"` → resolved version from Step 3
 - `[sources] "deriva-ml"` → resolved commit SHA from Step 3
@@ -105,14 +105,14 @@ Update `templates/researcher-repo/{{cookiecutter.project_name}}/pyproject.toml`:
 ```bash
 git add lockfiles/stable/ lockfiles/archive/ docs/releases/compatibility-matrix.md \
         templates/researcher-repo/
-git commit -m "chore: bless eye-ai <NEW_TAG> as stable stack"
+git commit -m "chore: release eye-ai <NEW_TAG> as stable stack"
 git push
 ```
 
 Then on GitHub: **Releases → Draft a new release**
 
 - Tag: `stack-<NEW_TAG>` (e.g. `stack-v1.6.0`)
-- Title: `Blessed stack: eye-ai <NEW_TAG>`
+- Title: `Stack release: eye-ai <NEW_TAG>`
 - Body: copy the `[notes]` from `manifest.toml` plus any breaking changes
 
 Publishing the release triggers `notify-release.yml`, which posts to Slack automatically.
@@ -169,7 +169,7 @@ These were done during initial setup but are listed here for handover purposes.
 To add a `CODEOWNERS` rule for the lockfiles:
 
 ```
-# Only the infra team can merge changes to the blessed lockfile
+# Only the infra team can merge changes to the stable lockfile
 lockfiles/stable/ @eye-ai-usc/eyeai-infra
 ```
 
@@ -181,8 +181,8 @@ Create `.github/CODEOWNERS` with that content when the `eyeai-infra` team exists
 
 | File | Purpose | Update frequency |
 |---|---|---|
-| `lockfiles/stable/uv.lock` | Blessed dependency lockfile | Per stack release (~quarterly) |
-| `lockfiles/stable/manifest.toml` | Versions, commit SHAs, blessing metadata | Per stack release |
+| `lockfiles/stable/uv.lock` | Stable dependency lockfile | Per stack release (~quarterly) |
+| `lockfiles/stable/manifest.toml` | Versions, commit SHAs, release metadata | Per stack release |
 | `lockfiles/archive/` | Historical lockfiles by quarter | Per stack release |
 | `docs/releases/compatibility-matrix.md` | Human-readable version history | Per stack release |
 | `templates/researcher-repo/cookiecutter.json` | Default versions for new repos | Per stack release |

@@ -1,4 +1,4 @@
-name: Notify on Blessed Release
+name: Notify on Stack Release
 
 on:
   release:
@@ -15,7 +15,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "New EyeAI stack blessed: ${{ github.event.release.tag_name }}. Changelog: ${{ github.event.release.html_url }}. To update: uv sync --frozen"
+              "text": "New EyeAI stack release: ${{ github.event.release.tag_name }}. Changelog: ${{ github.event.release.html_url }}. To update: uv sync --frozen"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

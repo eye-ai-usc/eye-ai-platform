@@ -1,7 +1,7 @@
 [project]
 name = "eyeai-stable"
 version = "0.1.0"
-description = "Blessed stack lockfile project — used only for uv sync and integration testing."
+description = "Stable stack lockfile project — used only for uv sync and integration testing."
 requires-python = ">=3.12"
 dependencies = [
     "eye-ai",

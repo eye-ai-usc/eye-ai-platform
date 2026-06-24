@@ -1,6 +1,6 @@
 # Updating Your Environment
 
-Run through this guide whenever a new blessed stack is announced, or whenever MCP or
+Run through this guide whenever a new stack release is announced, or whenever MCP or
 skills updates are posted. You do not need to do all three sections every time — each
 section is independent.
 
@@ -20,7 +20,7 @@ uv sync --frozen
 `--frozen` installs exactly what is pinned in your repo's `uv.lock` with no changes.
 Use this for day-to-day work to keep your environment consistent.
 
-To adopt a newly blessed stack, copy the updated lockfile from this repo into yours
+To adopt a newly released stack, copy the updated lockfile from this repo into yours
 and then sync:
 
 ```bash

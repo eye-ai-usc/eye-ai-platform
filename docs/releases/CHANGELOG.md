@@ -1,12 +1,12 @@
 # Changelog
 
-This file tracks blessed stack releases for the EyeAI research environment.
+This file tracks stack releases for the EyeAI research environment.
 
 ---
 
 ## [stable-2026-06-16] - 2026-06-16
 
-Initial blessed stack.
+Initial stable stack release.
 
 - `eye-ai` v1.5.3
 - `deriva-ml` 1.51.2 (resolved transitively from eye-ai@v1.5.3, git main commit `3bf7f007`)

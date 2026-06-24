@@ -8,7 +8,7 @@ Per-repository details for the `eye-ai-usc` GitHub organization.
 
 ### [eye-ai-platform](https://github.com/eye-ai-usc/eye-ai-platform)
 - **Maintainer:** Infrastructure / all senior MLEs
-- **Purpose:** Front door for the EyeAI project. Contains onboarding documentation, the blessed dependency lockfile registry, the Cookiecutter researcher repo template, and GitHub Actions for integration testing and release notification. No research code, no catalog scripts.
+- **Purpose:** Front door for the EyeAI project. Contains onboarding documentation, the stable dependency lockfile registry, the Cookiecutter researcher repo template, and GitHub Actions for integration testing and release notification. No research code, no catalog scripts.
 - **Status:** Active
 - **Depends on:** Nothing (documentation references all other repos)
 
