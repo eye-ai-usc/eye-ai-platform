@@ -1,0 +1,53 @@
+site_name: EyeAI Platform
+site_description: A clinical ML research platform for automated glaucoma detection — onboarding, dependency governance, and research tooling for the eye-ai-usc project.
+site_url: https://eye-ai-usc.github.io/eye-ai-platform/
+repo_url: https://github.com/eye-ai-usc/eye-ai-platform
+repo_name: eye-ai-usc/eye-ai-platform
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quickstart: onboarding/quickstart.md
+    - Update Your Environment: onboarding/update-env.md
+    - MCP Setup: onboarding/mcp-setup.md
+    - Catalog Overview: onboarding/catalog-overview.md
+    - New Researcher Guide: onboarding/new-researcher.md
+  - Guides:
+    - ETL Workflow: guides/etl-workflow.md
+    - Experiment Tracing: guides/experiment-tracing.md
+    - Catalog Migration: guides/catalog-migration.md
+  - Releases:
+    - Compatibility Matrix: releases/compatibility-matrix.md
+    - Changelog: releases/CHANGELOG.md
+  - Design:
+    - Architecture: design/architecture.md
+    - Implementation Spec: design/implementation-spec.md
+  - Maintenance: MAINTENANCE.md

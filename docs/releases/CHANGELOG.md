@@ -9,7 +9,7 @@ This file tracks blessed stack releases for the EyeAI research environment.
 Initial blessed stack.
 
 - `eye-ai` v1.5.3
-- `deriva-ml` v1.17.10
+- `deriva-ml` 1.51.2 (resolved transitively from eye-ai@v1.5.3, git main commit `3bf7f007`)
 - Python 3.12
 
 Baseline from existing active researcher environments.

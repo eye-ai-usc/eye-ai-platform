@@ -1,5 +1,8 @@
 # eye-ai-platform
 
+[![Latest stack release](https://img.shields.io/github/v/release/eye-ai-usc/eye-ai-platform?label=latest%20stack&color=indigo)](https://github.com/eye-ai-usc/eye-ai-platform/releases/latest)
+[![Docs](https://img.shields.io/badge/docs-eye--ai--platform-indigo)](https://eye-ai-usc.github.io/eye-ai-platform/)
+
 Front door for the [EyeAI](https://www.eye-ai.org) project — onboarding documentation,
 dependency lockfiles, and the Cookiecutter researcher template.
 
