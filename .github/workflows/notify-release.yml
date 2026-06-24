@@ -13,10 +13,9 @@ jobs:
         # TODO: add SLACK_WEBHOOK_URL secret in org Settings -> Secrets -> Actions
         uses: slackapi/slack-github-action@v2
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: webhook-trigger
           payload: |
             {
               "text": "New EyeAI stack release: ${{ github.event.release.tag_name }}. Changelog: ${{ github.event.release.html_url }}. To update: uv sync --frozen"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
