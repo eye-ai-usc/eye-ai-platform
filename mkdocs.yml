@@ -50,4 +50,5 @@ nav:
   - Design:
     - Architecture: design/architecture.md
     - Implementation Spec: design/implementation-spec.md
+    - Diagnosis & Severity Definitions: design/diagnosis-severity-definitions.md
   - Maintenance: MAINTENANCE.md
