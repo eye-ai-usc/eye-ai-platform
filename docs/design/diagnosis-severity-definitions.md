@@ -129,14 +129,25 @@ All 194,204 `Image_Diagnosis` rows resolve to exactly these three terms —
 194,204) — confirming the 2026-06-30 consolidation is complete with no legacy
 values or nulls remaining at the image level.
 
-> **Note — scope of `Glaucoma_Diagnosis` vs `Condition_Label`.** `Glaucoma_Diagnosis`
-> is the *image/visit/subject diagnostic category* (a coarse No / Suspected /
-> Unknown signal, ~referability), produced by graders and models on images.
-> `Condition_Label` is the *clinical chart-review condition* (the specific glaucoma
-> subtype: POAG/PACG/GS/...). They are deliberately different axes and should not
-> be merged; this document treats `Condition_Label` as the primary "condition"
-> vocabulary and notes `Glaucoma_Diagnosis` as the consolidated image-level
-> diagnostic signal that feeds it.
+> **Is there a semantic difference between `Condition_Label` and
+> `Glaucoma_Diagnosis`? Yes — they are deliberately different concepts, and the
+> team has confirmed keeping them as two separate vocabularies.**
+>
+> - **`Condition_Label` = the clinical chart-review diagnosis** — the specific
+>   glaucoma subtype (`POAG`, `PACG`, `GS`, `Normal or No dx`, `Unspecified
+>   Glaucoma`, `Other`). **Fine-grained**; sourced from **clinical chart review /
+>   ICD-coded encounters**; proposed to be **grounded in a curated glaucoma ICD
+>   subset** with a real ICD-11 WHO URI identifier and ICD-10/ICD-11 code columns
+>   (see §5.6).
+> - **`Glaucoma_Diagnosis` = the image-level diagnostic category** (`No Glaucoma` /
+>   `Suspected Glaucoma` / `Unknown`). **Coarse**, closer to **referability**;
+>   produced by **graders or models on fundus images**; **not ICD-based**; stays a
+>   **separate local vocabulary**.
+>
+> They differ on **granularity** (specific subtype vs. coarse category) and on
+> **source** (chart review vs. image grading), so they are not merged.
+> `Condition_Label` is the primary "condition" vocabulary; `Glaucoma_Diagnosis` is
+> the image-level signal that can feed into it.
 
 ### 2.4 Supporting vocabularies (distinct from diagnosis — do not conflate)
 
@@ -160,6 +171,45 @@ diagnosis itself. Listed so the clinical reader knows they exist and why they ar
   within the shared Chart_Label feature table."* Referenced by
   `Execution_Subject_Chart_Label.Grading_Condition`. Flagged here because it is a
   context axis the cleaned-up model may need to populate.
+
+### 2.5 Proposed term definitions (strawman — current vs. proposed)
+
+> **Provisional strawman for the Wednesday meeting.** These tables propose concrete
+> descriptions and human-readable synonyms for every term, to sit beside the
+> verified current state in §2.1–§2.2 (which is unchanged above). Clinical
+> descriptions are drafted for discussion; any marked **(confirm clinically)** need
+> Dr. Bolo / Dr. Xu sign-off. Severity staging *criteria* (thresholds) are
+> deliberately left **TBD — clinical**.
+
+**`Condition_Label` — proposed descriptions & synonyms** (grounding in ICD is §5.6):
+
+| Term | Proposed description | Proposed synonyms (human-readable) |
+|---|---|---|
+| `GS` | Glaucoma suspect — findings suspicious for glaucoma (e.g. ocular hypertension / elevated IOP, suspicious optic disc, anatomical narrow angle) **without** established glaucomatous damage. *(confirm clinically)* | "Glaucoma Suspect" |
+| `POAG` | Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an **open** anterior chamber angle and no secondary cause. *(confirm clinically)* | "Primary Open-Angle Glaucoma" |
+| `PACG` | Primary angle-closure glaucoma — glaucoma associated with appositional/synechial **closure** of the anterior chamber angle. *(confirm clinically)* | "Primary Angle-Closure Glaucoma" |
+| `Unspecified Glaucoma` | Glaucoma is present but the **subtype is not specified** (e.g. LAC patient-level chart review without a subtype). *(confirm clinically)* | "Glaucoma, unspecified"; "Glaucoma NOS" |
+| `Normal or No dx` | **No glaucoma diagnosis** — no signs of glaucoma, or no diagnosis recorded. *(confirm whether to split "Normal/no disease" from "not assessed / no dx")* | "No Glaucoma"; "Normal" |
+| `Other` | **Catch-all** for non-glaucoma conditions — used when the ICD-derived condition falls **outside** the curated glaucoma subset (§5.6). | "Non-glaucoma"; "Other condition" |
+
+**`Severity_Label` — proposed descriptions & synonyms.** Applies **only to
+established glaucoma** (§5.1–§5.2). `GS` and `Normal or No dx` are **proposed for
+removal** from `Severity_Label` (they are conditions, not stages — see §4, §6.1).
+
+| Term | Proposed action | Proposed description | Proposed synonyms |
+|---|---|---|---|
+| `Mild` | Keep | Mild-stage glaucomatous damage. **Criteria TBD — clinical** (e.g. VF MD threshold / RNFL / CDR). | "Early" |
+| `Moderate` | Keep | Moderate-stage glaucomatous damage. **Criteria TBD — clinical**. | — |
+| `Severe` | Keep | Severe / advanced-stage glaucomatous damage. **Criteria TBD — clinical**. | "Advanced" |
+| `Unspecified/Indeterminate` → `Not Staged` (+ optional `Indeterminate`) | Split & rename | Separate *"glaucoma present, stage **not recorded**"* (`Not Staged`) from *"stage genuinely **indeterminate**"* (`Indeterminate`); removes the slash / embedded synonym. | "Stage unspecified" (Not Staged); "Indeterminate stage" (Indeterminate) |
+| `GS` | **Remove from severity** | Not a stage — a condition; represent via `Condition_Label`. | — |
+| `Normal or No dx` | **Remove from severity** | Not a stage — absence of disease; represent via `Condition_Label`. | — |
+
+> **Note (informational).** The proposed stage set `Mild` / `Moderate` / `Severe` /
+> `Indeterminate` mirrors the **ICD-10 7th-character glaucoma staging** convention
+> (mild / moderate / severe / indeterminate stage), per the AAO guide (§8) — so the
+> severity vocabulary aligns with how stage is already coded in the source data.
+> The clinical *thresholds* defining each stage remain **TBD — Dr. Bolo / Dr. Xu**.
 
 ## 3. How the terms are actually used today (the evidence)
 
@@ -307,6 +357,80 @@ vocabulary concerns only the first:
 The doc states this explicitly so the two are never merged in code or
 conversation.
 
+### 5.6 Grounding `Condition_Label` in a curated glaucoma ICD subset (ICD-10 + ICD-11 + WHO URI)
+
+> **Settled design direction** (provisional only on the clinical *wording*). This is
+> the core proposal for how `Condition_Label` is grounded in an external standard.
+
+**Curated subset, at the category level — not the full ICD set.** Ground
+`Condition_Label` in a curated subset of **only the glaucoma codes**, at the
+**category level** (`H40.0` / `H40.1` / `H40.2`) — **not** the granular
+per-eye / per-stage sub-codes. Working at the category level keeps the
+ICD-10 ↔ ICD-11 crosswalk effectively **1-to-1 and lossless**: we map the coarse
+condition categories, not the laterality/stage detail. *Rationale (Carl):* a small
+curated subset keeps the vocabulary tables small and the crosswalk easy to maintain
+and audit. (For scale: the live data holds ~27,962 ICD-coded rows / 1,209 distinct
+codes, of which only the ~134 H40 glaucoma codes — and at category level only
+H40.0/.1/.2 — matter for this vocabulary; see §3.)
+
+**Documented ICD-10 ↔ ICD-11 mapping.** Because the curated set is small, the full
+mapping is documented inline:
+
+| `Condition_Label` | ICD-10-CM category | ICD-11 (MMS) code | ICD-11 title | Crosswalk |
+|---|---|---|---|---|
+| `GS` (Glaucoma Suspect) | `H40.0` (H40.00–H40.06) | **`9C60`** | Glaucoma suspect | Concept-equivalent but **structurally relocated** — ICD-11 breaks "glaucoma suspect" out as its **own stem code `9C60`**, a sibling of `9C61` Glaucoma (in ICD-10 it sits *inside* the H40 block). 1-to-1 at our category granularity; note a few H40.0 sub-codes move under `9C61` in ICD-11 (e.g. ocular hypertension → `9C61.01`; primary angle-closure suspect → `9C61.10`). |
+| `POAG` | `H40.1` (H40.10–H40.15) | **`9C61.0`** | Primary open-angle glaucoma | Equivalent, 1-to-1 |
+| `PACG` | `H40.2` | **`9C61.1`** | Primary angle closure or angle closure glaucoma | Equivalent, 1-to-1 |
+| `Unspecified Glaucoma` | `H40.9` (unspecified glaucoma) | **`9C61.Z`** | Glaucoma, unspecified | Equivalent |
+| `Normal or No dx` | — (no glaucoma code) | — | — | Absence of disease — no glaucoma code |
+| `Other` | — (non-glaucoma; default) | — | — | Catch-all for ICD codes outside the curated glaucoma subset |
+
+WHO crosswalk types (equivalent / broader / narrower / approximate) are noted where
+relevant; at this **coarse category level** the curated mapping is effectively
+**1-to-1 and lossless** for `POAG` / `PACG` / `Unspecified Glaucoma`, with the
+single caveat on `GS` above (concept-equivalent, structurally relocated in ICD-11).
+
+**Dual ICD-10 + ICD-11 code columns.** Augment the vocabulary so each curated term
+carries **both**:
+
+- an **ICD-10-CM code** column (the `H40.*` category code) — this matches the data
+  we actually have, which is **natively ICD-10-CM** (~27,962 stored codes) and
+  which incoming US EHR data keeps arriving as; and
+- an **ICD-11 code** column (the `9C60` / `9C61.x` category code).
+
+**Real ICD-11 WHO URI in the identifier column.** The term's **identifier column**
+(the vocabulary's `ID` / `URI`) holds the **real, authoritative ICD-11 WHO URI**
+(`http://id.who.int/icd/...`) as the external reference for the term — rather than
+a locally-minted id. *Why ICD-11 for the URI:* ICD-11 is **published by WHO as
+linked data with official, canonical entity URIs**, so authoritative identifiers
+come "for free"; **ICD-10-CM has no single official URI scheme** (it is maintained
+by CDC/NCHS as code lists — URIs exist only via third parties like BioPortal or
+must be self-minted). So the **URI is ICD-11** (authoritative, and forward-looking
+since international data will be ICD-11-encoded), while the **ICD-10 code is
+retained in its own column** for the data we actually hold. This uses the Deriva
+vocabulary mechanism where a term's `URI` references an externally-defined term.
+
+> **ICD-11 URI — implementation detail to confirm before catalog work.** The WHO
+> URI **scheme** is settled — `http://id.who.int/icd/release/11/{version}/mms/{code}`
+> (MMS linearization) or `http://id.who.int/icd/entity/{id}` (foundation). The
+> **exact per-term IRIs / entity-ids must be confirmed against the WHO ICD-11 API /
+> browser** (`icd.who.int`) before implementation; they are **not** minted in this
+> doc. **Confirmed ICD-11 codes & titles** (WHO ICD-11 MMS): `9C60` Glaucoma
+> suspect · `9C61` Glaucoma (parent) · `9C61.0` Primary open-angle glaucoma ·
+> `9C61.1` Primary angle closure / angle closure glaucoma · `9C61.Z` Glaucoma,
+> unspecified. *(`9C61.01` Ocular hypertension and `9C61.10` Primary angle-closure
+> suspect are noted for the GS caveat.)*
+
+**Consequence — `Synonyms` becomes human-only.** Once the codes live in their
+dedicated ICD-10 / ICD-11 columns and the URI in the identifier, the `Synonyms`
+field holds **human-readable alternate names only** (e.g. "Primary Open-Angle
+Glaucoma"). The `H40.*` patterns currently mis-stored in `Condition_Label.Synonyms`
+(see §2.1) move out into the proper code columns / mapping.
+
+**Primary clinical reference:** the **AAO Glaucoma ICD-10 Quick Reference Guide**
+is the authoritative ophthalmology coding reference for the H40 glaucoma codes (full
+citation in §8).
+
 ## 6. Naming cleanup proposals
 
 > **Provisional.** Names and descriptions below are placeholders for discussion;
@@ -332,7 +456,7 @@ conversation.
 
 | Current term | Proposed action | Note |
 |---|---|---|
-| `GS`, `POAG`, `PACG` | Keep names; **add proper clinical definitions** | Move the `H40.*` ICD patterns **out of `Synonyms`** into a defined `ICD10_Eye → Condition_Label` mapping (the mapping `compute_condition_label()` already hard-codes). `Synonyms` should hold human alternate names only. |
+| `GS`, `POAG`, `PACG` | Keep names; **add proper clinical definitions** (§2.5) and **ground in the curated glaucoma ICD subset** (§5.6) | Move the `H40.*` ICD patterns **out of `Synonyms`** into dedicated **ICD-10 + ICD-11 code columns** with the real **ICD-11 WHO URI** in the identifier (§5.6). `Synonyms` then holds human alternate names only. |
 | `Normal or No dx` | Consider clearer split | "Normal" (no disease) vs "No dx" (not assessed) may warrant separation — **TBD — clinical**. |
 | `Unspecified Glaucoma` | Keep | Glaucoma present, subtype unspecified (LAC patient-level). Confirm it is eligible for severity grading. |
 | `Other` | Keep | Catch-all for non-glaucoma ICD-derived conditions. |
@@ -392,6 +516,16 @@ doesn't lock GAMMA/GLEAM out.
   (laterality — see §5.5).
 - **Roadmap context:** repository layering per `eye-ai-usc/eye-ai-platform`
   (front door / repository index).
+- **Clinical & coding references** (for the `Condition_Label` ICD grounding, §5.6):
+  - AAO *Glaucoma ICD-10 Quick Reference Guide* — **primary** clinical reference
+    for the H40 glaucoma codes:
+    <https://www.aao.org/Assets/5adb14a6-7e5d-42ea-af51-3db772c4b0c2/636713219263270000/bc-2568-update-icd-10-quick-reference-guides-glaucoma-final-v2-color-pdf?inline=1>
+  - icd10data.com — ICD-10-CM H40 glaucoma codes:
+    <https://www.icd10data.com/ICD10CM/Codes/H00-H59/H40-H42/H40->
+  - WHO **ICD-11 (MMS)** — authoritative ICD-11 glaucoma codes and canonical URIs
+    (`http://id.who.int/icd/...`): glaucoma block `9C61`, glaucoma suspect `9C60`;
+    browse at <https://icd.who.int/browse11>. (ICD-10-CM has no single official URI
+    scheme — CDC/NCHS code lists — which is why the identifier URI uses ICD-11.)
 - **Process note — no catalog edits from this document.** Any term rename,
   removal, description change, or new term (§6) is a catalog change and must be
   requested through **`data-curation`** via its *"Feature Registration Request"*
