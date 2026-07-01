@@ -44,9 +44,9 @@ label glaucoma in the Eye-AI catalog, and proposes a cleanup. In one screen:
   (`Ungradable` — could the image be assessed?), and *status* (`Diagnosis_Status`
   — review state) are distinct questions and get distinct homes (§3.3).
 - **`Severity_Label` cleaned up.** Retire the values that are really conditions
-  (`GS`, `Normal or No dx`); split the `Unspecified/Indeterminate` catch-all; give
-  `Mild`/`Moderate`/`Severe` real clinical criteria (§3.5). Full table:
-  **Appendix B.2**.
+  (`GS`, `Normal or No dx`); split the `Unspecified/Indeterminate` catch-all; keep
+  `Mild`/`Moderate`/`Severe` as method-agnostic bands (the clinical *criteria* live
+  with the method, not the grade — §3.5). Full table: **Appendix B.2**.
 - **Severity records its method of determination.** The grade stays
   `Mild/Moderate/Severe`; a parallel `Severity_Method` vocabulary (HPA, ICD
   7th-char, …) records the staging basis, so each severity is the pair
@@ -276,8 +276,12 @@ Source: [`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg).*
 
 ### 3.5 Severity cleanup
 
-- **Keep `Mild`/`Moderate`/`Severe`**, add real clinical criteria (VF MD / RNFL /
-  CDR thresholds — **TBD — clinical**); today's descriptions are circular.
+- **Keep `Mild`/`Moderate`/`Severe`** as **method-agnostic ordinal bands**, and
+  replace today's circular descriptions ("Mild stage") with a real *conceptual*
+  definition of each band. The specific **thresholds are not on the severity term**
+  — they depend on the staging method (HPA vs ICD 7th-char vs structural define the
+  bands differently), so the criteria live with `Severity_Method` / the
+  `(Severity, Method)` pair, not baked into `Severity_Label` (§3.6). **TBD — clinical.**
 - **Split & rename `Unspecified/Indeterminate`** → `Not Staged` ("glaucoma present,
   stage not recorded") vs an optional `Indeterminate` ("stage genuinely
   indeterminate"); removes the slash.
@@ -346,7 +350,7 @@ executing these in the wrong order leaves half-built states.
 
 | # | Change | What it entails | Where |
 |---|---|---|---|
-| **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; add real clinical criteria to Mild/Moderate/Severe. (§3.5, App. B.2) | `data-curation` |
+| **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; give `Mild/Moderate/Severe` method-agnostic descriptions (criteria live with the method — §3.5/§3.6, App. B.2). | `data-curation` |
 | **2** | **Fold into one `Glaucoma_Diagnosis` vocabulary** | Merge `Condition_Label` + the current 3-term image/visit/subject `Glaucoma_Diagnosis` into one shared vocab named **`Glaucoma_Diagnosis`** (§3.2). Terms + identities per App. B.1: ICD-11 `ID`/`URI` for `GS/POAG/PACG/Unspecified Glaucoma`; split `Normal or No dx` → `Normal` + `No Diagnosis`; `Other`, `No Diagnosis` as EyeAI-local; `H40.*` out of `Synonyms`. Separate `Ungradable` (gradability axis) and drop the `Unknown`↔`Ungradable` mis-synonym. | `data-curation` |
 | **3** | **Create the ICD-10 cross-walk table** | New association table `ICD10_Eye → Glaucoma_Diagnosis` (`ICD10_Condition_Map`), **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§3.4) | `data-curation` |
 | **4** | **Migrate diagnosis data onto the folded vocab** | Repoint the `Chart_Label` feature rows and the image/visit/subject `*_Diagnosis` rows to the merged `Glaucoma_Diagnosis` terms; re-map cleaned severity values (counts in App. A). **Data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
@@ -370,7 +374,7 @@ ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
 
 ### 4.3 Gates (resolve before the clinical parts land)
 
-- **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §5 Q1).
+- **Severity criteria — per staging method** (not per grade) for Mild/Moderate/Severe — clinical (Dr. Bolo, §5 Q1).
 - **`Severity_Method` member set** — confirm the staging systems (HPA, ICD 7th-char, structural, …) before creating the vocabulary in change 6 (§3.6, clinical).
 - **`9C61.2/.3/.4` disposition** — become `Glaucoma_Diagnosis` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§3.4, §5).
 - **`Normal`'s identifier** — ICD-Z encounter code (`Z01.00`) vs an EyeAI-local URI (Appendix B.1 note).
@@ -382,7 +386,7 @@ ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
 
 ## 5. Open clinical questions (for the Dr. Bolo & Dr. Xu meeting)
 
-1. **Severity criteria.** What clinical criteria define `Mild`/`Moderate`/`Severe`? HPA staging? VF MD thresholds? Structural (RNFL/CDR)? A combination? (Dr. Bolo.)
+1. **Severity criteria — per method.** For each staging method in `Severity_Method`, what cut-points define `Mild`/`Moderate`/`Severe`? (e.g. HPA VF MD thresholds; ICD 7th-character definitions; structural RNFL/CDR.) Criteria attach to the method, not the grade (§3.5–§3.6). (Dr. Bolo.)
 2. **Separate but conditional?** Confirm severity is a separate attribute that applies **only** when an established glaucoma condition is present (§3.1).
 3. **`Severity_Method` member set.** Confirm the staging systems to enumerate (HPA, ICD 7th-char, structural, …) — the method design is settled (§3.6); the member list is the clinical input.
 4. **Fold sign-off.** Approve (or reject) merging `Condition_Label` + `Glaucoma_Diagnosis` into one vocabulary (§3.2) — this reverses the earlier keep-separate position.
@@ -544,15 +548,26 @@ cross-walk (§3.4). Full ICD-11 URIs follow
 ### B.2 `Severity_Label` (cleaned)
 
 Applies **only to established glaucoma** (§3.1). `GS` and `Normal or No dx` are
-retired (they are diagnoses, not stages — Appendix A.2, §3.5). Staging *thresholds*
-are **TBD — clinical**.
+retired (they are diagnoses, not stages — Appendix A.2, §3.5). These are
+**method-agnostic ordinal bands**: the descriptions define the *concept* of each
+band, **not** thresholds. The concrete criteria (VF MD / RNFL / CDR cut-points)
+are **method-dependent** and belong with `Severity_Method` / the
+`(Severity, Method)` pair (§3.6, B.3), not on these terms.
 
-| Term | Proposed description | Proposed synonyms |
+| Term | Proposed description (method-agnostic) | Proposed synonyms |
 |---|---|---|
-| `Mild` | Mild-stage glaucomatous damage. **Criteria TBD — clinical** (e.g. VF MD / RNFL / CDR). | "Early" |
-| `Moderate` | Moderate-stage glaucomatous damage. **Criteria TBD — clinical**. | — |
-| `Severe` | Severe / advanced-stage glaucomatous damage. **Criteria TBD — clinical**. | "Advanced" |
+| `Mild` | Early-stage glaucomatous damage — the least-affected band on the staging scale. | "Early" |
+| `Moderate` | Intermediate-stage glaucomatous damage — between mild and severe. | — |
+| `Severe` | Advanced-stage glaucomatous damage — the most-affected band. | "Advanced" |
 | `Not Staged` (+ optional `Indeterminate`) | Separate *"glaucoma present, stage **not recorded**"* from *"stage genuinely **indeterminate**"*; replaces `Unspecified/Indeterminate` (removes the slash). | "Stage unspecified"; "Indeterminate stage" |
+
+> **Criteria live with the method, not the grade.** Because HPA, ICD 7th-character,
+> and structural staging define `Mild`/`Moderate`/`Severe` by *different*
+> thresholds, the cut-points are a property of the `Severity_Method` (or the
+> method×grade combination), captured when the method set is finalized — **TBD —
+> clinical** (Dr. Bolo / Dr. Xu). Putting a single threshold on the `Severity_Label`
+> term would silently mix staging systems, which is exactly what the method axis
+> prevents.
 
 ### B.3 `Severity_Method` (new — the staging basis)
 

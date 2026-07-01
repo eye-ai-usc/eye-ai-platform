@@ -332,6 +332,19 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**Severity criteria belong to the METHOD, not the grade term.** (Prof. Carl caught
+an inconsistency.) An earlier line said "keep Mild/Moderate/Severe, add real
+clinical criteria (VF MD/RNFL/CDR thresholds) to the term" — which contradicts the
+Severity_Method design: HPA, ICD-7th-char, and structural staging define the SAME
+grade by DIFFERENT thresholds, so a single cut-point on the Severity_Label term is
+exactly the "silently mixing staging systems" problem the method axis prevents.
+Fix: Severity_Label terms are **method-agnostic ordinal bands** (Mild = "early-
+stage / least-affected band", etc. — the concept, not a threshold); the concrete
+cut-points are a property of the Severity_Method (or the method×grade combination)
+and are captured when the method set is finalized. Updated §3.5, App. B.2 (+ a
+"criteria live with the method" note), §5 Q1, the §4.3 gate, the Summary bullet,
+and change-plan row 1 to all say criteria attach to the method, not the grade.
+
 **ERD updated (2026-07-01) — folded name + severity method.** Regenerated the
 Figure-1 ERD to match the current design: renamed the hub + all FKs
 `Condition_Label`→`Glaucoma_Diagnosis` (the fold); added a `Severity_Method` vocab
