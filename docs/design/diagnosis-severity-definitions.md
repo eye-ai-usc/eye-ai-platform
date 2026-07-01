@@ -659,10 +659,15 @@ ICD10_Eye enumerated ──▶ (2) re-anchor Condition_Label ──┐
 - **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §7 Q1).
 - **`9C61.2/.3/.4` disposition** — become `Condition_Label` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§6.2, §7).
 - **GAMMA `Moderate-to-Severe` band** (§6.4) — may add a `Severity_Label` member in change 1.
-- **Catalog verification** (deriva MCP was not connected when this was written):
-  confirm `ICD10_Eye` is structurally a controlled vocabulary, and name the
-  existing `Clinical_Records ⇄ ICD10_Eye` association table (the input to
-  `compute_condition_label`).
+- **ICD-11 release-version pin** — pin a **specific ICD-11 release** in the term
+  URIs (e.g. `…/release/11/2025-01/mms/…`) rather than the bare `{version}`
+  placeholder, since ICD-11 codes/titles can shift between releases. Confirm the
+  current WHO release at implementation time and **record it in this spec** (keep
+  the release-independent foundation `…/icd/entity/{id}` URI as the stable anchor).
+- **Catalog verification** — ✅ **resolved (confirmed via deriva MCP, 2026-06-30):**
+  `ICD10_Eye` **is** a controlled vocabulary (1,209 terms), and the
+  `Clinical_Records ⇄ ICD10_Eye` association is **`Clinical_Records_ICD10_Eye`**
+  (27,962 rows — the input to `compute_condition_label`).
 
 ## 9. References / provenance
 
