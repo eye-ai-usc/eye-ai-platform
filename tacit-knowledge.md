@@ -332,6 +332,24 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**Tech-writer re-review (2026-06-30, Claude + Codex) — fold left a
+"which-vocab-is-the-target" inconsistency.** After §5.8 made `Glaucoma_Diagnosis`
+the folded target, §5.6/§5.7/§6/§9 still framed `Condition_Label` as the future
+grounded vocab — doc described two end-states. Root cause: `Condition_Label` was
+used for BOTH current-state and proposed-state. Fix applied: a naming-convention
+note at the top of §5.6 (`Condition_Label` = current/pre-fold; `Glaucoma_Diagnosis`
+= folded target; read the former as the latter under §5.8), then relabeled the
+pre-fold spots (§5.6 table `Normal or No dx` row, §6.0 defers diagnosis source-of-
+truth to §5.8.3, §6.2 retitled to migration current→folded with the split
+decided, Figure 1 caption, §9 ICD10_Condition_Map note). Also fixed: "see §6"→
+§5.6-5.7 (line 115) and §6.1 (line 278); "image-level Glaucoma_Diagnosis" leaks →
+"current 3-term image/visit/subject" (Summary, §5.8 banner, §8 change 2) — kept
+the legitimate image-level uses (verbatim catalog comment, Image_Diagnosis row,
+194K-rows count). Judged NOT worth changing: the 5× "no catalog edits" caveat
+(Codex #9) — each instance is scoped to a different reader entry-point, defensible
+for a strawman; and the §5.6-before-§5.8 ordering (Codex #4) — addressed with the
+transition note rather than a large section move.
+
 **DECIDED (Prof. Carl): the merged vocabulary is named `Glaucoma_Diagnosis`, not
 `Condition_Label`.** The fold of Condition_Label + the old image-level
 Glaucoma_Diagnosis into ONE shared vocabulary takes the name `Glaucoma_Diagnosis`
