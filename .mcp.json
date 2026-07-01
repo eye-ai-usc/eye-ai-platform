@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mcp-eye-ai-org": {
+      "type": "http",
+      "url": "https://mcp.eye-ai.org/mcp",
+      "oauth": {
+        "clientId": "deriva-mcp",
+        "callbackPort": 8080
+      }
+    }
+  }
+}
