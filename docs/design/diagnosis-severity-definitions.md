@@ -172,14 +172,15 @@ diagnosis itself. Listed so the clinical reader knows they exist and why they ar
   `Execution_Subject_Chart_Label.Grading_Condition`. Flagged here because it is a
   context axis the cleaned-up model may need to populate.
 
-### 2.5 Proposed term definitions (strawman — current vs. proposed)
+### 2.5 Proposed term definitions (the description & synonym source of truth)
 
-> **Provisional strawman for the Wednesday meeting.** These tables propose concrete
-> descriptions and human-readable synonyms for every term, to sit beside the
-> verified current state in §2.1–§2.2 (which is unchanged above). Clinical
-> descriptions are drafted for discussion; any marked **(confirm clinically)** need
-> Dr. Bolo / Dr. Xu sign-off. Severity staging *criteria* (thresholds) are
-> deliberately left **TBD — clinical**.
+> **Provisional strawman for the Wednesday meeting.** These tables are the
+> **single source** for each term's proposed **description** and **human-readable
+> synonyms** — §6 references them for wording rather than restating it (§6 covers
+> the *actions*, §5.6/§5.7 the *ICD grounding*). They sit beside the verified
+> current state in §2.1–§2.2 (unchanged above). Items marked **(confirm
+> clinically)** need Dr. Bolo / Dr. Xu sign-off; severity staging *thresholds* are
+> deliberately **TBD — clinical**.
 
 **`Condition_Label` — proposed descriptions & synonyms** (grounding in ICD is §5.6):
 
@@ -356,337 +357,223 @@ vocabulary concerns only the first:
 The doc states this explicitly so the two are never merged in code or
 conversation.
 
-### 5.6 Grounding `Condition_Label` in a curated glaucoma ICD subset (ICD-10 + ICD-11 + WHO URI)
+### 5.6 Grounding `Condition_Label` in ICD (the "what" and "why")
 
-> **Settled design direction** (provisional only on the clinical *wording*). This is
-> the core proposal for how `Condition_Label` is grounded in an external standard.
+> **Settled design direction** (provisional only on the clinical *wording*). How
+> `Condition_Label` is grounded in an external standard. The *implementation
+> mechanism* (cross-walk table, compute join, `eye-ai-ml` impact) is §5.7.
 
-**Curated subset, at the category level — not the full ICD set.** Ground
-`Condition_Label` in a curated subset of **only the glaucoma codes**, at the
-**category level** (`H40.0` / `H40.1` / `H40.2`) — **not** the granular
-per-eye / per-stage sub-codes. Working at the category level keeps the
-ICD-10 ↔ ICD-11 crosswalk effectively **1-to-1 and lossless**: we map the coarse
-condition categories, not the laterality/stage detail. *Rationale (Carl):* a small
-curated subset keeps the vocabulary tables small and the crosswalk easy to maintain
-and audit. (For scale: the live data holds ~27,962 ICD-coded rows / 1,209 distinct
-codes, of which only the ~134 H40 glaucoma codes — and at category level only
-H40.0/.1/.2 — matter for this vocabulary; see §3.)
+**Each `Condition_Label` term *is* an ICD-11 concept.** The condition vocabulary
+is not a local scheme that ICD-11 merely tags; each term **is** an ICD-11 concept,
+with the short name as its display label — `GS` = ICD-11 `9C60`, `POAG` = `9C61.0`,
+and so on. The ICD-11 code is the term's **identity**. This gives **one vocabulary
+(ICD-11 concepts) reached two ways** — a human chart reviewer picks the ICD-11
+concept directly (ICD-11-native, not ICD-free), and legacy ICD-10 records are
+translated *up* to the same concept (§5.7). Both arrive at the same term; ICD-10
+never stands alone as the identity.
 
-**Documented ICD-10 ↔ ICD-11 mapping.** Because the curated set is small, the full
-mapping is documented inline:
+**Curated subset, at the category level.** Ground the vocabulary in a curated
+subset of **only the glaucoma codes**, at the **category level**
+(`H40.0` / `H40.1` / `H40.2`) — not the granular per-eye / per-stage sub-codes.
+Working at the category level keeps the ICD-10 ↔ ICD-11 crosswalk effectively
+**1-to-1 and lossless**. *Rationale (Carl):* a small curated subset keeps the
+vocabulary tables small and the crosswalk easy to maintain and audit. (Scale: the
+live data holds ~27,962 ICD-coded rows / 1,209 distinct codes, of which only the
+~134 H40 glaucoma codes — at category level just `H40.0/.1/.2` — matter here;
+see §3.)
+
+**The ICD-10 ↔ ICD-11 mapping (the canonical table — referenced throughout).**
 
 | `Condition_Label` | ICD-10-CM category | ICD-11 (MMS) code | ICD-11 title | Crosswalk |
 |---|---|---|---|---|
-| `GS` (Glaucoma Suspect) | `H40.0` (H40.00–H40.06) | **`9C60`** | Glaucoma suspect | Concept-equivalent but **structurally relocated** — ICD-11 breaks "glaucoma suspect" out as its **own stem code `9C60`**, a sibling of `9C61` Glaucoma (in ICD-10 it sits *inside* the H40 block). 1-to-1 at our category granularity; note a few H40.0 sub-codes move under `9C61` in ICD-11 (e.g. ocular hypertension → `9C61.01`; primary angle-closure suspect → `9C61.10`). |
+| `GS` (Glaucoma Suspect) | `H40.0` (H40.00–H40.06) | **`9C60`** | Glaucoma suspect | Concept-equivalent but **structurally relocated** — ICD-11 breaks "glaucoma suspect" out as its **own stem code `9C60`**, a *sibling* of `9C61` Glaucoma (in ICD-10 it sits *inside* the H40 block). This **reinforces §5.2**: a suspect is not staged disease. A few H40.0 sub-codes move under `9C61` in ICD-11 (ocular hypertension → `9C61.01`; primary angle-closure suspect → `9C61.10`). |
 | `POAG` | `H40.1` (H40.10–H40.15) | **`9C61.0`** | Primary open-angle glaucoma | Equivalent, 1-to-1 |
 | `PACG` | `H40.2` | **`9C61.1`** | Primary angle closure or angle closure glaucoma | Equivalent, 1-to-1 |
-| `Unspecified Glaucoma` | `H40.9` (unspecified glaucoma) | **`9C61.Z`** | Glaucoma, unspecified | Equivalent |
-| `Normal or No dx` | — (no glaucoma code) | — | — | Absence of disease — no glaucoma code |
-| `Other` | — (non-glaucoma; default) | — | — | Catch-all for ICD codes outside the curated glaucoma subset |
+| `Unspecified Glaucoma` | `H40.9` | **`9C61.Z`** | Glaucoma, unspecified | Equivalent |
+| `Normal or No dx` | — (no glaucoma code) | — | — | Absence of disease |
+| `Other` | — (non-glaucoma; default) | — | — | Catch-all for codes outside the curated glaucoma subset |
 
-WHO crosswalk types (equivalent / broader / narrower / approximate) are noted where
-relevant; at this **coarse category level** the curated mapping is effectively
-**1-to-1 and lossless** for `POAG` / `PACG` / `Unspecified Glaucoma`, with the
-single caveat on `GS` above (concept-equivalent, structurally relocated in ICD-11).
+At this coarse category level the mapping is **1-to-1 and lossless** for
+`POAG` / `PACG` / `Unspecified Glaucoma`, with the single `GS` caveat above
+(concept-equivalent, structurally relocated). The secondary/developmental
+ICD-11 subtypes (`9C61.2` secondary OAG, `9C61.3` secondary ACG, `9C61.4`
+developmental) have **no dedicated `Condition_Label` member** and currently fall
+into `Other` — a disposition to decide clinically (§6.2, §7).
 
-**Dual ICD-10 + ICD-11 code columns.** Augment the vocabulary so each curated term
-carries **both**:
+**How the codes and identifier are stored.**
 
-- an **ICD-10-CM code** column (the `H40.*` category code) — this matches the data
-  we actually have, which is **natively ICD-10-CM** (~27,962 stored codes) and
-  which incoming US EHR data keeps arriving as; and
-- an **ICD-11 code** column (the `9C60` / `9C61.x` category code).
+- **Dual code columns.** Each term carries both an **ICD-10-CM code** column (the
+  `H40.*` category code — matching the data we actually hold, which is natively
+  ICD-10-CM and keeps arriving that way from US EHRs) and an **ICD-11 code**
+  column (`9C60` / `9C61.x`).
+- **ICD-11 WHO URI as the identifier.** The term's `ID` / `URI` holds the real,
+  authoritative **ICD-11 WHO URI** (`http://id.who.int/icd/...`), not a
+  locally-minted id. *Why ICD-11 for the URI:* WHO publishes ICD-11 as linked data
+  with official canonical URIs, so authoritative identifiers come for free;
+  ICD-10-CM has no single official URI scheme (CDC/NCHS code lists). The ICD-11
+  URI is also forward-looking as international data moves to ICD-11.
+- **`Synonyms` becomes human-only.** Once codes live in their dedicated columns
+  and the URI in the identifier, `Synonyms` holds **human-readable alternate names
+  only** (e.g. "Primary Open-Angle Glaucoma", WHO index terms). The `H40.*`
+  patterns currently mis-stored in `Condition_Label.Synonyms` (§2.1) move out.
+  This gives lookup **by code** (the identifier / code columns) and **by name**
+  (`Synonyms`) without overloading either — see §5.7 for why a code never goes in
+  `Synonyms`.
 
-**Real ICD-11 WHO URI in the identifier column.** The term's **identifier column**
-(the vocabulary's `ID` / `URI`) holds the **real, authoritative ICD-11 WHO URI**
-(`http://id.who.int/icd/...`) as the external reference for the term — rather than
-a locally-minted id. *Why ICD-11 for the URI:* ICD-11 is **published by WHO as
-linked data with official, canonical entity URIs**, so authoritative identifiers
-come "for free"; **ICD-10-CM has no single official URI scheme** (it is maintained
-by CDC/NCHS as code lists — URIs exist only via third parties like BioPortal or
-must be self-minted). So the **URI is ICD-11** (authoritative, and forward-looking
-since international data will be ICD-11-encoded), while the **ICD-10 code is
-retained in its own column** for the data we actually hold. This uses the Deriva
-vocabulary mechanism where a term's `URI` references an externally-defined term.
+**Open design decision — where the ICD-10 codes live.** Two mechanisms, to be
+resolved in the `data-curation` request; **not mutually exclusive**:
 
-> **ICD-11 URI — implementation detail to confirm before catalog work.** The WHO
-> URI **scheme** is settled — `http://id.who.int/icd/release/11/{version}/mms/{code}`
-> (MMS linearization) or `http://id.who.int/icd/entity/{id}` (foundation). The
-> **exact per-term IRIs / entity-ids must be confirmed against the WHO ICD-11 API /
-> browser** (`icd.who.int`) before implementation; they are **not** minted in this
-> doc. **Confirmed ICD-11 codes & titles** (WHO ICD-11 MMS): `9C60` Glaucoma
-> suspect · `9C61` Glaucoma (parent) · `9C61.0` Primary open-angle glaucoma ·
-> `9C61.1` Primary angle closure / angle closure glaucoma · `9C61.Z` Glaucoma,
-> unspecified. *(`9C61.01` Ocular hypertension and `9C61.10` Primary angle-closure
-> suspect are noted for the GS caveat.)*
+- **(a) Dual code columns on each term**, at category level (above) — simplest,
+  keeps everything on the term, lossless because it stays coarse.
+- **(b) A separate `ICD10_Condition_Map` cross-walk table** at exact-code level
+  (§5.7) — needed to map the granular per-code data, e.g. to drive
+  `compute_condition_label` off catalog data instead of a hard-coded dict.
 
-**Consequence — `Synonyms` becomes human-only.** Once the codes live in their
-dedicated ICD-10 / ICD-11 columns and the URI in the identifier, the `Synonyms`
-field holds **human-readable alternate names only** (e.g. "Primary Open-Angle
-Glaucoma"). The `H40.*` patterns currently mis-stored in `Condition_Label.Synonyms`
-(see §2.1) move out into the proper code columns / mapping.
+The category-level columns (a) can be the human-facing grounding while the
+exact-code table (b) drives computation. §5.7 describes (b).
 
-**Primary clinical reference:** the **AAO Glaucoma ICD-10 Quick Reference Guide**
-is the authoritative ophthalmology coding reference for the H40 glaucoma codes (full
-citation in §8).
+> **Status & verification (single source — referenced elsewhere as "the §5.6
+> status").** ICD-11 codes **verified 2026-06-30** against the WHO ICD-11 MMS
+> (`9C60` suspect; `9C61.0/.1/.Z` established glaucoma). The URI **scheme** is
+> settled — `http://id.who.int/icd/release/11/{version}/mms/{code}` — but the
+> **exact per-term IRIs must be confirmed against the WHO API/browser**
+> (`icd.who.int`) before catalog work; they are not minted here. Still
+> **unverified**: (1) disposition of `9C61.2/.3/.4` (clinical — Dr. Bolo / Dr. Xu);
+> (2) that `ICD10_Eye` is structurally a controlled vocabulary and the name of the
+> existing `Clinical_Records ⇄ ICD10_Eye` association table (§5.7) — the deriva
+> MCP surface was not connected when this was written. Primary clinical reference:
+> the **AAO Glaucoma ICD-10 Quick Reference Guide** (§8).
 
-#### 5.6.1 The term *is* the ICD-11 concept (reading of the grounding above)
+### 5.7 Implementation mechanism (the "how" — for `eye-ai-ml` / `data-curation`)
 
-The grounding above has a clean conceptual reading: each `Condition_Label` term
-**is** an ICD-11 concept, with the short name (`GS`) as its display label —
-`GS` = ICD-11 `9C60`, `POAG` = `9C61.0`, `PACG` = `9C61.1`. So there is **one
-vocabulary (ICD-11 concepts) reached two ways**, not two kinds of label sharing a
-vocabulary:
+This section covers mechanism (b) from §5.6: the cross-walk **table**, how it
+turns `compute_condition_label` into a join, and what that retires. Codes and the
+crosswalk itself are in the §5.6 mapping table; this section does not restate them.
 
-- **Human chart review** picks the ICD-11 concept **directly** — ICD-11-native,
-  *not* ICD-free (the reviewer already chooses in ICD-11 terms, displayed as
-  `GS`/`POAG`/…).
-- **Legacy ICD-10 records** carry an ICD-10 code and are **translated up to the
-  ICD-11 concept**.
+**Tables involved.**
 
-Both arrive at the **same** ICD-11 term. ICD-11 is the term's identity (in the
-`ID`/`URI` / code columns above); ICD-10 never stands alone as the identity.
-
-> **Open design decision — where do the ICD-10 codes live?** Two mechanisms are
-> on the table and should be resolved in the `data-curation` request:
-> **(a)** dual **ICD-10 + ICD-11 code columns on each `Condition_Label` term**, at
-> **category level** (`H40.0/.1/.2`), per the grounding proposal above — simplest,
-> keeps everything on the term, lossless *because* it stays coarse; or
-> **(b)** a separate **`ICD10_Condition_Map` cross-walk table** at **exact-code
-> level** (§5.6.2) — needed if we ever map the granular per-code data (e.g. to
-> drive `compute_condition_label` off catalog data). (a) and (b) are not
-> exclusive: the category-level columns can be the human-facing grounding while
-> the exact-code table drives computation. The rest of this section describes (b)
-> and what it buys.
-
-#### 5.6.2 Mechanism — the ICD-10→ICD-11 cross-walk table and the compute join
-
-**Two/three vocabularies + one cross-walk.**
-
-| Object | Role | Code |
+| Object | Role | Code / keys |
 |---|---|---|
-| `Condition_Label` | **the ICD-11 concept** (display name `GS`, `POAG`, …) | `ID`/`URI` = its **ICD-11** code (the identity) |
-| `ICD10_Eye` | one term per legacy ICD-10 code (`H40.00`…) | `ID`/`URI` = that ICD-10 code |
-| `ICD10_Condition_Map` *(new, association)* | **ICD-10 → ICD-11 cross-walk** | two FKs: `ICD10_Eye` → `Condition_Label` |
-
-```
-human chart review ───────────────▶ Condition_Label (= ICD-11 concept; GS = 9C60)
-                                            ▲
-ICD10_Eye(H40.02) ──(ICD-10→ICD-11)─────────┘
-```
+| `Condition_Label` | the ICD-11 concept (display name `GS`, `POAG`, …) | `ID`/`URI` = its ICD-11 code (identity) |
+| `ICD10_Eye` | one term per legacy ICD-10 code | `ID`/`URI` = that ICD-10 code |
+| `ICD10_Condition_Map` *(new, association)* | **ICD-10 → ICD-11 cross-walk** | FKs: `ICD10_Eye` → `Condition_Label` |
 
 ![ERD — Condition_Label IS the ICD-11 concept; chart review picks the ICD-11 term directly while legacy ICD-10 records cross-walk up to the same term.](img/icd11-condition-erd.png)
 
 *Figure 1 — ERD for the ICD-11 coding model. Source:
-[`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg) (PNG regenerated from it).*
+[`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg).*
 
-The ICD-11 codes (`GS=9C60`, `POAG=9C61.0`, `PACG=9C61.1`,
-`Unspecified Glaucoma=9C61.Z`) and their ICD-10↔ICD-11 crosswalk are in the
-mapping table in §5.6 above. Note that glaucoma suspect `9C60` is a **sibling
-stem code of** the `9C61` Glaucoma block (not a child), which **reinforces §5.2**:
-a suspect is not staged disease. The secondary/developmental subtypes
-(`9C61.2` secondary OAG, `9C61.3` secondary ACG, `9C61.4` developmental)
-currently have no dedicated `Condition_Label` member (they fall into `Other` —
-see §6.2, §7).
+**Why a cross-walk table (not more columns).** The ICD-10 side at exact-code
+granularity is *many* codes per concept (`H40.00`–`H40.06` all → `GS`) — a
+many-to-one relation. A single-valued `ID`/`URI` cannot hold a family, and
+`Synonyms` is for human names, not codes. Only an association table fits. Map
+**exact codes** (FKs to real `ICD10_Eye` terms), not wildcard patterns (`H40.0*`),
+so no wildcard-matching logic is needed.
 
-**Why a cross-walk *table* (mechanism (b)), not more `ID`/`Synonyms` columns.**
-For the exact-code mechanism, the ICD-10
-side is *many* codes per concept (`H40.00`–`H40.06` all → `GS`) — a many-to-one
-relation. A single-valued `ID`/`URI` cannot hold a family, and `Synonyms` is for
-human names, not codes (see the lookup rule below). Only an association table
-fits. Map **exact codes** (FKs to real `ICD10_Eye` terms), not wildcard patterns
-(`H40.0*`), so no wildcard-matching logic returns.
+**Lookup by code uses `ID`, never `Synonyms`.** A term's code IS its `ID`/`URI`,
+so `lookup_by_id("ICD11:9C60") → term` is a typed, indexed, one-hop lookup — that
+*is* semantic lookup by code, needing no duplication of the code into `Synonyms`.
+`Synonyms` hold WHO index terms (human names) for lookup by name. Putting a code
+in its own row's `Synonyms` would merely shadow `ID` and re-blur code-vs-name.
+(A code belongs in `Synonyms` only as a deprecated *alias* code; the primary code
+is always `ID`.)
 
-**What this retires in `eye-ai-ml` (verified against `eye_ai/eye_ai.py`,
-2026-06-30).** The cross-walk table makes the **hard-coded ICD→condition mapping
-obsolete.** `EyeAI.compute_condition_label()` (`eye_ai/eye_ai.py:268`) today does
-two things:
+**The two bridges — and the compute join.** `compute_condition_label()`'s input
+is a DataFrame `RID, Clinical_Records, ICD10_Eye` — one row per (record, code) —
+i.e. a read of a **`Clinical_Records ⇄ ICD10_Eye` association table already in the
+catalog** (verified from `eye_ai.py:293` + fixture `test_eye_ai_units.py:131`).
+So two distinct bridges represent all the codes as data:
 
-1. **ICD-10 → condition mapping** via an inline `icd_mapping` dict
-   (`H40.0x → GS`, `H40.1x → POAG`, `H40.2* → PACG`, else `Other`) applied by a
-   `startswith` prefix match. **This is exactly what the cross-walk table
-   replaces** — the dict is a copy of the mapping that will now live as catalog
-   data, so it should be deleted and the mapping read from `ICD10_Condition_Map`
-   instead. (It is the *only* copy of this mapping in the library — one
-   definition site, `eye_ai.py`, plus its unit test `test_eye_ai_units.py:139`;
-   no hidden duplicates.)
-2. **Multi-code priority resolution** — when one `Clinical_Records` has several
-   ICD codes, it keeps the highest-priority condition (`PACG > POAG > GS >
-   Other`) via a priority sort + `drop_duplicates`. **This is *not* mapping and
-   is *not* replaced by the table** — it is a per-record reconciliation policy
-   that still needs a home (in the library, or as a documented rule the cross-walk
-   consumer applies).
+| Bridge | Relates | Kind | Status |
+|---|---|---|---|
+| `Clinical_Records ⇄ ICD10_Eye` | record ↔ the codes it carries | **observed data** | exists (the input) |
+| `ICD10_Condition_Map` | ICD-10 code ↔ its ICD-11 concept | **classification rule** | proposed |
 
-So the accurate statement: the **`icd_mapping` dict is no longer needed** (catalog
-data supersedes it), and once it's gone the function is reduced to the
-priority-resolution step over rows already carrying a `Condition_Label` from the
-table — or removed entirely if that resolution moves elsewhere.
-`insert_condition_label()` (`eye_ai.py:302`, writes the result into
-`Clinical_Records`) is unaffected. **Retiring the dict is an `eye-ai-ml` code
-change**, tracked there, contingent on `ICD10_Condition_Map` existing first; this
-document only records that the mapping's authoritative home moves from code to
-catalog.
+With both, the code→condition step is a pure join —
+`Clinical_Records ─ ICD10_Eye ─ ICD10_Condition_Map ─ Condition_Label` — and the
+Python dict disappears. Keep the two bridges distinct: one records *facts* (this
+record's codes), the other the *rule* (what a code means); they evolve on
+different schedules.
 
-**The function's input is already a catalog bridge — so the whole thing becomes a
-join.** `compute_condition_label()` takes a DataFrame with columns
-`RID, Clinical_Records, ICD10_Eye` — one row per (clinical record, ICD-10 code)
-— i.e. a read of a **`Clinical_Records ⇄ ICD10_Eye` association table** already
-in the catalog (verified from the function body `eye_ai.py:293` and the test
-fixture `test_eye_ai_units.py:131`; both endpoints are confirmed catalog objects
-— `Clinical_Records` table, `ICD10_Eye` vocabulary §2.4). That means **two
-distinct bridge tables** are involved, and together they represent *all* the
-codes as data, with no Python mapping left:
+**End-to-end: many ICD-10 codes → one ICD-11 `Condition_Label`.** A record
+typically carries several codes. Resolution: (1) **map every code** to its ICD-11
+concept via the join — e.g. `H40.11`+`H40.00` → {`POAG`, `GS`}; (2) **pick the
+highest-priority concept** by clinical severity `PACG > POAG > GS > Other`
+(`eye_ai.py:295`) — here POAG wins → `Condition_Label = POAG`. The stored label
+is thus an ICD-11 concept; the codes are input, the winning term is output. (The
+priority tie-break now orders ICD-11 *concepts*, which is where it belongs, and
+could itself become a priority column on `Condition_Label`.)
 
-| Bridge | Relates | Answers | Kind | Status |
-|---|---|---|---|---|
-| `Clinical_Records ⇄ ICD10_Eye` | a record ↔ the ICD-10 codes it carries | "which codes does *this record* have?" | **observed data** | exists (the function's input) |
-| `ICD10_Condition_Map` (`ICD10_Eye ⇄ Condition_Label`) | an ICD-10 code ↔ its ICD-11 concept | "which condition does *this code* mean?" | **classification rule** | proposed (§5.6) |
+**What this retires in `eye-ai-ml`** (verified against `eye_ai/eye_ai.py`,
+2026-06-30). `compute_condition_label()` (`eye_ai.py:268`) does two things:
 
-With both in place, the mapping step is purely a join —
-`Clinical_Records ─(data bridge)─ ICD10_Eye ─(ICD10_Condition_Map)─
-Condition_Label` — and the inline dict disappears entirely. Keep the two bridges
-distinct: the first records *facts* (this patient's codes), the second records
-the *rule* (what a code means); they change on different schedules and for
-different reasons.
+1. **ICD-10 → condition mapping** via an inline `icd_mapping` dict + `startswith`.
+   **The cross-walk table replaces this** — delete the dict, read the mapping from
+   the table. (It is the only copy in the library — one site + test
+   `test_eye_ai_units.py:139`.)
+2. **Multi-code priority resolution** (the `PACG>POAG>GS>Other` tie-break). **Not
+   replaced** by the table — it is a per-record reconciliation policy that still
+   needs a home (library, or a documented rule on the join's output).
 
-**End-to-end: many ICD-10 codes → one ICD-11 `Condition_Label`.** A
-`Clinical_Records` typically carries **several** ICD-10 codes. The resolution is:
+So the **`icd_mapping` dict is no longer needed**; the function shrinks to the
+priority step (or is removed if that moves elsewhere). `insert_condition_label()`
+(`eye_ai.py:302`) is unaffected. **Placement:** the cross-walk is upstream of
+`Condition_Label`, *not* a hop off the Subject — the chart-review path references
+the term directly, the ICD-10 path reaches it through the cross-walk. **Retiring
+the dict is an `eye-ai-ml` change**, contingent on `ICD10_Condition_Map` existing
+first (§9).
 
-1. **Map every code to its ICD-11 concept** via the join (not "pick one code").
-   E.g. a record with `H40.11` and `H40.00` yields candidates
-   {`POAG`=`9C61.0`, `GS`=`9C60`}.
-2. **Pick the highest-priority concept** by clinical severity ordering
-   `PACG > POAG > GS > Other` (`eye_ai.py:295`). Here POAG outranks GS → the
-   record's `Condition_Label` = **`POAG` (ICD-11 `9C61.0`)**.
+## 6. Naming cleanup proposals (actions per term)
 
-So under the new structure the stored label **is an ICD-11 concept** — the ICD-10
-codes are the input, the winning ICD-11 term is the output. Two notes: the
-priority tie-break now orders **ICD-11 concepts** (a clinical ordering of
-conditions, which is where it belongs, and could itself become a priority column
-on `Condition_Label`); and if the secondary/developmental concepts
-(`9C61.2/.3/.4`, currently → `Other`) become members, they must be slotted into
-that ordering — a clinical decision (§7).
+This section states the **action** for each term — keep / rename / split / retire —
+and the rationale. The proposed **descriptions and synonyms** live in §2.5 (the
+term-definition tables); the **ICD grounding** is §5.6. §6 does not restate those;
+it says what changes and why.
 
-> **Unverified:** the exact name of the `Clinical_Records ⇄ ICD10_Eye`
-> association table is not confirmed — the notebook that builds the input
-> DataFrame is not in-repo, and the deriva MCP surface was not connected to
-> inspect the schema. Its *existence* is strongly implied by the column shape and
-> confirmed endpoints; the table name is a TODO for catalog verification.
-
-**Granularity — `Condition_Label` follows ICD-11's categories (chosen).**
-Because the term *is* the ICD-11 concept, the vocabulary's granularity is
-ICD-11's: each `Condition_Label` term corresponds to one ICD-11 concept
-(`GS=9C60`, `POAG=9C61.0`, `PACG=9C61.1`, `Unspecified Glaucoma=9C61.Z`). This is
-the strong form (formerly framed as "Option B") — ICD-11's taxonomy *drives* the
-vocabulary, it does not merely tag a parallel local scheme. Consequence: ICD-10's
-finer suspect distinctions (`H40.00`–`H40.06`) **collapse** into the single
-ICD-11 suspect concept `9C60` when translated up — which is correct, because
-ICD-11 itself collapses them. Where ICD-11 and our current member set differ
-(e.g. the `9C61.2/.3/.4` secondary/developmental subtypes have no current
-`Condition_Label` member), the member set should be reconciled to ICD-11 — a
-clinical decision for Dr. Bolo / Dr. Xu (see §7).
-
-**Placement vs. the Subject (do not mis-wire).** The cross-walk is **upstream of**
-`Condition_Label`, not a hop off the Subject. Both label sources reference the
-**same ICD-11 term**; the difference is only how they *reach* it:
-
-- **Chart-review path** (`Execution_Subject_Chart_Label`) references the ICD-11
-  `Condition_Label` term **directly** — the reviewer chose it. No ICD-10, no
-  cross-walk (the choice is *already* ICD-11; "no ICD" would be wrong — it is
-  ICD-11-native).
-- **Legacy ICD-10 path** (`Clinical_Records`, ICD-derived) carries an ICD-10
-  code and reaches the ICD-11 term **through the cross-walk**.
-
-Every consumer points at the ICD-11 term; the cross-walk only translates legacy
-ICD-10 up to it.
-
-**Lookup by code — use `ID`/`URI`, the code is the row's identity (not a
-synonym).** Each ICD-11 term's code IS that term's `ID`/`URI`, so
-`lookup_by_id("ICD11:9C60") → the term` is a typed, indexed, one-hop lookup —
-this *is* semantic lookup by code, and it needs **no** duplication of the code
-into `Synonyms`. The term's `Synonyms` hold the **WHO index/subcategory terms**
-(human-readable: "borderline glaucoma", "ocular hypertension", "narrow angle
-glaucoma suspect", …), which give semantic lookup *by name*. Putting the code
-itself into its own row's `Synonyms` would merely duplicate `ID` and reintroduce
-the "is this string a code or a name?" ambiguity. (A code only ever belongs in
-`Synonyms` as a *secondary/deprecated alias code* for the same concept; the
-primary code is always `ID`.) Net: lookup by code → `ID`; lookup by name →
-`Synonyms`; one `resolve(token)` view can offer both behind a single call.
-
-> **Status of the codes.** The ICD-11 codes here were **verified 2026-06-30**
-> against the WHO ICD-11 MMS (glaucoma suspect = `9C60`; `9C61.*` for established
-> glaucoma — see the code-numbers table above). Two items still need
-> confirmation before the `data-curation` request relies on them: (1) the
-> condition→code map for the `9C61.2/.3/.4` secondary/developmental subtypes,
-> which have no dedicated `Condition_Label` member yet (clinical — Dr. Bolo /
-> Dr. Xu); and (2) that `ICD10_Eye` is structurally a controlled-vocabulary
-> table (asserted from §2.4, not yet verified against the live catalog — the
-> deriva MCP surface was not connected when this was written).
-
-## 6. Naming cleanup proposals
-
-> **Provisional.** Names and descriptions below are placeholders for discussion;
-> clinical criteria are **TBD — clinical**, pending Dr. Bolo and Dr. Xu.
+> **Provisional.** Actions below are for discussion; clinical criteria are
+> **TBD — clinical**, pending Dr. Bolo and Dr. Xu.
 
 ### 6.1 `Severity_Label`
 
-| Current term | Proposed action | Proposed name | Proposed description (placeholder) |
-|---|---|---|---|
-| `Mild` (`4-YFWT`) | **Keep**, add real criteria | `Mild` | *Mild-stage glaucomatous damage.* **TBD — clinical** (VF MD threshold / structural criteria). |
-| `Moderate` (`4-YFWP`) | **Keep**, add real criteria | `Moderate` | *Moderate-stage glaucomatous damage.* **TBD — clinical**. |
-| `Severe` (`4-YFWR`) | **Keep**, add real criteria | `Severe` | *Severe / advanced-stage glaucomatous damage.* **TBD — clinical**. |
-| `Unspecified/Indeterminate` (`4-YFWW`) | **Split & rename** | `Not Staged` (and possibly a separate `Indeterminate`) | Distinguish *"glaucoma present, stage not recorded"* from *"stage genuinely indeterminate."* Remove the slash. |
-| `GS` (`4-YFWY`) | **Retire from severity** | — | `GS` is a condition, not a stage; represent via `Condition_Label`. Migrate existing 698+287 rows (see migration note). |
-| `Normal or No dx` (`5-29BJ`) | **Retire from severity** | — | A condition / absence of disease, not a stage; represent via `Condition_Label`. Migrate existing rows. |
+| Current term | Action | Rationale |
+|---|---|---|
+| `Mild` / `Moderate` / `Severe` | **Keep**, add real criteria | Genuine stages; today's descriptions are circular (§4.3). Add reproducible criteria — **TBD — clinical** (VF MD / RNFL / CDR). |
+| `Unspecified/Indeterminate` (`4-YFWW`) | **Split & rename** → `Not Staged` (+ optional `Indeterminate`) | One label conflates "stage not recorded" vs "genuinely indeterminate", and the slash packs a synonym (§4.2). |
+| `GS` (`4-YFWY`) | **Retire from severity** | A condition, not a stage — represent via `Condition_Label` (§4.1). Requires data migration (below). |
+| `Normal or No dx` (`5-29BJ`) | **Retire from severity** | Absence of disease, not a stage — represent via `Condition_Label` (§4.1). Requires data migration (below). |
 
-> **Migration note (for `data-curation`, not this doc):** retiring severity `GS`
-> and `Normal or No dx` requires re-mapping the existing `Chart_Label` rows
-> (698 `GS`/`GS`, 287 `GS`/`Unspecified`, 61+27 Normal rows) so the condition is
-> preserved and severity becomes not-applicable/not-staged. Counts in §3.
+(Proposed descriptions & synonyms for the kept terms: §2.5.)
+
+> **Migration note (data migration — §9 change 4, not this doc):** retiring
+> severity `GS` and `Normal or No dx` requires re-mapping existing `Chart_Label`
+> rows (698 `GS`/`GS`, 287 `GS`/`Unspecified`, 61+27 Normal rows; §3) so the
+> condition is preserved and severity becomes not-applicable / not-staged.
 
 ### 6.2 `Condition_Label`
 
-| Current term | Proposed action | Note |
+| Current term | Action | Rationale |
 |---|---|---|
-| `GS`, `POAG`, `PACG` | Keep names as display labels; **add proper clinical definitions** and **ground in the curated glaucoma ICD subset** (§5.6) | Each term **is its ICD-11 concept** (`GS=9C60`, `POAG=9C61.0`, `PACG=9C61.1`), with the real **ICD-11 WHO URI** in the identifier. Move the `H40.*` patterns **out of `Synonyms`** into dedicated ICD-10/ICD-11 code columns (grounding) and/or the `ICD10_Eye → Condition_Label` cross-walk (§5.6, mechanism (b) — the relation `compute_condition_label()` hard-codes). `Synonyms` then holds human names / WHO index terms only (lookup by name); the code is the identifier (lookup by code). |
-| `Normal or No dx` | Consider clearer split | "Normal" (no disease) vs "No dx" (not assessed) may warrant separation — **TBD — clinical**. |
-| `Unspecified Glaucoma` | Keep | Glaucoma present, subtype unspecified (LAC patient-level). Confirm it is eligible for severity grading. |
-| `Other` | Keep — but reconcile scope | Currently the catch-all for non-glaucoma ICD-derived conditions. Note the tension: §5.6 tentatively routes ICD-11 `9C61.2/.3/.4` (secondary / developmental **glaucoma**) here for lack of a dedicated member — so `Other` would hold some glaucoma. Decide whether to add secondary/developmental members instead (clinical — §7). |
+| `GS`, `POAG`, `PACG` | **Keep** names as display labels; ground in ICD-11 | Each term *is* its ICD-11 concept with the WHO URI as identity, and `H40.*` codes move out of `Synonyms` — full design in §5.6/§5.7. |
+| `Normal or No dx` | **Consider split** | "Normal" (no disease) vs "No dx" (not assessed) may warrant separation — **TBD — clinical**. |
+| `Unspecified Glaucoma` | **Keep** | Subtype unspecified (LAC patient-level). Confirm eligibility for severity grading (§5.2). |
+| `Other` | **Keep — reconcile scope** | Catch-all for non-glaucoma. Tension: §5.6 tentatively routes ICD-11 `9C61.2/.3/.4` (secondary/developmental **glaucoma**) here for lack of a member — so `Other` would hold some glaucoma. Decide whether to add those members instead (clinical — §7). |
 
-**Worked example — a `Condition_Label` row under the §5.6 model.** The term *is*
-the ICD-11 concept: `Name` is the display label, the code is the row's **`ID`**
-(semantic lookup *by code*), and `Synonyms` carry the WHO index terms (semantic
-lookup *by name*). Below is the full `GS` (glaucoma suspect) row; the clinical
-*definition* is still provisional, but the ICD-11 code was verified 2026-06-30.
+**Worked example — a grounded `Condition_Label` row (`GS`).** Illustrates the
+§5.6 model concretely: `Name` = display label, `ID`/`URI` = the ICD-11 identity
+(lookup by code), `Synonyms` = WHO index terms (lookup by name). Description and
+synonyms are provisional (§2.5); the `9C60` code is verified (§5.6 status).
 
 | Column | Value |
 |---|---|
-| `RID` | `2-NKSW` *(system-assigned — the existing GS row from §2.1)* |
+| `RID` | `2-NKSW` *(the existing GS row, §2.1)* |
 | `Name` | `GS` |
-| `Description` | Glaucoma suspect — an eye with one or more risk factors for glaucoma (elevated IOP / ocular hypertension, suspicious optic disc or RNFL, narrow/occludable angle, or steroid response) **without** definite glaucomatous optic neuropathy or visual-field loss. **TBD — clinical** (Dr. Bolo / Dr. Xu). |
-| `Synonyms` | `Glaucoma Suspect`, `Suspected glaucoma`, `Borderline glaucoma`, `Ocular hypertension`, `Primary open-angle glaucoma suspect`, `Normal pressure glaucoma suspect`, `Narrow angle glaucoma suspect` *(WHO `9C60` index terms — human names, not codes)* |
-| `ID` | `ICD11:9C60` *(the identity — this is the by-code lookup key; verified 2026-06-30)* |
-| `URI` | `http://id.who.int/icd/release/11/mms/9C60` |
+| `Description` | Glaucoma suspect — risk factors for glaucoma (elevated IOP / ocular hypertension, suspicious optic disc or RNFL, narrow/occludable angle, or steroid response) **without** definite glaucomatous optic neuropathy or field loss. *(confirm clinically)* |
+| `Synonyms` | `Glaucoma Suspect`, `Borderline glaucoma`, `Ocular hypertension`, `Narrow angle glaucoma suspect`, … *(WHO `9C60` index terms — human names, not codes; copy the authoritative set from icd.who.int)* |
+| `ID` / `URI` | `ICD11:9C60` / `http://id.who.int/icd/release/11/mms/9C60` |
 
-The same pattern for the established-glaucoma siblings (`ID`/`URI` differ, all
-else analogous):
-
-| `Name` | `ID` | `URI` |
-|---|---|---|
-| `POAG` | `ICD11:9C61.0` | `http://id.who.int/icd/release/11/mms/9C61.0` |
-| `PACG` | `ICD11:9C61.1` | `http://id.who.int/icd/release/11/mms/9C61.1` |
-| `Unspecified Glaucoma` | `ICD11:9C61.Z` | `http://id.who.int/icd/release/11/mms/9C61.Z` |
-
-ICD-10 equivalents are **not** in these rows — they are rows in
-`ICD10_Condition_Map` pointing at the term. For `GS`: `H40.00`–`H40.06` (the
-family currently mis-stored as `H40.0*` patterns in `Synonyms`; ICD-10 `H40.0` =
-"glaucoma suspect", `.00`–`.06` by mechanism).
-
-> The `Synonyms` list is **illustrative** — copy the authoritative WHO `9C60`
-> index terms from https://icd.who.int/browse11 when finalizing. And `ID`/`URI`
-> are assumed to be columns of the Deriva vocabulary table (standard for Deriva
-> controlled vocabularies, but not yet verified against this catalog — see the
-> §5.6 status box).
+Siblings follow the same shape: `POAG` = `9C61.0`, `PACG` = `9C61.1`,
+`Unspecified Glaucoma` = `9C61.Z`. ICD-10 equivalents (`GS`: `H40.00`–`H40.06`)
+are **not** in the row — they live in the cross-walk / code columns (§5.6, §5.7).
 
 ### 6.3 Severity naming precision
 
@@ -740,7 +627,7 @@ doesn't lock GAMMA/GLEAM out.
   `Subject_Diagnosis`.
 - **Proposed new object (not yet in catalog)**: `ICD10_Condition_Map` — an
   association table that **cross-walks legacy ICD-10 → the ICD-11 concept**
-  (`ICD10_Eye → Condition_Label`, §5.6), the data-driven replacement for the
+  (`ICD10_Eye → Condition_Label`, §5.7), the data-driven replacement for the
   hard-coded `icd_mapping` in `compute_condition_label()`. Name is a placeholder;
   creation is a `data-curation` change.
 - **Library code referenced** (`eye-ai-ml/eye_ai/eye_ai.py`):
@@ -766,7 +653,7 @@ doesn't lock GAMMA/GLEAM out.
 
 ## 9. Change plan (consolidated)
 
-The actionable synthesis of §§5–6. **Dependency ordering and repo split matter** —
+The actionable synthesis of §§5–7. **Dependency ordering and repo split matter** —
 executing these in the wrong order leaves half-built states.
 
 ### 9.1 The changes
@@ -775,9 +662,9 @@ executing these in the wrong order leaves half-built states.
 |---|---|---|---|
 | **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; add real clinical criteria to Mild/Moderate/Severe. (§6.1) | `data-curation` |
 | **2** | **Re-anchor `Condition_Label` on ICD-11** | *Not a new table — it exists (§2.1).* Add ICD-11 `ID`/`URI` to each term (`GS=9C60`, `POAG=9C61.0`, `PACG=9C61.1`, `Unspecified Glaucoma=9C61.Z`); remove `H40.*` codes from `Synonyms`, replace with WHO index terms; reconcile member set to ICD-11 (decide `9C61.2/.3/.4`). (§5.6, §6.2) | `data-curation` |
-| **3** | **Create `ICD10_Condition_Map`** | New association table `ICD10_Eye → Condition_Label`, **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§5.6) | `data-curation` |
+| **3** | **Create `ICD10_Condition_Map`** | New association table `ICD10_Eye → Condition_Label`, **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§5.7) | `data-curation` |
 | **4** | **Migrate `Chart_Label` data** | Re-map existing `Execution_Subject_Chart_Label` rows to the cleaned severity + condition values (counts in §6.1). This is **data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
-| **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with the **join** (step 1 → the map); **keep** the priority tie-break (step 2 — it already exists, do not re-add). `insert_condition_label` unaffected. (§5.6) | `eye-ai-ml` |
+| **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with the **join** (step 1 → the map); **keep** the priority tie-break (step 2 — it already exists, do not re-add). `insert_condition_label` unaffected. (§5.7) | `eye-ai-ml` |
 
 ### 9.2 Dependency ordering
 
