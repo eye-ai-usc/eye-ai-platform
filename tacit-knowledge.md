@@ -352,6 +352,17 @@ assumptions" (had a resolved ✅ item); §5 retitled "Open questions & decisions
 and the section is already concern-ordered; #12 tone (⚠️/✅ emoji, "Professor
 Carl") — kept, deliberate emphasis appropriate for a strawman working doc.
 
+**Removed the "per-method severity cut-points" open question — it's not open.**
+(Prof. Carl.) Each named `Severity_Method` (HPA, ICD_7th_char, …) IS a published
+external standard that already defines its own Mild/Moderate/Severe cut-points;
+Eye-AI does not re-derive them, so "what cut-points define each grade per method?"
+was a false open question. Folded its rationale into §5 Q1 (the member-set
+question — picking a method brings its criteria with it; the only exception is a
+local/house method with no external standard, which would then need cut-points
+defined). Renumbered §5 (8→7 questions); merged the two redundant §4.3 gates
+(severity-criteria + member-set) into one; fixed refs (GAMMA §5 Q8→Q7, member-set
+gate → §5 Q1).
+
 **Severity criteria belong to the METHOD, not the grade term.** (Prof. Carl caught
 an inconsistency.) An earlier line said "keep Mild/Moderate/Severe, add real
 clinical criteria (VF MD/RNFL/CDR thresholds) to the term" — which contradicts the

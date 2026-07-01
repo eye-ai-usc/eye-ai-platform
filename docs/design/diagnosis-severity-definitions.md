@@ -339,7 +339,7 @@ Dr. Kyle's **GAMMA** mapping needs a **"Moderate-to-Severe"** band (GAMMA's
 `Moderate-to-Severe` band become an additional `Severity_Label` member, or should
 cross-dataset band collapses (GAMMA/GLEAM) be a **mapping layer** on top of
 canonical `Mild`/`Moderate`/`Severe` rather than new vocabulary terms? Flagged so
-the cleanup doesn't lock GAMMA/GLEAM out (§5 Q8).
+the cleanup doesn't lock GAMMA/GLEAM out (§5 Q7).
 
 ## 4. Change plan
 
@@ -374,8 +374,7 @@ ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
 
 ### 4.3 Gates and verified assumptions (resolve the open ones before the clinical parts land)
 
-- **Severity criteria — per staging method** (not per grade) for Mild/Moderate/Severe — clinical (Dr. Bolo, §5 Q1).
-- **`Severity_Method` member set** — confirm the staging systems (HPA, ICD 7th-char, structural, …) before creating the vocabulary in change 6 (§3.6, clinical).
+- **`Severity_Method` member set** — confirm the staging systems (HPA, ICD 7th-char, structural, …) before creating the vocabulary in change 6. Each named method carries its own published cut-points, so this is the only severity-criteria input needed (§3.6, §5 Q1; clinical, Dr. Bolo).
 - **`9C61.2/.3/.4` disposition** — become `Glaucoma_Diagnosis` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§3.4, §5).
 - **`Normal`'s identifier** — ICD-Z encounter code (`Z01.00`) vs an EyeAI-local URI (Appendix B.1 note).
 - **EyeAI URI scheme** for local terms (`Other`, `No Diagnosis`, maybe `Normal`).
@@ -386,14 +385,13 @@ ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
 
 ## 5. Open questions & decisions (for the Dr. Bolo & Dr. Xu meeting)
 
-1. **Severity criteria — per method.** For each staging method in `Severity_Method`, what cut-points define `Mild`/`Moderate`/`Severe`? (e.g. HPA VF MD thresholds; ICD 7th-character definitions; structural RNFL/CDR.) Criteria attach to the method, not the grade (§3.5–§3.6). (Dr. Bolo.)
+1. **`Severity_Method` member set.** Confirm the staging systems to enumerate (HPA, ICD 7th-char, structural, …). This is the only severity-criteria question that remains open: each named method **already defines its own cut-points** (HPA *is* the Hodapp-Parrish-Anderson definition; `ICD_7th_char` *is* the ICD definition), so picking a method brings its criteria with it — Eye-AI does not re-derive them (§3.5–§3.6). The exception would be a *local/house* method with no external standard, whose cut-points would then need defining. (Dr. Bolo.)
 2. **Separate but conditional?** Confirm severity is a separate attribute that applies **only** when an established glaucoma condition is present (§3.1).
-3. **`Severity_Method` member set.** Confirm the staging systems to enumerate (HPA, ICD 7th-char, structural, …) — the method design is settled (§3.6); the member list is the clinical input.
-4. **Fold sign-off.** Approve (or reject) merging `Condition_Label` + `Glaucoma_Diagnosis` into one vocabulary (§3.2) — this reverses the earlier keep-separate position.
-5. **Remove non-stage values?** Confirm retiring `GS` and `Normal or No dx` from `Severity_Label`.
-6. **Suspects and severity.** Does a glaucoma suspect (`GS`) have a severity at all? (Strawman: no — not applicable.)
-7. **`9C61.2/.3/.4` disposition.** Add secondary/developmental glaucoma as `Glaucoma_Diagnosis` members, or leave them in `Other`?
-8. **GLEAM / GAMMA.** What must the cleaned-up vocabulary provide so the GLEAM/GAMMA mappings land cleanly — notably GAMMA's `Moderate-to-Severe` band (§3.7) — without distorting the canonical definitions?
+3. **Fold sign-off.** Approve (or reject) merging `Condition_Label` + `Glaucoma_Diagnosis` into one vocabulary (§3.2) — this reverses the earlier keep-separate position.
+4. **Remove non-stage values?** Confirm retiring `GS` and `Normal or No dx` from `Severity_Label`.
+5. **Suspects and severity.** Does a glaucoma suspect (`GS`) have a severity at all? (Strawman: no — not applicable.)
+6. **`9C61.2/.3/.4` disposition.** Add secondary/developmental glaucoma as `Glaucoma_Diagnosis` members, or leave them in `Other`?
+7. **GLEAM / GAMMA.** What must the cleaned-up vocabulary provide so the GLEAM/GAMMA mappings land cleanly — notably GAMMA's `Moderate-to-Severe` band (§3.7) — without distorting the canonical definitions?
 
 ---
 
