@@ -540,6 +540,19 @@ first (§8).
 > non-diagnosis concepts onto their own axes. Provisional; a `data-curation`
 > change, and it depends on the catalog checks in §5.8.4.
 
+> **⚠️ Proposed change — pending clinical confirmation (Dr. Xu & Dr. Bolo).**
+> This fold is a **proposal, not a settled decision.** It **reverses** the earlier
+> team-noted position to *keep `Condition_Label` and `Glaucoma_Diagnosis` as two
+> separate vocabularies*, so it needs **explicit sign-off from Dr. Xu and Dr. Bolo
+> before any implementation.**
+>
+> - **In scope:** merge the two diagnosis vocabularies into one shared
+>   `Glaucoma_Diagnosis`, with assertion provenance carried by `Diagnosis_Tag` and
+>   the non-diagnosis axes (**gradability**, **status**) separated out (§5.8.2).
+> - **Unchanged / not in question:** the ICD-11 grounding and the
+>   `ICD10_Condition_Map` cross-walk (§5.6–§5.7), and **severity as its own axis**
+>   (`Severity_Label`, §6.0–§6.1).
+
 #### 5.8.1 Why one vocabulary
 
 Today two vocabularies describe overlapping glaucoma status: `Condition_Label`
