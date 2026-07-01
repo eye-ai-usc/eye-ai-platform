@@ -332,6 +332,15 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**ERD updated (2026-07-01) — folded name + severity method.** Regenerated the
+Figure-1 ERD to match the current design: renamed the hub + all FKs
+`Condition_Label`→`Glaucoma_Diagnosis` (the fold); added a `Severity_Method` vocab
+box and a third FK column (`Severity_Method (NEW)`) on the Chart_Label feature, so
+the feature now shows diagnosis + the (Severity, Method) pair; constraint reads
+"severity (grade + method) valid only if diagnosis = glaucoma"; legend now 6 lines
+(leads with the fold, adds the method line). SVG canvas grew to 960×800; PNG
+regenerated via Chrome headless. Doc image path unchanged.
+
 **Doc restructured (2026-07-01) — proposal-first, reference to appendices.** (Prof.
 Carl.) The doc had grown table-heavy and buried the proposal behind the current-
 state inventory. New arc: §1 Summary (what we're doing) → §2 Why/limitations
