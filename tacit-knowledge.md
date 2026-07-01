@@ -332,6 +332,16 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**§5.8.3 and §6.0 diagnosis tables were duplicative — deduped.** (Prof. Carl.)
+The prior "defer §6.0 to §5.8.3" half-fix left BOTH tables present, and §6.0's
+still said `Condition_Label`. Resolved: §5.8.3 is now the SINGLE diagnosis table
+(enriched with a Synonyms column + fuller descriptions merged from §6.0, named
+`Glaucoma_Diagnosis`); §6.0's condition table is DELETED and §6.0 is retitled to
+severity-only. §6.2 worked example kept but re-scoped to "illustrates the column
+layout" (defers values to §5.8.3). Rule going forward: diagnosis term definitions
+live ONLY in §5.8.3; severity term definitions ONLY in §6.0; §6.1/§6.2 are
+actions that reference those, not restatements.
+
 **Tech-writer re-review (2026-06-30, Claude + Codex) — fold left a
 "which-vocab-is-the-target" inconsistency.** After §5.8 made `Glaucoma_Diagnosis`
 the folded target, §5.6/§5.7/§6/§9 still framed `Condition_Label` as the future

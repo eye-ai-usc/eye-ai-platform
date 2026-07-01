@@ -601,22 +601,28 @@ Key distinctions that drive the placement (all from the 2026-06-30 discussion):
 
 #### 5.8.3 The proposed `Glaucoma_Diagnosis` table
 
-Standard Deriva vocabulary shape only (`RID`, `Name`, `Description`, `Synonyms`,
-`ID`, `URI` + system columns) — **no custom columns**. Every term has a resolvable
-identity; grounded-vs-local is the **URI namespace** (`id.who.int/…` = ICD-11
-authority; `eye-ai.org/…` = EyeAI local), never a null test.
+This is the **single source of truth for the proposed diagnosis terms** — their
+names, descriptions, synonyms, and identities. (§6 references this table for
+diagnosis wording; §6.0 covers only severity.) Standard Deriva vocabulary shape
+only (`RID`, `Name`, `Description`, `Synonyms`, `ID`, `URI` + system columns) —
+**no custom columns**. `ID`/`URI` is the identity (lookup by code); `Synonyms` is
+human-readable names (lookup by name). Grounded-vs-local is the **URI namespace**
+(`id.who.int/…` = ICD-11 authority; `eye-ai.org/…` = EyeAI local), never a null
+test. Descriptions marked **(confirm clinically)** need Dr. Bolo / Dr. Xu sign-off.
 
-| Name | Description | `ID` | `URI` | Grounding |
-|---|---|---|---|---|
-| `GS` | Glaucoma suspect — risk factors without established glaucomatous damage. | `ICD11:9C60` | `http://id.who.int/icd/release/11/mms/9C60` | ICD-11 |
-| `POAG` | Primary open-angle glaucoma. | `ICD11:9C61.0` | `http://id.who.int/icd/release/11/mms/9C61.0` | ICD-11 |
-| `PACG` | Primary angle-closure glaucoma. | `ICD11:9C61.1` | `http://id.who.int/icd/release/11/mms/9C61.1` | ICD-11 |
-| `Unspecified Glaucoma` | Glaucoma present, subtype not specified. | `ICD11:9C61.Z` | `http://id.who.int/icd/release/11/mms/9C61.Z` | ICD-11 |
-| `Normal` | Assessed; no glaucoma present (a genuine negative finding). | `ICD10:Z01.00` *or* `EYEAI:Normal` **(TBD, §5.8.4)** | (per `ID` choice) | ICD-Z encounter *or* local |
-| `Other` | A non-glaucoma condition (outside the curated glaucoma subset). | `EYEAI:Other` | `https://www.eye-ai.org/id/condition/Other` | local |
-| `No dx` | No diagnosis made — no glaucoma determination on record (≡ the former `Unknown`). | `EYEAI:No_dx` | `https://www.eye-ai.org/id/condition/No_dx` | local |
+| Name | Description | Synonyms (human-readable) | `ID` / `URI` |
+|---|---|---|---|
+| `GS` | Glaucoma suspect — findings suspicious for glaucoma (ocular hypertension / elevated IOP, suspicious optic disc or RNFL, narrow/occludable angle, or steroid response) **without** established glaucomatous damage. *(confirm clinically)* | "Glaucoma Suspect"; WHO `9C60` index terms (e.g. "Borderline glaucoma", "Ocular hypertension") | `ICD11:9C60` / `…/mms/9C60` |
+| `POAG` | Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an **open** angle, no secondary cause. *(confirm clinically)* | "Primary Open-Angle Glaucoma" | `ICD11:9C61.0` / `…/mms/9C61.0` |
+| `PACG` | Primary angle-closure glaucoma — glaucoma with appositional/synechial **closure** of the angle. *(confirm clinically)* | "Primary Angle-Closure Glaucoma" | `ICD11:9C61.1` / `…/mms/9C61.1` |
+| `Unspecified Glaucoma` | Glaucoma present, **subtype not specified**. *(confirm clinically)* | "Glaucoma, unspecified"; "Glaucoma NOS" | `ICD11:9C61.Z` / `…/mms/9C61.Z` |
+| `Normal` | Assessed; **no glaucoma** present (a genuine negative finding). *(confirm clinically)* | "No Glaucoma"; "Normal" | `ICD10:Z01.00` *or* `EYEAI:Normal` **(TBD, §5.8.4)** |
+| `Other` | A **non-glaucoma** condition (outside the curated glaucoma subset). | "Non-glaucoma"; "Other condition" | `EYEAI:Other` / `eye-ai.org/id/condition/Other` |
+| `No dx` | **No diagnosis made** — no glaucoma determination on record (≡ the former `Unknown`). *(confirm whether "not assessed" needs its own wording)* | "No diagnosis"; "Not assessed" | `EYEAI:No_dx` / `eye-ai.org/id/condition/No_dx` |
 
-Notes on the table:
+Full ICD-11 URIs follow `http://id.who.int/icd/release/11/{version}/mms/{code}`
+(abbreviated `…/mms/{code}` above); see the §5.6 status box and §8.3 for the
+release-version pin. Notes:
 
 - **ICD-10 codes are not in these rows.** The `H40.*` families map to the glaucoma
   terms through the `ICD10_Condition_Map` cross-walk (§5.7), not via `Synonyms` or
@@ -642,42 +648,22 @@ Notes on the table:
 
 ## 6. Naming cleanup proposals
 
-§6.0 gives the **proposed descriptions and synonyms** for every term; §6.1–§6.2
-give the **action** per term (keep / rename / split / retire) and the rationale;
-§6.3–§6.4 cover severity-naming precision and the GAMMA band. The **ICD grounding**
-is §5.6. §6.1–§6.2 reference §6.0 for wording rather than restating it.
+§6.0 gives the proposed **severity** descriptions and synonyms; §6.1–§6.2 give the
+**action** per term (keep / rename / split / retire) and rationale; §6.3–§6.4 cover
+severity-naming precision and the GAMMA band. **Diagnosis** term descriptions and
+synonyms are **not** here — they live in the §5.8.3 `Glaucoma_Diagnosis` table (the
+single source); §6.2 references it. The **ICD grounding** is §5.6.
 
 > **Provisional.** Everything below is for discussion; clinical criteria are
 > **TBD — clinical**, pending Dr. Bolo and Dr. Xu.
 
-### 6.0 Proposed term definitions (descriptions & synonyms)
+### 6.0 Proposed `Severity_Label` definitions (descriptions & synonyms)
 
-The proposed **description** and **human-readable synonyms** for each term. Items
-marked **(confirm clinically)** need Dr. Bolo / Dr. Xu sign-off; severity staging
-*thresholds* are deliberately **TBD — clinical**. Current catalog state is
-§2.1–§2.2 (unchanged); ICD grounding is §5.6.
-
-> **Source of truth for the *diagnosis* terms is §5.8.3** (the folded
-> `Glaucoma_Diagnosis` table), which already applies the `Normal or No dx` →
-> `Normal` + `No dx` split. The condition table below gives descriptions/synonyms
-> at the current (pre-fold) `Condition_Label` granularity; where it and §5.8.3
-> differ (the split), §5.8.3 governs. The severity table below is the source for
-> severity descriptions/synonyms.
-
-**`Condition_Label` — proposed descriptions & synonyms (pre-fold granularity):**
-
-| Term | Proposed description | Proposed synonyms (human-readable) |
-|---|---|---|
-| `GS` | Glaucoma suspect — findings suspicious for glaucoma (e.g. ocular hypertension / elevated IOP, suspicious optic disc, anatomical narrow angle) **without** established glaucomatous damage. *(confirm clinically)* | "Glaucoma Suspect" |
-| `POAG` | Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an **open** anterior chamber angle and no secondary cause. *(confirm clinically)* | "Primary Open-Angle Glaucoma" |
-| `PACG` | Primary angle-closure glaucoma — glaucoma associated with appositional/synechial **closure** of the anterior chamber angle. *(confirm clinically)* | "Primary Angle-Closure Glaucoma" |
-| `Unspecified Glaucoma` | Glaucoma is present but the **subtype is not specified** (e.g. LAC patient-level chart review without a subtype). *(confirm clinically)* | "Glaucoma, unspecified"; "Glaucoma NOS" |
-| `Normal or No dx` | **No glaucoma diagnosis** — no signs of glaucoma, or no diagnosis recorded. *(confirm whether to split "Normal/no disease" from "not assessed / no dx")* | "No Glaucoma"; "Normal" |
-| `Other` | **Catch-all** for non-glaucoma conditions — used when the ICD-derived condition falls **outside** the curated glaucoma subset (§5.6). | "Non-glaucoma"; "Other condition" |
-
-**`Severity_Label` — proposed descriptions & synonyms.** Applies **only to
-established glaucoma** (§5.1–§5.2). `GS` and `Normal or No dx` are proposed for
-removal (they are conditions, not stages — §4, §6.1).
+The proposed **description** and **human-readable synonyms** for each severity
+term. Applies **only to established glaucoma** (§5.1–§5.2). Staging *thresholds*
+are deliberately **TBD — clinical**. (Diagnosis-term definitions are in §5.8.3;
+`GS` and `Normal or No dx` are proposed for removal from `Severity_Label` — they
+are diagnoses, not stages — §4, §6.1.)
 
 | Term | Proposed description | Proposed synonyms |
 |---|---|---|
@@ -719,10 +705,12 @@ folded `Glaucoma_Diagnosis` (§5.8). The final term set + identities are §5.8.3
 | `Unspecified Glaucoma` | **Keep** | Subtype unspecified (LAC patient-level). Confirm eligibility for severity grading (§5.2). |
 | `Other` | **Keep — reconcile scope** | Catch-all for non-glaucoma. Tension: §5.6 tentatively routes ICD-11 `9C61.2/.3/.4` (secondary/developmental **glaucoma**) here for lack of a member — so `Other` would hold some glaucoma. Decide whether to add those members instead (clinical — §7). |
 
-**Worked example — a grounded `Condition_Label` row (`GS`).** Illustrates the
-§5.6 model concretely: `Name` = display label, `ID`/`URI` = the ICD-11 identity
-(lookup by code), `Synonyms` = WHO index terms (lookup by name). Description and
-synonyms are provisional (§6.0); the `9C60` code is verified (§5.6 status).
+**Worked example — the vocabulary-row layout for `GS`.** Shows how one folded
+`Glaucoma_Diagnosis` row fills the standard vocabulary columns concretely
+(the term set + values are §5.8.3; this just illustrates the column layout):
+`Name` = display label, `ID`/`URI` = the ICD-11 identity (lookup by code),
+`Synonyms` = WHO index terms (lookup by name). Description/synonyms provisional;
+the `9C60` code is verified (§5.6 status).
 
 | Column | Value |
 |---|---|
