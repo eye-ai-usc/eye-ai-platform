@@ -332,6 +332,98 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**WRITTEN TO DOC (2026-07-01):** §6.3 rewritten from the open "naming precision"
+question into the `Severity_Method` decision (with a sample vocabulary table +
+the two feature method-columns); §7 Q3 resolved → points to §6.3; §8 change plan
+gained change **6** (create Severity_Method vocab + add method columns), gates
+gained "confirm Severity_Method member set"; Summary + §9 references updated.
+Catalog-verified that Clinical_Records has no severity column, so no table-column
+variant is needed — method is a feature column on both severity features only.
+
+**Severity method-of-determination → separate `Severity_Method` CV + (Severity,
+Method) pair (recommended B).** (Prof. Carl.) Severity scale stays Mild/Moderate/
+Severe; the *method* (HPA / CMS / ICD-7th-char / …) is recorded too. Three
+options examined through 3 lenses:
+- **A — method = Workflow_Type / execution provenance** (infer method from the
+  Workflow that produced the value). ML: bad — reading method needs a lineage
+  walk (value→Execution→Workflow→type), can't `groupby`. Chaise: bad — method
+  invisible on the record without cross-FK visible-columns, no native facet. DB:
+  layering violation — conflates "what code ran" (Workflow's job) with "what
+  staging system the value uses" (a semantic property of the VALUE); breaks when
+  method ≠ code (human chart review has no workflow; ICD-derived; configurable
+  graders); pollutes the built-in system vocab Workflow_Type with domain
+  semantics; can't NOT-NULL-enforce "severity needs a method".
+- **B — separate `Severity_Method` domain CV; feature carries Severity_Label +
+  Severity_Method columns; unit = the (Severity, Method) pair.** ML: winner —
+  both are df columns, trivial filter/groupby, method-vs-method confusion matrix
+  is a self-join. Chaise: winner — two native FK dropdowns, independent facets,
+  at-a-glance + editable. DB: winner — method modeled as what it is (attribute of
+  the value), FK-validated, NOT-NULL-able, source-independent (works for chart
+  review AND ICD-derived without an Execution), composes with the existing
+  "severity only when glaucoma" rule, and directly resolves §6.3 (Dr. Xu's
+  caution about silently mixing staging systems).
+- **C — encode method in the term (`HPA_Mild`…).** Rejected: the exact
+  pack-two-axes-into-one-label anti-pattern this whole doc removes (cf.
+  Unspecified/Indeterminate, Normal or No dx); corrupts the clean 3-value scale.
+
+**Where Severity_Method is recorded (two layers).** (1) *Vocabulary table* — a new
+domain vocab `Severity_Method` (via `deriva_ml_create_vocabulary`), one row per
+staging system (HPA, ICD_7th_char, CMS…), defining the allowed methods — parallel
+to how `Severity_Label` defines the allowed stages. (2) *Value* — a new
+`Severity_Method` FK column ADDED TO EACH FEATURE that carries a severity, beside
+the severity column, so the (Severity, Method) pair is co-located on the same row:
+`Execution_Subject_Chart_Label` (Chart_Label feature: Condition_Label +
+Severity_Label + Severity_Method) and `Execution_Clinical_Records_Glaucoma_Severity`
+(ICD_Severity_Label + ICD_Severity_Method). Add it as PART OF THE FEATURE
+DEFINITION (features are multi-column — Chart_Label already carries condition +
+severity) so it keeps the feature machinery (Execution provenance link,
+Feature_Name). This realizes "keep both": method column on the row (semantic) +
+feature→Execution link (provenance). RESOLVED (Prof. Carl): method VARIES PER ROW (a grader can use HPA vs CMS on
+different subjects) → it IS a genuine per-row FK column on the feature, beside
+Severity_Label. No fixed-per-source shortcut; full Option B. NOT-NULL when severity
+is present.
+
+**Placement invariant across features AND plain table columns.** The rule is:
+*method goes wherever the severity value goes, on the same row; and a given
+severity should live in exactly ONE place per source.* Mechanism adapts to where
+severity already is:
+- Severity as a **Feature** (e.g. `Execution_Subject_Chart_Label` Chart_Label;
+  `Execution_Clinical_Records_Glaucoma_Severity` ICD-derived) → add the method as
+  a **feature column** (`Severity_Method` / `ICD_Severity_Method`) in the feature
+  definition — keeps the Execution provenance link.
+- Severity as a **plain FK column** directly on a table (the way
+  `Clinical_Records.ICD_Condition_Label` is a plain column) → add a **plain
+  `Severity_Method` FK column** beside it. Same co-located-pair principle.
+RESOLVED via live catalog (get_table www.eye-ai.org/eye-ai Clinical_Records,
+2026-07-01): `Clinical_Records` has NO severity column. Its columns are RID +
+system, Date_of_Encounter, LogMAR_VA, Visual_Acuity_Numerator, IOP,
+Refractive_Error, CCT, CDR, Gonioscopy, Condition_Display, Provider, Clinical_ID,
+**ICD_Condition_Label** (FK→Condition_Label), Powerform_Laterality (FK→Image_Side).
+So condition IS a raw column (ICD_Condition_Label) but SEVERITY is not — the only
+severity-ish data are raw numerics (IOP/CDR/CCT/…), the *inputs* to severity, not
+a grade. ICD-derived severity lives ONLY in the feature
+`Execution_Clinical_Records_Glaucoma_Severity`. CONSEQUENCE: do NOT add a severity-
+method column to `Clinical_Records` (no severity there to qualify).
+`Severity_Method` goes only on the two FEATURES where severity lives —
+`Execution_Subject_Chart_Label` (Severity_Method) and
+`Execution_Clinical_Records_Glaucoma_Severity` (ICD_Severity_Method) — both as
+feature columns. Cleanest case: severity is consistently a feature (never a raw
+column), so method is consistently a feature column; no feature-vs-column
+duplication risk, no Clinical_Records schema change. (Aside: ICD_Condition_Label
+FK→Condition_Label becomes FK→Glaucoma_Diagnosis under the §5.8 fold — migration
+covered by change 2/4.)
+
+**Verdict: B — all three lenses converge** (rare), because method IS a semantic
+attribute of the severity value, not a fact about the code. Keep BOTH provenance
+(Workflow = which code ran) and Severity_Method (which clinical basis) — they are
+complementary, not substitutes. Honest caveat for A: if method were *always* a
+deterministic function of the workflow it'd be redundant with provenance — but
+that assumption fails for human/ICD/configurable sources, and even when it holds
+the read-cost makes A worse. Implementation: `Severity_Method` = new domain vocab
+(`deriva_ml_create_vocabulary`); add `Severity_Method` FK column to the
+Chart_Label / Glaucoma_Severity features beside `Severity_Label`, NOT-NULL when
+severity present. NOT yet written to the doc (offered).
+
 **§5.8.3 and §6.0 diagnosis tables were duplicative — deduped.** (Prof. Carl.)
 The prior "defer §6.0 to §5.8.3" half-fix left BOTH tables present, and §6.0's
 still said `Condition_Label`. Resolved: §5.8.3 is now the SINGLE diagnosis table

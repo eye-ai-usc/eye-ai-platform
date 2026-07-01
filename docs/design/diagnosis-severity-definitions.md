@@ -23,6 +23,11 @@ The short version, for readers who want the outcome before the evidence:
   not stages, and should be retired from severity; `Unspecified/Indeterminate`
   should split into `Not Staged` vs `Indeterminate`; `Mild/Moderate/Severe` need
   real clinical criteria (§4, §6.1).
+- **Severity records its method of determination.** The grade stays
+  `Mild/Moderate/Severe`, and a parallel `Severity_Method` vocabulary (HPA, ICD
+  7th-char, …) records the staging basis, so each severity is the pair
+  `(Severity_Label, Severity_Method)` — resolving the "don't silently mix staging
+  systems" concern (§6.3).
 - **The diagnosis vocabulary is grounded in ICD.** Each term *is* an ICD-11
   concept (`GS`=`9C60`, `POAG`=`9C61.0`, `PACG`=`9C61.1`, `Unspecified`=`9C61.Z`)
   with the WHO URI as its identity. ICD-10 codes move **out of `Synonyms`** (where
@@ -662,10 +667,11 @@ release-version pin. Notes:
 ## 6. Naming cleanup proposals
 
 §6.0 gives the proposed **severity** descriptions and synonyms; §6.1–§6.2 give the
-**action** per term (keep / rename / split / retire) and rationale; §6.3–§6.4 cover
-severity-naming precision and the GAMMA band. **Diagnosis** term descriptions and
-synonyms are **not** here — they live in the §5.8.3 `Glaucoma_Diagnosis` table (the
-single source); §6.2 references it. The **ICD grounding** is §5.6.
+**action** per term (keep / rename / split / retire) and rationale; §6.3 adds the
+severity **method of determination** (`Severity_Method`); §6.4 covers the GAMMA
+band. **Diagnosis** term descriptions and synonyms are **not** here — they live in
+the §5.8.3 `Glaucoma_Diagnosis` table (the single source); §6.2 references it. The
+**ICD grounding** is §5.6.
 
 > **Provisional.** Everything below is for discussion; clinical criteria are
 > **TBD — clinical**, pending Dr. Bolo and Dr. Xu.
@@ -738,13 +744,67 @@ Siblings follow the same shape: `POAG` = `9C61.0`, `PACG` = `9C61.1`,
 are **not** in the row — they live in the `ICD10_Condition_Map` cross-walk table
 (§5.6, §5.7), not in columns on the term.
 
-### 6.3 Severity naming precision
+### 6.3 Severity method of determination — `Severity_Method` + the `(Severity, Method)` pair
 
-Per Dr. Xu's caution (§7), `Mild/Moderate/Severe` may be ambiguous without a named
-basis. Options to decide in the meeting: a neutral name vs. a basis-qualified name
-(e.g. `HPA_severity` vs `CMS_severity`). The vocabulary name should make the
-**basis of staging unambiguous** so two different staging systems are never
-silently mixed in one column.
+Per Dr. Xu's caution (§7), `Mild/Moderate/Severe` are ambiguous without a named
+**basis** — the same grade means different things under different staging systems,
+and two systems must never be silently mixed in one column. The resolution:
+**record the method of determination as a first-class value alongside the severity
+grade**, so each severity is the pair **`(Severity_Label, Severity_Method)`**.
+
+**Why a separate `Severity_Method` vocabulary (not a workflow type, not a
+compound term).** The method is a *semantic property of the severity value* — "this
+`Mild` was determined by HPA staging" — not a fact about which code ran and not
+part of the grade itself. So:
+
+- It is **not** encoded into the severity term (`HPA_Mild`, …) — that repeats the
+  pack-two-axes-into-one-label anti-pattern this document removes elsewhere (cf.
+  `Unspecified/Indeterminate`, `Normal or No dx`) and destroys the clean
+  three-value scale.
+- It is **not** left implicit in the producing `Workflow`/`Execution` — method
+  varies **per row** (a grader may use HPA on one subject, another system on the
+  next), applies to human chart-review values that have no workflow, and would
+  otherwise require a provenance walk to read. Provenance (which code ran) and
+  method (which clinical basis) are complementary and both kept.
+
+This keeps the `Severity_Label` scale exactly `Mild` / `Moderate` / `Severe` (plus
+the `Not Staged` / `Indeterminate` sentinels, §6.0) and adds the basis as a
+parallel controlled vocabulary.
+
+**Proposed `Severity_Method` vocabulary** (new domain vocab; standard shape,
+`Synonyms` human-only; codes are illustrative — confirm the set with Dr. Bolo /
+Dr. Xu):
+
+| Name | Description | `ID` / `URI` |
+|---|---|---|
+| `HPA` | Hodapp-Parrish-Anderson visual-field staging (VF mean-deviation thresholds + defect location/depth). | `EYEAI:HPA` / `eye-ai.org/id/severity-method/HPA` |
+| `ICD_7th_char` | Stage taken from the ICD-10 7th-character glaucoma-stage code (mild / moderate / severe / indeterminate). | `EYEAI:ICD_7th_char` / `…/severity-method/ICD_7th_char` |
+| `Structural` | Stage from structural criteria (RNFL thickness / CDR) rather than VF. *(confirm clinically)* | `EYEAI:Structural` / `…/severity-method/Structural` |
+| `Clinician_Global` | Clinician's overall global staging judgment, basis not otherwise specified. *(confirm clinically)* | `EYEAI:Clinician_Global` / `…/severity-method/Clinician_Global` |
+
+> The exact member set is **TBD — clinical** (Dr. Bolo / Dr. Xu); at minimum
+> `HPA` and `ICD_7th_char` are expected, since the two populated severity sources
+> today are chart-review and ICD-derived. Local vocabulary → EyeAI-routed URIs
+> (§5.6 convention).
+
+**Where the method value is recorded.** Severity lives **only in features**, never
+as a raw column — confirmed from the live catalog (`Clinical_Records` has *no*
+severity column; only condition (`ICD_Condition_Label`) and the raw measurements
+`IOP` / `CDR` / `CCT` / … that *feed* severity). So `Severity_Method` is added as a
+**feature column beside the severity column**, on each severity-bearing feature:
+
+| Feature (target) | Severity column | New method column |
+|---|---|---|
+| `Execution_Subject_Chart_Label` (Chart_Label on Subject) | `Severity_Label` | `Severity_Method` |
+| `Execution_Clinical_Records_Glaucoma_Severity` (ICD-derived) | `ICD_Severity_Label` | `ICD_Severity_Method` |
+
+Both go in as part of the feature definition (features are multi-column), so the
+method inherits the feature machinery — including the provenance link to the
+producing Execution. The method column is **NOT-NULL whenever the severity is a
+graded value** (`Mild`/`Moderate`/`Severe`); it is not-applicable for the
+`Not Staged` / `Indeterminate` sentinels.
+
+### 6.4 New term needed for the GAMMA mapping
 
 ### 6.4 New term needed for the GAMMA mapping
 
@@ -766,9 +826,10 @@ doesn't lock GAMMA/GLEAM out.
 2. **Separate but conditional?** Confirm severity should be a separate attribute
    that applies **only** when an established glaucoma condition is present
    (Professor Carl's question; strawman in §5.2).
-3. **Naming basis.** How to name severity so its meaning is unambiguous — neutral
-   name vs. basis-qualified (`HPA_severity` vs `CMS_severity` vs a neutral label)
-   — per Dr. Xu's caution about silently mixing staging systems.
+3. **Method of determination.** Resolved in **§6.3**: record the staging basis as
+   a separate `Severity_Method` vocabulary, so each severity is the pair
+   `(Severity_Label, Severity_Method)`. Remaining clinical input: **confirm the
+   `Severity_Method` member set** (HPA, ICD 7th-char, structural, … — §6.3).
 4. **Remove non-stage values?** Confirm retiring `GS` and `Normal or No dx` from
    `Severity_Label` (they are conditions, not stages).
 5. **Suspects and severity.** Does a glaucoma suspect (`GS`) have a severity at
@@ -791,23 +852,28 @@ executing these in the wrong order leaves half-built states.
 | **3** | **Create the ICD-10 cross-walk table** | New association table `ICD10_Eye → Glaucoma_Diagnosis` (`ICD10_Condition_Map`), **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§5.7) | `data-curation` |
 | **4** | **Migrate diagnosis data onto the folded vocab** | Repoint the `Chart_Label` feature rows and the image/visit/subject `*_Diagnosis` rows to the merged `Glaucoma_Diagnosis` terms; re-map cleaned severity values (counts in §6.1). **Data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
 | **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with a **join through the cross-walk**; **keep** the multi-code priority tie-break (it already exists, do not re-add). `insert_condition_label` unaffected. (§5.7) | `eye-ai-ml` |
+| **6** | **Add severity method of determination** | Create the `Severity_Method` vocabulary (§6.3), then add a method column to each severity-bearing feature — `Severity_Method` on `Execution_Subject_Chart_Label` and `ICD_Severity_Method` on `Execution_Clinical_Records_Glaucoma_Severity` — NOT-NULL when severity is graded. Records each severity as the `(Severity_Label, Severity_Method)` pair. | `data-curation` |
 
 ### 8.2 Dependency ordering
 
 ```
 ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
                      └──▶ (3) create cross-walk table ───────┴─▶ (5) update code ──▶ (4) migrate diagnosis data
-(1) Severity cleanup ── independent, can run in parallel
+(1) Severity cleanup ──┐
+(6) Severity_Method ───┴─ independent of the diagnosis fold; can run in parallel
 ```
 
 - The cross-walk (3) needs both endpoints ready: the folded `Glaucoma_Diagnosis` (2) **and** `ICD10_Eye` populated with exact codes.
 - The code change (5) needs the cross-walk (3) to exist.
 - The data migration (4) needs the folded vocabulary (2) and the cleaned severity (1).
-- **Repo split:** 1–4 are catalog/schema/data → `data-curation` (Feature Registration Request); 5 is code → `eye-ai-ml`, and its PR **cannot merge until 3 lands** in the catalog.
+- Severity work (1) and the method vocab/columns (6) are on the **severity axis**, independent of the diagnosis fold; (6) needs the `Severity_Method` member set confirmed (§8.3) and the severity features to exist (they do).
+- **Repo split:** 1–4 and 6 are catalog/schema/data → `data-curation` (Feature Registration Request); 5 is code → `eye-ai-ml`, and its PR **cannot merge until 3 lands** in the catalog.
 
 ### 8.3 Gates (must resolve before the clinical parts land)
 
 - **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §7 Q1).
+- **`Severity_Method` member set** — confirm the staging systems (HPA, ICD 7th-char,
+  structural, …) before creating the vocabulary in change 6 (§6.3, clinical).
 - **`9C61.2/.3/.4` disposition** — become `Glaucoma_Diagnosis` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§5.8, §7).
 - **`Normal`'s identifier** — ICD-Z encounter code (`Z01.00`) vs an EyeAI-local URI (§5.8.4).
 - **EyeAI URI scheme** for local terms (`Other`, `No Diagnosis`, maybe `Normal`) — §5.8.4.
@@ -843,6 +909,11 @@ ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
   §5.7), the data-driven replacement for the hard-coded `icd_mapping` in
   `compute_condition_label()`. Name is a placeholder; creation is a `data-curation`
   change.
+- **Proposed new object (not yet in catalog)**: `Severity_Method` — a domain
+  vocabulary of severity staging systems (HPA, ICD 7th-char, …), referenced by a
+  new method column on each severity-bearing feature so severity is recorded as
+  the `(Severity_Label, Severity_Method)` pair (§6.3). Creation is a
+  `data-curation` change.
 - **Library code referenced** (`eye-ai-ml/eye_ai/eye_ai.py`):
   `compute_condition_label()`, `insert_condition_label()`, `severity_analysis()`
   (laterality — see §5.5).
