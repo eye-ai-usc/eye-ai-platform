@@ -3,13 +3,38 @@
 - Status: **draft / strawman** — clinical definitions are **provisional**, to be finalized with Dr. Bolo and Dr. Xu
 - Date: 2026-06-30
 - Catalog: `www.eye-ai.org`, catalog `eye-ai`, schema `eye-ai`
-- Scope: clinical reference only — **this document does not modify the catalog** (see §8)
+- Scope: clinical reference only — **this document does not modify the catalog** (see §9)
 
 > **Provisional notice.** Every clinical definition, criterion, and threshold in
 > this document is a placeholder strawman written to be *argued with*, not a
 > settled standard. Nothing here is a clinical authority until reviewed and
 > ratified by Dr. Bolo and Dr. Xu.
 > Where a definition is unknown, it is marked **TBD — clinical**.
+
+## Summary of conclusions
+
+The short version, for readers who want the outcome before the evidence:
+
+- **Two axes, kept separate.** *Condition* (`Condition_Label`: which glaucoma, or
+  none) and *severity* (`Severity_Label`: stage of established disease). Severity
+  applies **only when a glaucoma condition is present** — "mild glaucoma" = a
+  glaucoma condition **+** a `Mild` severity, not a fused term (§5.1–§5.2).
+- **`Severity_Label` needs cleanup.** `GS` and `Normal or No dx` are *conditions*,
+  not stages, and should be retired from severity; `Unspecified/Indeterminate`
+  should split into `Not Staged` vs `Indeterminate`; `Mild/Moderate/Severe` need
+  real clinical criteria (§4, §6.1).
+- **`Condition_Label` is grounded in ICD.** Each term *is* an ICD-11 concept
+  (`GS`=`9C60`, `POAG`=`9C61.0`, `PACG`=`9C61.1`, `Unspecified`=`9C61.Z`) with the
+  WHO URI as its identity. ICD-10 codes move **out of `Synonyms`** (where they are
+  mis-stored today) into dedicated code columns and/or an `ICD10_Condition_Map`
+  cross-walk table (§5.6–§5.7).
+- **The hard-coded mapping goes away.** With the cross-walk in the catalog, the
+  `icd_mapping` dict in `eye-ai-ml`'s `compute_condition_label()` becomes a join;
+  only the multi-code priority tie-break remains in code (§5.7).
+- **Nothing here changes the catalog.** This is a clinical reference and design
+  proposal; all changes go through `data-curation`. The executable plan — five
+  changes, their ordering, and the open clinical questions — is in §8. Clinical
+  definitions are provisional pending Dr. Bolo and Dr. Xu.
 
 ## 1. Purpose & scope
 
@@ -36,7 +61,7 @@ What this document is **not**:
   one-time decision record. Decisions that *result* from this work (e.g. renaming
   a term, removing a value) may be captured separately once made.
 - It is **not** a mechanism for changing the catalog. Term/schema changes are
-  requested through the `data-curation` process (see §8).
+  requested through the `data-curation` process (see §9).
 
 ### Where this sits in the project (per the `eye-ai-platform` roadmap)
 
@@ -129,25 +154,11 @@ All 194,204 `Image_Diagnosis` rows resolve to exactly these three terms —
 194,204) — confirming the 2026-06-30 consolidation is complete with no legacy
 values or nulls remaining at the image level.
 
-> **Is there a semantic difference between `Condition_Label` and
-> `Glaucoma_Diagnosis`? Yes — they are deliberately different concepts, and the
-> team has confirmed keeping them as two separate vocabularies.**
->
-> - **`Condition_Label` = the clinical chart-review diagnosis** — the specific
->   glaucoma subtype (`POAG`, `PACG`, `GS`, `Normal or No dx`, `Unspecified
->   Glaucoma`, `Other`). **Fine-grained**; sourced from **clinical chart review /
->   ICD-coded encounters**; proposed to be **grounded in a curated glaucoma ICD
->   subset** with a real ICD-11 WHO URI identifier and ICD-10/ICD-11 code columns
->   (see §5.6).
-> - **`Glaucoma_Diagnosis` = the image-level diagnostic category** (`No Glaucoma` /
->   `Suspected Glaucoma` / `Unknown`). **Coarse**, closer to **referability**;
->   produced by **graders or models on fundus images**; **not ICD-based**; stays a
->   **separate local vocabulary**.
->
-> They differ on **granularity** (specific subtype vs. coarse category) and on
-> **source** (chart review vs. image grading), so they are not merged.
-> `Condition_Label` is the primary "condition" vocabulary; `Glaucoma_Diagnosis` is
-> the image-level signal that can feed into it.
+> **Note.** `Glaucoma_Diagnosis` (image-level: No / Suspected / Unknown, ~a
+> referability signal from graders/models) is deliberately kept **separate** from
+> `Condition_Label` (the fine-grained chart-review subtype). They differ on
+> granularity and source and are not merged; the full distinction and why it holds
+> is in §5.
 
 ### 2.4 Supporting vocabularies (distinct from diagnosis — do not conflate)
 
@@ -171,46 +182,6 @@ diagnosis itself. Listed so the clinical reader knows they exist and why they ar
   within the shared Chart_Label feature table."* Referenced by
   `Execution_Subject_Chart_Label.Grading_Condition`. Flagged here because it is a
   context axis the cleaned-up model may need to populate.
-
-### 2.5 Proposed term definitions (the description & synonym source of truth)
-
-> **Provisional strawman for the Wednesday meeting.** These tables are the
-> **single source** for each term's proposed **description** and **human-readable
-> synonyms** — §6 references them for wording rather than restating it (§6 covers
-> the *actions*, §5.6/§5.7 the *ICD grounding*). They sit beside the verified
-> current state in §2.1–§2.2 (unchanged above). Items marked **(confirm
-> clinically)** need Dr. Bolo / Dr. Xu sign-off; severity staging *thresholds* are
-> deliberately **TBD — clinical**.
-
-**`Condition_Label` — proposed descriptions & synonyms** (grounding in ICD is §5.6):
-
-| Term | Proposed description | Proposed synonyms (human-readable) |
-|---|---|---|
-| `GS` | Glaucoma suspect — findings suspicious for glaucoma (e.g. ocular hypertension / elevated IOP, suspicious optic disc, anatomical narrow angle) **without** established glaucomatous damage. *(confirm clinically)* | "Glaucoma Suspect" |
-| `POAG` | Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an **open** anterior chamber angle and no secondary cause. *(confirm clinically)* | "Primary Open-Angle Glaucoma" |
-| `PACG` | Primary angle-closure glaucoma — glaucoma associated with appositional/synechial **closure** of the anterior chamber angle. *(confirm clinically)* | "Primary Angle-Closure Glaucoma" |
-| `Unspecified Glaucoma` | Glaucoma is present but the **subtype is not specified** (e.g. LAC patient-level chart review without a subtype). *(confirm clinically)* | "Glaucoma, unspecified"; "Glaucoma NOS" |
-| `Normal or No dx` | **No glaucoma diagnosis** — no signs of glaucoma, or no diagnosis recorded. *(confirm whether to split "Normal/no disease" from "not assessed / no dx")* | "No Glaucoma"; "Normal" |
-| `Other` | **Catch-all** for non-glaucoma conditions — used when the ICD-derived condition falls **outside** the curated glaucoma subset (§5.6). | "Non-glaucoma"; "Other condition" |
-
-**`Severity_Label` — proposed descriptions & synonyms.** Applies **only to
-established glaucoma** (§5.1–§5.2). `GS` and `Normal or No dx` are **proposed for
-removal** from `Severity_Label` (they are conditions, not stages — see §4, §6.1).
-
-| Term | Proposed action | Proposed description | Proposed synonyms |
-|---|---|---|---|
-| `Mild` | Keep | Mild-stage glaucomatous damage. **Criteria TBD — clinical** (e.g. VF MD threshold / RNFL / CDR). | "Early" |
-| `Moderate` | Keep | Moderate-stage glaucomatous damage. **Criteria TBD — clinical**. | — |
-| `Severe` | Keep | Severe / advanced-stage glaucomatous damage. **Criteria TBD — clinical**. | "Advanced" |
-| `Unspecified/Indeterminate` → `Not Staged` (+ optional `Indeterminate`) | Split & rename | Separate *"glaucoma present, stage **not recorded**"* (`Not Staged`) from *"stage genuinely **indeterminate**"* (`Indeterminate`); removes the slash / embedded synonym. | "Stage unspecified" (Not Staged); "Indeterminate stage" (Indeterminate) |
-| `GS` | **Remove from severity** | Not a stage — a condition; represent via `Condition_Label`. | — |
-| `Normal or No dx` | **Remove from severity** | Not a stage — absence of disease; represent via `Condition_Label`. | — |
-
-> **Note (informational).** The proposed stage set `Mild` / `Moderate` / `Severe` /
-> `Indeterminate` mirrors the **ICD-10 7th-character glaucoma staging** convention
-> (mild / moderate / severe / indeterminate stage), per the AAO guide (§8) — so the
-> severity vocabulary aligns with how stage is already coded in the source data.
-> The clinical *thresholds* defining each stage remain **TBD — Dr. Bolo / Dr. Xu**.
 
 ## 3. How the terms are actually used today (the evidence)
 
@@ -379,8 +350,7 @@ Working at the category level keeps the ICD-10 ↔ ICD-11 crosswalk effectively
 **1-to-1 and lossless**. *Rationale (Carl):* a small curated subset keeps the
 vocabulary tables small and the crosswalk easy to maintain and audit. (Scale: the
 live data holds ~27,962 ICD-coded rows / 1,209 distinct codes, of which only the
-~134 H40 glaucoma codes — at category level just `H40.0/.1/.2` — matter here;
-see §3.)
+~134 H40 glaucoma codes — at category level just `H40.0/.1/.2` — matter here.)
 
 **The ICD-10 ↔ ICD-11 mapping (the canonical table — referenced throughout).**
 
@@ -442,7 +412,7 @@ exact-code table (b) drives computation. §5.7 describes (b).
 > (2) that `ICD10_Eye` is structurally a controlled vocabulary and the name of the
 > existing `Clinical_Records ⇄ ICD10_Eye` association table (§5.7) — the deriva
 > MCP surface was not connected when this was written. Primary clinical reference:
-> the **AAO Glaucoma ICD-10 Quick Reference Guide** (§8).
+> the **AAO Glaucoma ICD-10 Quick Reference Guide** (§9).
 
 ### 5.7 Implementation mechanism (the "how" — for `eye-ai-ml` / `data-curation`)
 
@@ -521,35 +491,69 @@ priority step (or is removed if that moves elsewhere). `insert_condition_label()
 `Condition_Label`, *not* a hop off the Subject — the chart-review path references
 the term directly, the ICD-10 path reaches it through the cross-walk. **Retiring
 the dict is an `eye-ai-ml` change**, contingent on `ICD10_Condition_Map` existing
-first (§9).
+first (§8).
 
-## 6. Naming cleanup proposals (actions per term)
+## 6. Naming cleanup proposals
 
-This section states the **action** for each term — keep / rename / split / retire —
-and the rationale. The proposed **descriptions and synonyms** live in §2.5 (the
-term-definition tables); the **ICD grounding** is §5.6. §6 does not restate those;
-it says what changes and why.
+§6.0 gives the **proposed descriptions and synonyms** for every term; §6.1–§6.2
+give the **action** per term (keep / rename / split / retire) and the rationale;
+§6.3–§6.4 cover severity-naming precision and the GAMMA band. The **ICD grounding**
+is §5.6. §6.1–§6.2 reference §6.0 for wording rather than restating it.
 
-> **Provisional.** Actions below are for discussion; clinical criteria are
+> **Provisional.** Everything below is for discussion; clinical criteria are
 > **TBD — clinical**, pending Dr. Bolo and Dr. Xu.
 
-### 6.1 `Severity_Label`
+### 6.0 Proposed term definitions (descriptions & synonyms — source of truth)
+
+The **single source** for each term's proposed **description** and
+**human-readable synonyms**. Items marked **(confirm clinically)** need Dr. Bolo /
+Dr. Xu sign-off; severity staging *thresholds* are deliberately **TBD — clinical**.
+Current catalog state is §2.1–§2.2 (unchanged); ICD grounding is §5.6.
+
+**`Condition_Label` — proposed descriptions & synonyms:**
+
+| Term | Proposed description | Proposed synonyms (human-readable) |
+|---|---|---|
+| `GS` | Glaucoma suspect — findings suspicious for glaucoma (e.g. ocular hypertension / elevated IOP, suspicious optic disc, anatomical narrow angle) **without** established glaucomatous damage. *(confirm clinically)* | "Glaucoma Suspect" |
+| `POAG` | Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an **open** anterior chamber angle and no secondary cause. *(confirm clinically)* | "Primary Open-Angle Glaucoma" |
+| `PACG` | Primary angle-closure glaucoma — glaucoma associated with appositional/synechial **closure** of the anterior chamber angle. *(confirm clinically)* | "Primary Angle-Closure Glaucoma" |
+| `Unspecified Glaucoma` | Glaucoma is present but the **subtype is not specified** (e.g. LAC patient-level chart review without a subtype). *(confirm clinically)* | "Glaucoma, unspecified"; "Glaucoma NOS" |
+| `Normal or No dx` | **No glaucoma diagnosis** — no signs of glaucoma, or no diagnosis recorded. *(confirm whether to split "Normal/no disease" from "not assessed / no dx")* | "No Glaucoma"; "Normal" |
+| `Other` | **Catch-all** for non-glaucoma conditions — used when the ICD-derived condition falls **outside** the curated glaucoma subset (§5.6). | "Non-glaucoma"; "Other condition" |
+
+**`Severity_Label` — proposed descriptions & synonyms.** Applies **only to
+established glaucoma** (§5.1–§5.2). `GS` and `Normal or No dx` are proposed for
+removal (they are conditions, not stages — §4, §6.1).
+
+| Term | Proposed description | Proposed synonyms |
+|---|---|---|
+| `Mild` | Mild-stage glaucomatous damage. **Criteria TBD — clinical** (e.g. VF MD / RNFL / CDR). | "Early" |
+| `Moderate` | Moderate-stage glaucomatous damage. **Criteria TBD — clinical**. | — |
+| `Severe` | Severe / advanced-stage glaucomatous damage. **Criteria TBD — clinical**. | "Advanced" |
+| `Not Staged` (+ optional `Indeterminate`) | Separate *"glaucoma present, stage **not recorded**"* from *"stage genuinely **indeterminate**"*; replaces `Unspecified/Indeterminate` (removes the slash). | "Stage unspecified"; "Indeterminate stage" |
+
+> **Note.** The stage set `Mild` / `Moderate` / `Severe` / `Indeterminate` mirrors
+> the **ICD-10 7th-character glaucoma staging** convention, per the AAO guide (§9)
+> — so severity aligns with how stage is already coded in the source data.
+> Thresholds remain **TBD — Dr. Bolo / Dr. Xu**.
+
+### 6.1 `Severity_Label` — actions
 
 | Current term | Action | Rationale |
 |---|---|---|
-| `Mild` / `Moderate` / `Severe` | **Keep**, add real criteria | Genuine stages; today's descriptions are circular (§4.3). Add reproducible criteria — **TBD — clinical** (VF MD / RNFL / CDR). |
-| `Unspecified/Indeterminate` (`4-YFWW`) | **Split & rename** → `Not Staged` (+ optional `Indeterminate`) | One label conflates "stage not recorded" vs "genuinely indeterminate", and the slash packs a synonym (§4.2). |
-| `GS` (`4-YFWY`) | **Retire from severity** | A condition, not a stage — represent via `Condition_Label` (§4.1). Requires data migration (below). |
-| `Normal or No dx` (`5-29BJ`) | **Retire from severity** | Absence of disease, not a stage — represent via `Condition_Label` (§4.1). Requires data migration (below). |
+| `Mild` / `Moderate` / `Severe` | **Keep**, add real criteria | Genuine stages; today's descriptions are circular (§4 item 3). Add reproducible criteria — **TBD — clinical** (VF MD / RNFL / CDR). |
+| `Unspecified/Indeterminate` (`4-YFWW`) | **Split & rename** → `Not Staged` (+ optional `Indeterminate`) | One label conflates "stage not recorded" vs "genuinely indeterminate", and the slash packs a synonym (§4 item 2). |
+| `GS` (`4-YFWY`) | **Retire from severity** | A condition, not a stage — represent via `Condition_Label` (§4 item 1). Requires data migration (below). |
+| `Normal or No dx` (`5-29BJ`) | **Retire from severity** | Absence of disease, not a stage — represent via `Condition_Label` (§4 item 1). Requires data migration (below). |
 
-(Proposed descriptions & synonyms for the kept terms: §2.5.)
+(Proposed descriptions & synonyms for the kept terms: §6.0.)
 
-> **Migration note (data migration — §9 change 4, not this doc):** retiring
+> **Migration note (data migration — §8 change 4, not this doc):** retiring
 > severity `GS` and `Normal or No dx` requires re-mapping existing `Chart_Label`
 > rows (698 `GS`/`GS`, 287 `GS`/`Unspecified`, 61+27 Normal rows; §3) so the
 > condition is preserved and severity becomes not-applicable / not-staged.
 
-### 6.2 `Condition_Label`
+### 6.2 `Condition_Label` — actions
 
 | Current term | Action | Rationale |
 |---|---|---|
@@ -561,7 +565,7 @@ it says what changes and why.
 **Worked example — a grounded `Condition_Label` row (`GS`).** Illustrates the
 §5.6 model concretely: `Name` = display label, `ID`/`URI` = the ICD-11 identity
 (lookup by code), `Synonyms` = WHO index terms (lookup by name). Description and
-synonyms are provisional (§2.5); the `9C60` code is verified (§5.6 status).
+synonyms are provisional (§6.0); the `9C60` code is verified (§5.6 status).
 
 | Column | Value |
 |---|---|
@@ -614,7 +618,45 @@ doesn't lock GAMMA/GLEAM out.
    the GLEAM and GAMMA mappings land cleanly — notably GAMMA's `Moderate-to-Severe`
    band (§6.4) — without distorting the canonical clinical definitions?
 
-## 8. References / provenance
+## 8. Change plan (consolidated)
+
+The actionable synthesis of §§5–7. **Dependency ordering and repo split matter** —
+executing these in the wrong order leaves half-built states.
+
+### 8.1 The changes
+
+| # | Change | What it entails | Where |
+|---|---|---|---|
+| **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; add real clinical criteria to Mild/Moderate/Severe. (§6.1) | `data-curation` |
+| **2** | **Re-anchor `Condition_Label` on ICD-11** | *Not a new table — it exists (§2.1).* Add ICD-11 `ID`/`URI` to each term (`GS=9C60`, `POAG=9C61.0`, `PACG=9C61.1`, `Unspecified Glaucoma=9C61.Z`); remove `H40.*` codes from `Synonyms`, replace with WHO index terms; reconcile member set to ICD-11 (decide `9C61.2/.3/.4`). (§5.6, §6.2) | `data-curation` |
+| **3** | **Create `ICD10_Condition_Map`** | New association table `ICD10_Eye → Condition_Label`, **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§5.7) | `data-curation` |
+| **4** | **Migrate `Chart_Label` data** | Re-map existing `Execution_Subject_Chart_Label` rows to the cleaned severity + condition values (counts in §6.1). This is **data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
+| **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with a **join through `ICD10_Condition_Map`**; **keep** the multi-code priority tie-break (it already exists, do not re-add). `insert_condition_label` unaffected. (§5.7) | `eye-ai-ml` |
+
+### 8.2 Dependency ordering
+
+```
+ICD10_Eye enumerated ──▶ (2) re-anchor Condition_Label ──┐
+                     └──▶ (3) create ICD10_Condition_Map ─┴─▶ (5) update code ──▶ (4) migrate Chart_Label data
+(1) Severity cleanup ── independent, can run in parallel
+```
+
+- The map (3) needs both endpoints ready: `Condition_Label` re-anchored (2) **and** `ICD10_Eye` populated with exact codes.
+- The code change (5) needs the map (3) to exist.
+- The data migration (4) needs the cleaned vocabularies (1, 2).
+- **Repo split:** 1–4 are catalog/schema/data → `data-curation` (Feature Registration Request); 5 is code → `eye-ai-ml`, and its PR **cannot merge until 3 lands** in the catalog.
+
+### 8.3 Gates (must resolve before the clinical parts land)
+
+- **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §7 Q1).
+- **`9C61.2/.3/.4` disposition** — become `Condition_Label` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§6.2, §7).
+- **GAMMA `Moderate-to-Severe` band** (§6.4) — may add a `Severity_Label` member in change 1.
+- **Catalog verification** (deriva MCP was not connected when this was written):
+  confirm `ICD10_Eye` is structurally a controlled vocabulary, and name the
+  existing `Clinical_Records ⇄ ICD10_Eye` association table (the input to
+  `compute_condition_label`).
+
+## 9. References / provenance
 
 - This document consolidates the read-only investigation from the 2026-06-30
   review of the diagnosis/condition/severity landscape.
@@ -650,44 +692,6 @@ doesn't lock GAMMA/GLEAM out.
   requested through **`data-curation`** via its *"Feature Registration Request"*
   issue template. This document is the clinical rationale that such requests cite;
   it does not itself mutate the catalog.
-
-## 9. Change plan (consolidated)
-
-The actionable synthesis of §§5–7. **Dependency ordering and repo split matter** —
-executing these in the wrong order leaves half-built states.
-
-### 9.1 The changes
-
-| # | Change | What it entails | Where |
-|---|---|---|---|
-| **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; add real clinical criteria to Mild/Moderate/Severe. (§6.1) | `data-curation` |
-| **2** | **Re-anchor `Condition_Label` on ICD-11** | *Not a new table — it exists (§2.1).* Add ICD-11 `ID`/`URI` to each term (`GS=9C60`, `POAG=9C61.0`, `PACG=9C61.1`, `Unspecified Glaucoma=9C61.Z`); remove `H40.*` codes from `Synonyms`, replace with WHO index terms; reconcile member set to ICD-11 (decide `9C61.2/.3/.4`). (§5.6, §6.2) | `data-curation` |
-| **3** | **Create `ICD10_Condition_Map`** | New association table `ICD10_Eye → Condition_Label`, **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§5.7) | `data-curation` |
-| **4** | **Migrate `Chart_Label` data** | Re-map existing `Execution_Subject_Chart_Label` rows to the cleaned severity + condition values (counts in §6.1). This is **data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
-| **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with the **join** (step 1 → the map); **keep** the priority tie-break (step 2 — it already exists, do not re-add). `insert_condition_label` unaffected. (§5.7) | `eye-ai-ml` |
-
-### 9.2 Dependency ordering
-
-```
-ICD10_Eye enumerated ──▶ (2) re-anchor Condition_Label ──┐
-                     └──▶ (3) create ICD10_Condition_Map ─┴─▶ (5) update code ──▶ (4) migrate Chart_Label data
-(1) Severity cleanup ── independent, can run in parallel
-```
-
-- The map (3) needs both endpoints ready: `Condition_Label` re-anchored (2) **and** `ICD10_Eye` populated with exact codes.
-- The code change (5) needs the map (3) to exist.
-- The data migration (4) needs the cleaned vocabularies (1, 2).
-- **Repo split:** 1–4 are catalog/schema/data → `data-curation` (Feature Registration Request); 5 is code → `eye-ai-ml`, and its PR **cannot merge until 3 lands** in the catalog.
-
-### 9.3 Gates (must resolve before the clinical parts land)
-
-- **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §7 Q1).
-- **`9C61.2/.3/.4` disposition** — become `Condition_Label` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§6.2, §7).
-- **GAMMA `Moderate-to-Severe` band** (§6.4) — may add a `Severity_Label` member in change 1.
-- **Catalog verification** (deriva MCP was not connected when this was written):
-  confirm `ICD10_Eye` is structurally a controlled vocabulary, and name the
-  existing `Clinical_Records ⇄ ICD10_Eye` association table (the input to
-  `compute_condition_label`).
 
 ---
 
