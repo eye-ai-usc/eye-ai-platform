@@ -332,6 +332,19 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**Doc restructured (2026-07-01) — proposal-first, reference to appendices.** (Prof.
+Carl.) The doc had grown table-heavy and buried the proposal behind the current-
+state inventory. New arc: §1 Summary (what we're doing) → §2 Why/limitations
+(brief, distilled from the old §4 problems) → §3 Proposed design (narrative core:
+axes, fold, ICD grounding, severity cleanup, method) → §4 Change plan → §5 Open
+questions. Reference material moved to appendices: **App. A** = current-state
+verbatim inventory + usage counts (old §2/§3); **App. B** = full proposed vocab
+tables (B.1 Glaucoma_Diagnosis, B.2 Severity_Label, B.3 Severity_Method); **App. C**
+= references (old §9). Load-bearing decision tables (ICD-10↔ICD-11 crosswalk, the
+3-axis table, the change plan) kept INLINE per Prof. Carl's choice; only
+reference/sample tables moved. Also fixed a duplicate §6.4 GAMMA heading. 942→607
+lines, no content lost, all cross-refs renumbered and verified.
+
 **WRITTEN TO DOC (2026-07-01):** §6.3 rewritten from the open "naming precision"
 question into the `Severity_Method` decision (with a sample vocabulary table +
 the two feature method-columns); §7 Q3 resolved → points to §6.3; §8 change plan

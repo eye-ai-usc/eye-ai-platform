@@ -3,102 +3,403 @@
 - Status: **draft / strawman** — clinical definitions are **provisional**, to be finalized with Dr. Bolo and Dr. Xu
 - Date: 2026-06-30
 - Catalog: `www.eye-ai.org`, catalog `eye-ai`, schema `eye-ai`
-- Scope: clinical reference only — **this document does not modify the catalog** (see §9)
+- Scope: clinical reference and design proposal only — **this document does not modify the catalog** (see Appendix C)
 
 > **Provisional notice.** Every clinical definition, criterion, and threshold in
 > this document is a placeholder strawman written to be *argued with*, not a
 > settled standard. Nothing here is a clinical authority until reviewed and
-> ratified by Dr. Bolo and Dr. Xu.
-> Where a definition is unknown, it is marked **TBD — clinical**.
+> ratified by Dr. Bolo and Dr. Xu. Where a definition is unknown, it is marked
+> **TBD — clinical**.
 
-## Summary of conclusions
+**How to read this document.** The body is the narrative: **§1** what we're
+doing, **§2** why (the limits of the current vocabularies), **§3** the proposed
+design, **§4** the change plan, **§5** the open clinical questions. The reference
+material — the *current* catalog contents and the *proposed* vocabulary tables in
+full — lives in the appendices:
 
-The short version, for readers who want the outcome before the evidence:
+- **Appendix A** — current-state inventory (every term, verbatim from the catalog) + how the terms are used today.
+- **Appendix B** — the proposed vocabulary tables in full (`Glaucoma_Diagnosis`, `Severity_Label`, `Severity_Method`).
+- **Appendix C** — references / provenance / process.
 
-- **Two axes, kept separate.** *Condition* (`Condition_Label`: which glaucoma, or
-  none) and *severity* (`Severity_Label`: stage of established disease). Severity
-  applies **only when a glaucoma condition is present** — "mild glaucoma" = a
-  glaucoma condition **+** a `Mild` severity, not a fused term (§5.1–§5.2).
-- **`Severity_Label` needs cleanup.** `GS` and `Normal or No dx` are *conditions*,
-  not stages, and should be retired from severity; `Unspecified/Indeterminate`
-  should split into `Not Staged` vs `Indeterminate`; `Mild/Moderate/Severe` need
-  real clinical criteria (§4, §6.1).
+---
+
+## 1. Summary — what we are doing
+
+This document defines the **diagnosis** and **severity** vocabularies used to
+label glaucoma in the Eye-AI catalog, and proposes a cleanup. In one screen:
+
+- **Diagnosis and severity are two separate axes.** *Diagnosis* = which glaucoma,
+  or none. *Severity* = stage of established disease (`Mild`/`Moderate`/`Severe`),
+  applicable **only when a glaucoma condition is present** — "mild glaucoma" = a
+  glaucoma diagnosis **+** a `Mild` severity, not one fused term (§3.1).
+- **One shared diagnosis vocabulary, ICD-grounded.** Fold today's two overlapping
+  diagnosis vocabularies (`Condition_Label` + the image/visit/subject
+  `Glaucoma_Diagnosis`) into **one vocabulary named `Glaucoma_Diagnosis`**, so a
+  model's "Glaucoma" and a clinician's "Glaucoma" are the *same* term (direct
+  model-vs-clinical comparison). Each term **is** an ICD-11 concept (`GS`=`9C60`,
+  `POAG`=`9C61.0`, `PACG`=`9C61.1`, `Unspecified`=`9C61.Z`) with the WHO URI as its
+  identity; legacy ICD-10 codes move out of `Synonyms` into a cross-walk table
+  (§3.2–§3.4). Full table: **Appendix B.1**.
+- **Three axes separated.** *Diagnosis* (`Glaucoma_Diagnosis`), *gradability*
+  (`Ungradable` — could the image be assessed?), and *status* (`Diagnosis_Status`
+  — review state) are distinct questions and get distinct homes (§3.3).
+- **`Severity_Label` cleaned up.** Retire the values that are really conditions
+  (`GS`, `Normal or No dx`); split the `Unspecified/Indeterminate` catch-all; give
+  `Mild`/`Moderate`/`Severe` real clinical criteria (§3.5). Full table:
+  **Appendix B.2**.
 - **Severity records its method of determination.** The grade stays
-  `Mild/Moderate/Severe`, and a parallel `Severity_Method` vocabulary (HPA, ICD
+  `Mild/Moderate/Severe`; a parallel `Severity_Method` vocabulary (HPA, ICD
   7th-char, …) records the staging basis, so each severity is the pair
-  `(Severity_Label, Severity_Method)` — resolving the "don't silently mix staging
-  systems" concern (§6.3).
-- **The diagnosis vocabulary is grounded in ICD.** Each term *is* an ICD-11
-  concept (`GS`=`9C60`, `POAG`=`9C61.0`, `PACG`=`9C61.1`, `Unspecified`=`9C61.Z`)
-  with the WHO URI as its identity. ICD-10 codes move **out of `Synonyms`** (where
-  they are mis-stored today) into an `ICD10_Condition_Map` cross-walk table — no
-  custom columns are added to the vocabulary (§5.6–§5.7).
-- **One shared diagnosis vocabulary (proposed fold).** `Condition_Label` and the
-  current 3-term image/visit/subject `Glaucoma_Diagnosis` fold into **one
-  vocabulary named `Glaucoma_Diagnosis`**, so a model's "Glaucoma" and a
-  clinician's "Glaucoma" are
-  the *same* term (direct model-vs-clinical comparison); provenance is carried by
-  `Diagnosis_Tag`, not by a separate vocabulary. Three axes are separated —
-  **diagnosis** (this vocab, incl. `No Diagnosis` as a local term), **gradability**
-  (`Ungradable`), **status** (`Diagnosis_Status`). Final table in §5.8.3.
-- **The hard-coded mapping goes away.** With the cross-walk in the catalog, the
-  `icd_mapping` dict in `eye-ai-ml`'s `compute_condition_label()` becomes a join;
-  only the multi-code priority tie-break remains in code (§5.7).
-- **Nothing here changes the catalog.** This is a clinical reference and design
-  proposal; all changes go through `data-curation`. The executable plan — five
-  changes, their ordering, and the open clinical questions — is in §8. Clinical
+  `(Severity_Label, Severity_Method)` (§3.6). Full table: **Appendix B.3**.
+- **The hard-coded mapping goes away.** With the ICD-10 cross-walk in the catalog,
+  the `icd_mapping` dict in `eye-ai-ml`'s `compute_condition_label()` becomes a
+  join; only the multi-code priority tie-break stays in code (§3.4).
+- **Nothing here changes the catalog.** All changes go through `data-curation`; the
+  executable plan (six changes, ordering, open questions) is §4. Clinical
   definitions are provisional pending Dr. Bolo and Dr. Xu.
 
-## 1. Purpose & scope
+### Where this sits in the project
 
-This document defines the **Condition (diagnosis)** and **Severity** vocabularies
-used to label glaucoma in the Eye-AI catalog — their **clinical meaning** and
-**intended use**, stated **independently of any algorithm, model, or grading
-tool**. A term means what a clinician means by it; whether a CNN, an ICD-derived
-rule, or a human grader produced a given label does not change the definition of
-the label itself.
+The `eye-ai-platform` repository is the project's front door. Per its layering:
+schema/vocabulary **changes** are executed in **`data-curation`** (via its
+*"Feature Registration Request"* template); the **`eye-ai-ml`** library reads and
+writes these vocabularies (`compute_condition_label()` /
+`insert_condition_label()`); **this document** is the clinical reference for what
+the terms mean — it informs the `data-curation` requests, it does not perform them.
 
-What this document is:
+A guiding principle throughout: **define terms clinically, not by how the label
+was produced.** A term's definition describes the eye, never the mechanism. The
+same term is written by a human chart reviewer and by an automated ICD rule, and
+must mean the same thing both ways — so "Moderate POAG" is one clinical concept
+regardless of who or what produced it.
 
-- The **clinical reference** for the members of `Condition_Label` and
-  `Severity_Label` (and the related `Glaucoma_Diagnosis` diagnostic vocabulary,
-  applied at image/visit/subject levels).
-- A **strawman conceptual model** for how *condition* and *severity* relate, to be
-  refined in the upcoming meeting with Dr. Bolo and Dr. Xu.
-- A **record of the problems** in the current vocabularies, grounded in the actual
-  catalog data, so the cleanup is driven by evidence rather than opinion.
+> **Note — two senses of "severity."** This document concerns `Severity_Label`
+> (the clinical *stage* of disease). It is unrelated to
+> `EyeAI.severity_analysis()` in `eye-ai-ml`, which computes *which eye is worse*
+> (laterality) from RNFL/HVF/CDR and flags `Severity_Mismatch`. Never conflate the
+> two.
 
-What this document is **not**:
+## 2. Why — limitations of the current state
 
-- It is **not** an algorithm spec, a model card, or a grading protocol.
-- It is **not** a numbered ADR — this is an **evolving clinical reference**, not a
-  one-time decision record. Decisions that *result* from this work (e.g. renaming
-  a term, removing a value) may be captured separately once made.
-- It is **not** a mechanism for changing the catalog. Term/schema changes are
-  requested through the `data-curation` process (see §9).
+The cleanup is driven by concrete problems in today's vocabularies, grounded in
+the actual catalog data (full inventory and usage counts in **Appendix A**):
 
-### Where this sits in the project (per the `eye-ai-platform` roadmap)
+1. **Two overlapping diagnosis vocabularies.** `Condition_Label` (fine
+   chart-review subtypes) and `Glaucoma_Diagnosis` (coarse No/Suspected/Unknown,
+   used at image/visit/subject levels) both describe glaucoma status and overlap
+   at the subject level. A model's label and a clinician's label live in
+   *different* vocabularies, so comparing them requires a cross-vocabulary mapping
+   instead of a value comparison — the cost lands on the platform's central query.
 
-The `eye-ai-platform` repository is the project's front door and repository index.
-Per its layering:
+2. **ICD codes are mis-stored in `Synonyms`.** The `Synonyms` field of `GS`,
+   `POAG`, `PACG` holds ICD-10 code patterns (`H40.*`), not human-readable names —
+   a machine lookup key masquerading as alternate names, and the key that
+   `compute_condition_label()`'s hard-coded `icd_mapping` reverses. The terms have
+   no proper external identifier.
 
-- **Schema and vocabulary *changes*** (adding/renaming terms, altering tables) are
-  tracked and executed in **`data-curation`** — the catalog-integrity repo. Its
-  *"Feature Registration Request"* issue template is the front door for requesting
-  a catalog change.
-- The **`eye-ai-ml`** library (the `EyeAI` domain class) **reads and writes** these
-  vocabularies — e.g. `compute_condition_label()` / `insert_condition_label()` map
-  ICD-10 codes into `Condition_Label` values.
-- **This document** (in `eye-ai-platform/docs/design/`) is the **clinical reference
-  for what the terms mean.** It informs the `data-curation` requests; it does not
-  perform them.
+3. **`Severity_Label` contains values that are really conditions, not stages.**
+   `GS` and `Normal or No dx` duplicate `Condition_Label` members; the data proves
+   it (698 `GS`/`GS` rows, 27 `Normal`/`Normal` rows where severity just echoes the
+   condition). True severity only meaningfully applies to established glaucoma —
+   grading a "suspect" or "normal" eye on a Mild/Moderate/Severe scale is a
+   category error.
 
-## 2. Current state — every term, exactly as in the catalog
+4. **`Unspecified/Indeterminate` packs two ideas into one label** ("indeterminate
+   stage" vs "stage not recorded") via a slash, and is the dumping ground for any
+   condition with no graded stage (≈900 rows).
 
-Snapshot taken 2026-06-30 from `www.eye-ai.org` / `eye-ai`. Descriptions and
-synonyms are reproduced verbatim; commentary is set off as notes.
+5. **Severity descriptions are circular and carry no criteria.** "Mild stage",
+   "Moderate stage", "Severe stage" restate the name — nothing a grader could
+   apply reproducibly, and no record of *which staging system* produced a grade.
 
-### 2.1 `Condition_Label` — 6 terms
+6. **`Normal or No dx` fuses two opposite states.** "Normal" (assessed, healthy)
+   and "No diagnosis" (no determination made) are opposites in information content,
+   welded into one term — you cannot tell screened-healthy from never-screened.
+
+## 3. Proposed design
+
+> **Provisional strawman** to be confirmed/revised with Dr. Bolo and Dr. Xu.
+
+### 3.1 Two axes: diagnosis and severity, separate but conditional
+
+- **Diagnosis** = which glaucoma, or none — `GS`, `POAG`, `PACG`,
+  `Unspecified Glaucoma`, `Normal`, `Other`, `No Diagnosis`.
+- **Severity** = stage of established glaucomatous disease —
+  `Mild`/`Moderate`/`Severe` — **applicable only when a glaucomatous condition is
+  present.**
+
+Severity is a *further attribute of an established glaucoma diagnosis*, not an
+independent label: you first have a diagnosis; severity refines it **only** when
+that diagnosis is glaucoma (POAG/PACG, possibly `Unspecified Glaucoma`). This
+answers **Professor Carl's question** — *is there such a thing as "mild glaucoma"?*
+— with **separate but conditional**: "mild glaucoma" = diagnosis `POAG` (or `PACG`)
++ severity `Mild`; severity is not baked into the diagnosis term. Corollaries
+(pending clinical confirmation): a suspect (`GS`) and a normal eye have no severity
+(not-applicable).
+
+**Future enforcement (to discuss).** The schema *could* enforce "severity requires
+a glaucoma condition" (severity non-null only for glaucomatous diagnoses) via a
+write-time constraint on the features — a `data-curation` change, noted here as
+intent.
+
+### 3.2 One shared diagnosis vocabulary: `Glaucoma_Diagnosis`
+
+> **⚠️ Proposed change — pending clinical confirmation (Dr. Xu & Dr. Bolo).**
+> This fold **reverses** an earlier team-noted position to keep the two
+> vocabularies separate, so it needs **explicit sign-off before implementation.**
+> In scope: merge the two diagnosis vocabularies into one. Unchanged / not in
+> question: the ICD-11 grounding + cross-walk (§3.4), and severity as its own axis.
+
+**Fold `Condition_Label` and the current `Glaucoma_Diagnosis` into one
+vocabulary**, named **`Glaucoma_Diagnosis`**, referenced by the image / visit /
+subject / chart tables alike. The driving requirement: **a model's "Glaucoma" and
+a clinician's "Glaucoma" must be the *same* term**, so that model-vs-ground-truth
+is a direct value comparison (`prediction == label`), not a cross-vocabulary
+mapping. Storing the same concept in two vocabularies is denormalization of the
+concept.
+
+The distinction "a model asserted it" vs "a clinician asserted it" is **provenance
+of the assertion** — carried by `Diagnosis_Tag` (`CNN_Prediction`,
+`Expert_Consensus`, …), **not** by which vocabulary the value comes from.
+Provenance is an attribute of the *assertion*, not of the *concept*.
+
+The merged vocabulary keeps the name `Glaucoma_Diagnosis` (it *is* the glaucoma
+diagnosis, and that name is already consumed at all three levels); the old 3-term
+`Glaucoma_Diagnosis` is replaced by it and `Condition_Label`'s terms move into it.
+**Full proposed table: Appendix B.1.**
+
+### 3.3 Three axes: diagnosis, gradability, status
+
+The current vocabularies conflate three independent questions. Separate them:
+
+| Axis | Question | Home |
+|---|---|---|
+| **Diagnosis** | which glaucoma, or none? | **`Glaucoma_Diagnosis`** |
+| **Gradability** | could the image be assessed? | gradability vocab / flag (`Gradable`, `Ungradable`) |
+| **Status** | what is the review state? | `Diagnosis_Status` (`Graded`, `Validated`, `Rejected`) |
+
+The distinctions that drive the placement:
+
+- **`Normal` ≠ `No Diagnosis`.** The old `Normal or No dx` fused two opposites:
+  `Normal` = assessed, no glaucoma (a real negative finding — ICD codes the
+  encounter, `Z01.00`); `No Diagnosis` = no determination on record. **They split.**
+- **`No Diagnosis` stays on the diagnosis axis, as a local term.** "No diagnosis"
+  is a legitimate *value* of the diagnosis field (one column, ML-comparable). It
+  has no ICD code, so it is a **local term** with an EyeAI URI — *"no ICD code"*
+  means *"local term"*, not *"different axis."* Because it lives here,
+  `Diagnosis_Status` does **not** also get a `Not assessed` value (that would
+  duplicate the concept).
+- **`Unknown` ≡ `No Diagnosis`** — the same concept ("no determination"). The old
+  `Glaucoma_Diagnosis.Unknown` synonym `Ungradable` was a **mis-synonym** (it
+  paired a status concept with an image-quality concept) and is dropped.
+- **`Ungradable` is not a diagnosis** — "couldn't assess the image" is an
+  image-quality fact → the **gradability** axis. (An image classifier that can
+  abstain carries `Ungradable` as one of *its* output classes on the gradability
+  axis — the one place image-model output and clinical diagnosis legitimately
+  differ.)
+
+### 3.4 ICD grounding and the cross-walk mechanism
+
+**Each `Glaucoma_Diagnosis` term *is* an ICD-11 concept** — the ICD-11 code is the
+term's **identity**, held in the vocabulary's standard `ID`/`URI` columns. This
+gives one vocabulary reached two ways: a human chart reviewer picks the ICD-11
+concept directly (ICD-11-native, not ICD-free), and legacy ICD-10 records are
+translated *up* to the same concept. ICD-10 never stands alone as the identity.
+
+**Curated subset, at the category level.** Ground the vocabulary in only the
+glaucoma codes, at the category level (`H40.0`/`H40.1`/`H40.2`) — not the granular
+per-eye/per-stage sub-codes. This keeps the ICD-10 ↔ ICD-11 crosswalk effectively
+**1-to-1 and lossless** and the vocabulary small and auditable. (Of ~27,962
+ICD-coded rows / 1,209 distinct codes, only the ~134 H40 glaucoma codes — at
+category level just `H40.0/.1/.2` — matter here.)
+
+**The canonical ICD-10 ↔ ICD-11 mapping:**
+
+| `Glaucoma_Diagnosis` | ICD-10-CM category | ICD-11 (MMS) | ICD-11 title | Crosswalk |
+|---|---|---|---|---|
+| `GS` | `H40.0` (H40.00–.06) | **`9C60`** | Glaucoma suspect | Concept-equivalent, **structurally relocated** — ICD-11 makes suspect its own stem code `9C60`, a *sibling* of `9C61` Glaucoma (reinforces §3.1: a suspect is not staged disease). A few H40.0 sub-codes move under `9C61` (ocular hypertension → `9C61.01`; PAC suspect → `9C61.10`). |
+| `POAG` | `H40.1` (H40.10–.15) | **`9C61.0`** | Primary open-angle glaucoma | Equivalent, 1-to-1 |
+| `PACG` | `H40.2` | **`9C61.1`** | Primary angle closure / angle closure glaucoma | Equivalent, 1-to-1 |
+| `Unspecified Glaucoma` | `H40.9` | **`9C61.Z`** | Glaucoma, unspecified | Equivalent |
+| `Normal` | — (no glaucoma code) | *(TBD, §5)* | — | Absence of disease; grounded via encounter code `Z01.00` or a local URI |
+| `Other` | — (non-glaucoma) | — | — | Catch-all outside the curated glaucoma subset |
+| `No Diagnosis` | — | — | — | No determination on record; local (EyeAI) URI |
+
+> The secondary/developmental ICD-11 subtypes (`9C61.2` secondary OAG, `9C61.3`
+> secondary ACG, `9C61.4` developmental) have **no dedicated member** and fall into
+> `Other` until added — a clinical decision (§5). ICD-11 codes **verified
+> 2026-06-30** against the WHO ICD-11 MMS; the URI *scheme* is settled but exact
+> per-term IRIs and the release-version pin are §4/§5 open items.
+
+**How codes are stored — standard vocabulary shape only.** A Deriva controlled
+vocabulary has a fixed schema (`RID`, `Name`, `Description`, `Synonyms`, `ID`,
+`URI`). **No custom columns are added.** So:
+
+- **ICD-11 → `ID`/`URI`** — the term's one canonical external identity (WHO
+  publishes ICD-11 as linked data with official URIs; ICD-10-CM has no single
+  official URI scheme, and ICD-11 is forward-looking).
+- **ICD-10 → the `ICD10_Condition_Map` cross-walk table**, *not* a column. One
+  condition maps from *many* ICD-10 codes (`H40.00`–`H40.06` → `GS`); a
+  many-to-one external relation attaches through an association table.
+- **`Synonyms` stays human-only** — the `H40.*` patterns move out to the
+  cross-walk; lookup **by code** uses `ID`/`URI`, **by name** uses `Synonyms`.
+- **Grounded-vs-local** is the **URI namespace** (`id.who.int/…` = ICD-11 authority;
+  `eye-ai.org/…` = EyeAI-local), never a null test. Local terms (`Other`,
+  `No Diagnosis`, possibly `Normal`) get EyeAI-routed resolvable URIs.
+
+**The cross-walk turns `compute_condition_label` into a join.** Its input is the
+`Clinical_Records_ICD10_Eye` association table already in the catalog (confirmed
+via deriva MCP 2026-06-30 — 27,962 rows). Two bridges represent all the codes as
+data: `Clinical_Records_ICD10_Eye` (observed data: which codes a record carries)
+and `ICD10_Condition_Map` (the classification rule: what a code means). With both,
+the code→condition step is a pure join —
+`Clinical_Records ─ ICD10_Eye ─ ICD10_Condition_Map ─ Glaucoma_Diagnosis` — and the
+Python dict disappears.
+
+**What this retires in `eye-ai-ml`** (verified against `eye_ai.py:268`).
+`compute_condition_label()` does two things: (1) ICD-10 → condition mapping via an
+inline `icd_mapping` dict — **the cross-walk table replaces this** (delete the
+dict, read from the table); (2) multi-code priority resolution
+(`PACG>POAG>GS>Other` tie-break) — **not** replaced (a per-record reconciliation
+policy that still needs a home). So the dict is no longer needed; the function
+shrinks to the priority step. `insert_condition_label()` is unaffected. Retiring
+the dict is an `eye-ai-ml` change, contingent on `ICD10_Condition_Map` existing
+first (§4). Map **exact codes** (FKs to real `ICD10_Eye` terms), not wildcard
+patterns, so no wildcard-matching logic is needed.
+
+![ERD — the Chart_Label feature carries the diagnosis and severity axes side by side; the diagnosis term is the ICD-11 concept (chart review picks it directly, legacy ICD-10 cross-walks up), and severity is valid only when the diagnosis is glaucoma.](img/icd11-condition-erd.png)
+
+*Figure 1 — the full Chart_Label model: the two axes (§3.1), the ICD-11 grounding
+(§3.4), and the ICD-10→ICD-11 cross-walk. The figure uses the current name
+`Condition_Label`; under the fold read it as the folded `Glaucoma_Diagnosis`.
+Source: [`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg).*
+
+### 3.5 Severity cleanup
+
+- **Keep `Mild`/`Moderate`/`Severe`**, add real clinical criteria (VF MD / RNFL /
+  CDR thresholds — **TBD — clinical**); today's descriptions are circular.
+- **Split & rename `Unspecified/Indeterminate`** → `Not Staged` ("glaucoma present,
+  stage not recorded") vs an optional `Indeterminate` ("stage genuinely
+  indeterminate"); removes the slash.
+- **Retire `GS` and `Normal or No dx` from severity** — they are diagnoses, not
+  stages; represent them via `Glaucoma_Diagnosis`. Retiring them requires
+  re-mapping existing `Chart_Label` rows so the condition is preserved and severity
+  becomes not-applicable/not-staged (data migration — §4 change 4; counts in
+  Appendix A).
+
+The stage set `Mild`/`Moderate`/`Severe`/`Indeterminate` mirrors the ICD-10
+7th-character glaucoma staging convention, so severity aligns with how stage is
+already coded in the source data. **Full proposed table: Appendix B.2.**
+
+### 3.6 Severity method of determination — the `(Severity, Method)` pair
+
+`Mild`/`Moderate`/`Severe` are ambiguous without a named **basis** — the same
+grade means different things under different staging systems, and two systems must
+never be silently mixed in one column. Resolution: **record the method of
+determination as a first-class value alongside the grade**, so each severity is
+the pair **`(Severity_Label, Severity_Method)`**.
+
+Method is a *semantic property of the severity value* — "this `Mild` was determined
+by HPA staging" — not a fact about which code ran, and not part of the grade. So:
+
+- It is **not** encoded into the severity term (`HPA_Mild`, …) — that repeats the
+  pack-two-axes-into-one-label anti-pattern this cleanup removes elsewhere, and
+  destroys the clean three-value scale.
+- It is **not** left implicit in the producing `Workflow`/`Execution` — method
+  varies **per row** (a grader may use HPA on one subject, another system on the
+  next), applies to human chart-review values that have no workflow, and would
+  otherwise need a provenance walk to read. Provenance (which code ran) and method
+  (which clinical basis) are complementary and both kept.
+
+**Where the method is recorded.** Severity lives **only in features**, never as a
+raw column (confirmed from the live catalog — `Clinical_Records` has no severity
+column, only the raw measurements `IOP`/`CDR`/`CCT`/… that *feed* severity). So
+`Severity_Method` is added as a **feature column beside the severity column**, on
+each severity-bearing feature:
+
+| Feature (target) | Severity column | New method column |
+|---|---|---|
+| `Execution_Subject_Chart_Label` (Chart_Label on Subject) | `Severity_Label` | `Severity_Method` |
+| `Execution_Clinical_Records_Glaucoma_Severity` (ICD-derived) | `ICD_Severity_Label` | `ICD_Severity_Method` |
+
+Each goes in as part of the feature definition (features are multi-column), so the
+method inherits the feature machinery — including the provenance link to the
+producing Execution. The method column is **NOT-NULL whenever the severity is a
+graded value**; not-applicable for the `Not Staged` / `Indeterminate` sentinels.
+**Full proposed `Severity_Method` vocabulary: Appendix B.3.**
+
+### 3.7 GAMMA / GLEAM band mapping (open)
+
+Dr. Kyle's **GAMMA** mapping needs a **"Moderate-to-Severe"** band (GAMMA's
+"Progressive" category maps to it, per Dr. Bolo). Open question: does a
+`Moderate-to-Severe` band become an additional `Severity_Label` member, or should
+cross-dataset band collapses (GAMMA/GLEAM) be a **mapping layer** on top of
+canonical `Mild`/`Moderate`/`Severe` rather than new vocabulary terms? Flagged so
+the cleanup doesn't lock GAMMA/GLEAM out (§5 Q6).
+
+## 4. Change plan
+
+The actionable synthesis of §3. **Dependency ordering and repo split matter** —
+executing these in the wrong order leaves half-built states.
+
+### 4.1 The changes
+
+| # | Change | What it entails | Where |
+|---|---|---|---|
+| **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; add real clinical criteria to Mild/Moderate/Severe. (§3.5, App. B.2) | `data-curation` |
+| **2** | **Fold into one `Glaucoma_Diagnosis` vocabulary** | Merge `Condition_Label` + the current 3-term image/visit/subject `Glaucoma_Diagnosis` into one shared vocab named **`Glaucoma_Diagnosis`** (§3.2). Terms + identities per App. B.1: ICD-11 `ID`/`URI` for `GS/POAG/PACG/Unspecified Glaucoma`; split `Normal or No dx` → `Normal` + `No Diagnosis`; `Other`, `No Diagnosis` as EyeAI-local; `H40.*` out of `Synonyms`. Separate `Ungradable` (gradability axis) and drop the `Unknown`↔`Ungradable` mis-synonym. | `data-curation` |
+| **3** | **Create the ICD-10 cross-walk table** | New association table `ICD10_Eye → Glaucoma_Diagnosis` (`ICD10_Condition_Map`), **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§3.4) | `data-curation` |
+| **4** | **Migrate diagnosis data onto the folded vocab** | Repoint the `Chart_Label` feature rows and the image/visit/subject `*_Diagnosis` rows to the merged `Glaucoma_Diagnosis` terms; re-map cleaned severity values (counts in App. A). **Data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
+| **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with a **join through the cross-walk**; **keep** the multi-code priority tie-break (do not re-add). `insert_condition_label` unaffected. (§3.4) | `eye-ai-ml` |
+| **6** | **Add severity method of determination** | Create the `Severity_Method` vocabulary (App. B.3), then add a method column to each severity-bearing feature — `Severity_Method` on `Execution_Subject_Chart_Label` and `ICD_Severity_Method` on `Execution_Clinical_Records_Glaucoma_Severity` — NOT-NULL when severity is graded. Records severity as the `(Severity_Label, Severity_Method)` pair. (§3.6) | `data-curation` |
+
+### 4.2 Dependency ordering
+
+```
+ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
+                     └──▶ (3) create cross-walk table ───────┴─▶ (5) update code ──▶ (4) migrate diagnosis data
+(1) Severity cleanup ──┐
+(6) Severity_Method ───┴─ severity axis; independent of the diagnosis fold, can run in parallel
+```
+
+- The cross-walk (3) needs both endpoints ready: the folded `Glaucoma_Diagnosis` (2) **and** `ICD10_Eye` populated with exact codes.
+- The code change (5) needs the cross-walk (3) to exist.
+- The data migration (4) needs the folded vocabulary (2) and the cleaned severity (1).
+- Severity work (1) and the method vocab/columns (6) are on the severity axis, independent of the diagnosis fold; (6) needs the `Severity_Method` member set confirmed (§5) and the severity features (they exist).
+- **Repo split:** 1–4 and 6 are catalog/schema/data → `data-curation`; 5 is code → `eye-ai-ml`, and its PR **cannot merge until 3 lands** in the catalog.
+
+### 4.3 Gates (resolve before the clinical parts land)
+
+- **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §5 Q1).
+- **`Severity_Method` member set** — confirm the staging systems (HPA, ICD 7th-char, structural, …) before creating the vocabulary in change 6 (§3.6, clinical).
+- **`9C61.2/.3/.4` disposition** — become `Glaucoma_Diagnosis` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§3.4, §5).
+- **`Normal`'s identifier** — ICD-Z encounter code (`Z01.00`) vs an EyeAI-local URI (Appendix B.1 note).
+- **EyeAI URI scheme** for local terms (`Other`, `No Diagnosis`, maybe `Normal`).
+- **GAMMA `Moderate-to-Severe` band** (§3.7) — may add a `Severity_Label` member in change 1.
+- **ICD-11 release-version pin** — pin a specific ICD-11 release in the term URIs (e.g. `…/release/11/2025-01/mms/…`) rather than the bare `{version}` placeholder; confirm the current WHO release at implementation time and record it (keep the release-independent foundation `…/icd/entity/{id}` URI as the stable anchor).
+- **Catalog verification** — ✅ **resolved (deriva MCP, 2026-06-30):** `ICD10_Eye` **is** a controlled vocabulary (1,209 terms); the `Clinical_Records ⇄ ICD10_Eye` association is **`Clinical_Records_ICD10_Eye`** (27,962 rows); `Clinical_Records` has **no** severity column (so severity-method is a feature column only).
+- **Fold verification (open)** — before the fold (change 2/4), confirm what populates `Subject_Diagnosis` vs the `Chart_Label` feature and how the image/visit/subject `*_Diagnosis` rows reconcile with the chart rows onto the merged vocabulary.
+
+## 5. Open clinical questions (for the Dr. Bolo & Dr. Xu meeting)
+
+1. **Severity criteria.** What clinical criteria define `Mild`/`Moderate`/`Severe`? HPA staging? VF MD thresholds? Structural (RNFL/CDR)? A combination? (Dr. Bolo.)
+2. **Separate but conditional?** Confirm severity is a separate attribute that applies **only** when an established glaucoma condition is present (§3.1).
+3. **`Severity_Method` member set.** Confirm the staging systems to enumerate (HPA, ICD 7th-char, structural, …) — the method design is settled (§3.6); the member list is the clinical input.
+4. **Fold sign-off.** Approve (or reject) merging `Condition_Label` + `Glaucoma_Diagnosis` into one vocabulary (§3.2) — this reverses the earlier keep-separate position.
+5. **Remove non-stage values?** Confirm retiring `GS` and `Normal or No dx` from `Severity_Label`.
+6. **Suspects and severity.** Does a glaucoma suspect (`GS`) have a severity at all? (Strawman: no — not applicable.)
+7. **`9C61.2/.3/.4` disposition.** Add secondary/developmental glaucoma as `Glaucoma_Diagnosis` members, or leave them in `Other`?
+8. **GLEAM / GAMMA.** What must the cleaned-up vocabulary provide so the GLEAM/GAMMA mappings land cleanly — notably GAMMA's `Moderate-to-Severe` band (§3.7) — without distorting the canonical definitions?
+
+---
+
+## Appendix A — Current state (as in the catalog, 2026-06-30)
+
+Snapshot from `www.eye-ai.org` / `eye-ai`. Descriptions and synonyms are
+reproduced **verbatim**; commentary is set off as notes. These are the **pre-fold**
+vocabularies; the proposed replacements are in Appendix B.
+
+### A.1 `Condition_Label` — 6 terms
 
 > Catalog comment: *"Vocabulary of clinical condition labels used in chart-review
 > diagnoses (e.g., glaucoma, diabetic retinopathy)."*
@@ -112,15 +413,12 @@ synonyms are reproduced verbatim; commentary is set off as notes.
 | `5-26KY` | **Normal or No dx** | No signs of glaucoma or No diagnosis made | — |
 | `6-0A34` | **Unspecified Glaucoma** | Glaucoma present, subtype unspecified (from LAC patient-level chart review). | — |
 
-> **Note — ICD codes in `Synonyms`.** The `Synonyms` field of `GS`, `POAG`, and
-> `PACG` is currently being used to store **ICD-10 code patterns** (`H40.*`), not
-> human-readable alternate names. This is the lookup key that
-> `EyeAI.compute_condition_label()` reverses (its hard-coded `icd_mapping` mirrors
-> exactly these patterns: `H40.0x → GS`, `H40.1x → POAG`, `H40.2* → PACG`, else
-> `Other`). The codes belong in a defined ICD→condition mapping, not in a
-> free-text synonyms list (see §5.6–§5.7).
+> **Note.** The `Synonyms` of `GS`/`POAG`/`PACG` store ICD-10 code patterns
+> (`H40.*`), not names — the key `compute_condition_label()`'s `icd_mapping`
+> reverses (`H40.0x → GS`, `H40.1x → POAG`, `H40.2* → PACG`, else `Other`). §2
+> item 2 / §3.4 address this.
 
-### 2.2 `Severity_Label` — 6 terms
+### A.2 `Severity_Label` — 6 terms
 
 > Catalog comment: *"Vocabulary of severity levels for clinical conditions (e.g.,
 > mild, moderate, severe, advanced). Used in chart-review and ICD-derived severity
@@ -135,17 +433,16 @@ synonyms are reproduced verbatim; commentary is set off as notes.
 | `4-YFWY` | **GS** | Glaucoma Suspect | — |
 | `5-29BJ` | **Normal or No dx** | No signs of glaucoma or No diagnosis made | — |
 
-> **Note.** Three of these six are not severity stages at all: `GS` and
-> `Normal or No dx` are *conditions* (they duplicate `Condition_Label` members),
-> and `Unspecified/Indeterminate` is a "no stage available" sentinel whose name
-> packs a synonym into a slash. Only `Mild`/`Moderate`/`Severe` are genuine
-> severity grades. See §3–§4 for the evidence and §6 for proposed fixes.
+> **Note.** Three of these six are not stages: `GS` and `Normal or No dx` are
+> conditions (duplicating `Condition_Label`), and `Unspecified/Indeterminate` packs
+> a synonym into a slash. Only `Mild`/`Moderate`/`Severe` are genuine grades (§2
+> items 3–4).
 
-### 2.3 `Glaucoma_Diagnosis` — 3 terms (image/visit/subject diagnostic vocabulary)
+### A.3 `Glaucoma_Diagnosis` — 3 terms (image/visit/subject diagnostic vocabulary)
 
-The diagnostic vocabulary, **created 2026-06-30** as the single consolidated
-vocabulary that the three diagnosis levels (image / observation / subject) now
-share.
+Created 2026-06-30 as the single consolidated vocabulary the three diagnosis levels
+(image / observation / subject) share. **Not image-only**, despite the catalog
+comment.
 
 > Catalog comment: *"Vocabulary of image-level diagnostic categories for retinal
 > images (e.g., referable glaucoma, no glaucoma)."*
@@ -156,7 +453,7 @@ share.
 | `6-0EQP` | **Suspected Glaucoma** | Suspected Glaucoma | Referable Glaucoma |
 | `6-0EQM` | **Unknown** | Unknown | Ungradable |
 
-**Consumed by** (all foreign-key to `Glaucoma_Diagnosis.Name`, all populated):
+**Consumed by** (all FK to `Glaucoma_Diagnosis.Name`, all populated):
 
 | Table | Rows | Level |
 |---|---|---|
@@ -164,55 +461,31 @@ share.
 | `Observation_Diagnosis` | 7,020 | observation / visit-level |
 | `Subject_Diagnosis` | 7,020 | subject-level |
 
-All 194,204 `Image_Diagnosis` rows resolve to exactly these three terms —
-**No Glaucoma** 155,279, **Suspected Glaucoma** 38,547, **Unknown** 378 (sum =
-194,204) — confirming the 2026-06-30 consolidation is complete with no legacy
-values or nulls remaining at the image level.
+All 194,204 `Image_Diagnosis` rows resolve to exactly three terms — **No Glaucoma**
+155,279, **Suspected Glaucoma** 38,547, **Unknown** 378 (sum = 194,204).
 
-> **Note (current state).** `Glaucoma_Diagnosis` today is a coarse
-> No / Suspected / Unknown vocabulary applied at **image, visit, and subject**
-> levels (see the Consumed-by table above — it is *not* image-only, despite the
-> heading), a ~referability signal from graders/models. `Condition_Label` is the
-> fine-grained chart-review subtype.
->
-> **Proposed change (§5.8):** these two vocabularies are proposed to be **folded
-> into one shared diagnosis vocabulary** — so a model's "Glaucoma" and a
-> clinician's "Glaucoma" are the *same* term (direct model-vs-clinical
-> comparison). The merged vocabulary **keeps the name `Glaucoma_Diagnosis`**; the
-> non-diagnosis concepts (`Ungradable`, and `Unknown`≡`No Diagnosis`) are separated onto
-> gradability / diagnosis axes. The current 3-term `Glaucoma_Diagnosis` and the
-> 6-term `Condition_Label` shown in §2 are the **pre-fold** state; the proposed
-> merged table is in §5.8.3.
+### A.4 Supporting vocabularies (distinct from diagnosis — do not conflate)
 
-### 2.4 Supporting vocabularies (distinct from diagnosis — do not conflate)
+Provenance / status / context of a diagnosis, not the diagnosis itself:
 
-These describe *provenance, status, and context* of a diagnosis, not the
-diagnosis itself. Listed so the clinical reader knows they exist and why they are
-**not** part of the condition/severity cleanup.
+- **`Diagnosis_Tag`** (11 terms) — provenance / study tags (`Initial Diagnosis`,
+  `CNN_Prediction`, `Expert_Consensus`, `Intragrader_Agreement`,
+  `GlaucomaSuspect-Training`/`-Validation`, `UI Annotation`, …). "Who/what produced
+  this label, in what study?" — the provenance carrier the fold (§3.2) relies on.
+- **`Diagnosis_Status`** (3 terms) — `Graded`, `Validated`, `Rejected`. "Review
+  state of this diagnosis?" — the status axis (§3.3).
+- **`ICD10_Eye`** — vocabulary of ICD-10 ophthalmic codes (1,209 terms); the source
+  feeding ICD-derived labels; source side of the cross-walk (§3.4).
+- **`Grading_Condition`** — **empty (0 terms)**. Intended to record USC vs LAC
+  grading context on the shared `Chart_Label` feature; a context axis the cleaned
+  model may need to populate.
 
-- **`Diagnosis_Tag`** (11 terms) — *provenance / study tags*, not diagnoses.
-  Examples: `Initial Diagnosis` (from the original dataset), `CNN_Prediction`,
-  `Expert_Consensus` (*"Expert consensus diagnosis from 3 expert graders (Benjamin
-  Xu, Brandon Wong, Van Nguyen)"*), `Intragrader_Agreement`,
-  `GlaucomaSuspect-Training` / `-Validation`, `UI Annotation`. Answers *"who/what
-  produced this label, in what study?"*
-- **`Diagnosis_Status`** (3 terms) — `Graded`, `Validated`, `Rejected`. Answers
-  *"what is the review state of this diagnosis?"*
-- **`ICD10_Eye`** — vocabulary of ICD-10 ophthalmic codes; the standardized source
-  feeding the ICD-derived condition and severity labels.
-- **`Grading_Condition`** — **exists but is currently empty (0 terms)**. Intended
-  (per its catalog comment) to *"record the conditions under which a chart label
-  was graded, so that the USC and LAC grading contexts remain distinguishable
-  within the shared Chart_Label feature table."* Referenced by
-  `Execution_Subject_Chart_Label.Grading_Condition`. Flagged here because it is a
-  context axis the cleaned-up model may need to populate.
-
-## 3. How the terms are actually used today (the evidence)
+### A.5 How the terms are used today (the evidence)
 
 The clinical chart-review label lives in the **`Chart_Label` feature on Subject**
-— table `Execution_Subject_Chart_Label`, **2,302 rows** — which carries
-`Condition_Label` **and** `Severity_Label` as two columns on the same row. The
-distinct `(Condition_Label, Severity_Label)` pairs actually present:
+(`Execution_Subject_Chart_Label`, **2,302 rows**), carrying `Condition_Label`
+**and** `Severity_Label` as two columns on the same row. Distinct
+`(Condition_Label, Severity_Label)` pairs present:
 
 | Count | Condition_Label | Severity_Label |
 |---:|---|---|
@@ -231,402 +504,29 @@ distinct `(Condition_Label, Severity_Label)` pairs actually present:
 | 16 | Unspecified Glaucoma | Unspecified/Indeterminate |
 | 8 | PACG | Moderate |
 
-Read directly off the data:
-
-- **The only rows carrying a genuine severity grade** (Mild/Moderate/Severe) are
-  POAG (648 rows) and PACG (45 rows) — i.e. established glaucoma. Everything else
-  is `Unspecified/Indeterminate` or a condition-as-severity sentinel.
-- **698 rows are `GS` / `GS`** — the condition *and* the severity are both "GS".
-  The severity column is restating the condition.
-- **27 rows are `Normal or No dx` / `Normal or No dx`** — same pattern at the
-  no-disease end.
-- **`Unspecified/Indeterminate` is the catch-all** across every condition (≈900
-  rows), used wherever no real stage applies.
-
-## 4. Identified problems (what's broken and why)
-
-1. **`Severity_Label` contains values that are really conditions, not stages.**
-   `GS` (`4-YFWY`) and `Normal or No dx` (`5-29BJ`) duplicate `Condition_Label`
-   members and make the severity column do double duty. The data proves it: 698
-   `GS`/`GS` rows and 27 `Normal`/`Normal` rows where severity simply echoes
-   condition.
-2. **`Unspecified/Indeterminate` packs a synonym into the name via a slash.** It
-   conflates two ideas ("indeterminate stage" vs "stage not recorded") in one
-   label and functions as a dumping ground for any condition with no graded stage.
-3. **Severity descriptions are circular and thin.** "Mild stage", "Moderate
-   stage", "Severe stage" restate the name and carry **no clinical criteria** — no
-   VF MD thresholds, no structural criteria, nothing a grader could apply
-   reproducibly.
-4. **Condition descriptions are better but lean on ICD codes stuffed in
-   `Synonyms`.** The `H40.*` patterns in `GS`/`POAG`/`PACG` synonyms are a
-   machine lookup key masquerading as alternate names; the clinical definition of
-   each condition is mostly carried by the (short) Description, not a proper
-   criteria statement.
-5. **True severity only meaningfully applies to established glaucoma
-   (POAG/PACG).** Grading a "suspect" or a "normal" eye on a Mild/Moderate/Severe
-   scale is a category error — which is exactly why those rows fall back to
-   condition-as-severity or `Unspecified`.
-
-## 5. Proposed conceptual model (the strawman to discuss)
-
-> **Provisional.** This section is the strawman to be confirmed/revised with
-> Dr. Bolo and Dr. Xu.
-
-### 5.1 Two separate axes
-
-- **Condition** = *which glaucoma, or none* — the diagnosis. Candidate members
-  (from current `Condition_Label`): `Normal or No dx`, `GS` (glaucoma suspect),
-  `POAG`, `PACG`, `Unspecified Glaucoma`, `Other`.
-- **Severity** = *stage of established glaucomatous disease* —
-  `Mild` / `Moderate` / `Severe` — **applicable only when a glaucomatous condition
-  is present**. The non-stage values (`GS`, `Normal or No dx`) move **out** of
-  severity; the "no stage available" case is represented explicitly (see §6.1),
-  not by smuggling a condition into the severity column.
-
-### 5.2 Intended relationship: separate but conditional
-
-Severity is a **further attribute of an established glaucoma diagnosis**, not an
-independent label. You first have a *condition*; *severity* refines it **only**
-when that condition is glaucoma (POAG/PACG, and possibly `Unspecified Glaucoma`).
-
-This directly answers **Professor Carl's question** — *"is there such a thing as 'mild
-glaucoma', or is it glaucoma + a separate severity attribute?"* — with a proposed
-answer: **separate but conditional.** "Mild glaucoma" = condition `POAG` (or
-`PACG`) + severity `Mild`; severity is not baked into the condition term.
-**Pending clinical confirmation.**
-
-Corollaries to confirm in the meeting:
-
-- A **suspect (`GS`)** has, by definition, no established disease to stage — so
-  does a suspect have a severity at all? (Strawman: **no** — severity is
-  undefined/not-applicable for `GS`.)
-- A **normal** eye has no severity. (Strawman: not-applicable.)
-
-### 5.3 Data-model placement
-
-**Current join (as built):**
-
-- `Condition_Label` and `Severity_Label` are **two independent foreign-key columns
-  side by side** on the `Chart_Label` feature on Subject
-  (`Execution_Subject_Chart_Label`: `Condition_Label` → `Condition_Label.Name`,
-  `Severity_Label` → `Severity_Label.Name`). Nothing in the schema ties the two —
-  any condition can pair with any severity, which is how `GS`/`GS` and
-  `Normal`/`Normal` arose.
-- **Severity also stands alone**, decoupled from the chart condition, in the
-  **ICD-derived feature** `Execution_Clinical_Records_Glaucoma_Severity`
-  (**3,674 rows**; column `ICD_Severity_Label` → `Severity_Label.Name`), whose
-  target `Clinical_Records` carries the condition separately in
-  `Clinical_Records.ICD_Condition_Label` → `Condition_Label.Name`.
-
-**Future enforcement (to discuss).** Once severity is defined as conditional on a
-glaucoma condition, the schema *could* enforce "severity requires a glaucoma
-condition" — e.g. severity is non-null only for glaucomatous conditions and
-null/not-applicable otherwise, or a constraint/validation at write time in the
-`Chart_Label` and `Glaucoma_Severity` features. This is a `data-curation` change,
-out of scope for this document beyond recording the intent.
-
-The **ERD in §5.7 (Figure 1)** shows this whole model — both axes on the
-`Chart_Label` row, the conditional severity constraint, and the ICD grounding of
-`Condition_Label` — once the ICD pieces (§5.6) are in place.
-
-### 5.4 Define terms clinically, not by how the label was produced
-
-A term's definition must describe **the eye**, never the mechanism that assigned
-the label. The same term is written into the catalog two ways — by a **human**
-chart reviewer, and by an automated **ICD rule** (see §5.6 for how both reach the
-same term) — and its meaning must be identical in both cases.
-
-So: define `POAG` as a clinical condition, **not** as "whatever `H40.1x` maps to"
-(only true for the ICD path) or "what the grader circled" (only true for the
-human path). "Moderate POAG" must mean the same clinical thing whether a grader
-wrote it or an ICD rule produced it.
-
-### 5.5 Do not conflate the two senses of "severity"
-
-There are **two unrelated meanings of "severity"** in this codebase; the
-vocabulary concerns only the first:
-
-- **Severity grade (this document)** — `Severity_Label`: the clinical stage of
-  disease (Mild/Moderate/Severe).
-- **Laterality severity (different concept)** — `EyeAI.severity_analysis()` in the
-  `eye-ai-ml` library computes *which eye is worse* (left vs right) from RNFL
-  thickness, HVF MD, and CDR, and flags `Severity_Mismatch`. This is **not** the
-  `Severity_Label` vocabulary and must never be confused with it.
-
-The doc states this explicitly so the two are never merged in code or
-conversation.
-
-### 5.6 Grounding the diagnosis vocabulary in ICD (the "what" and "why")
-
-> **Naming convention (read once, applies from here on).** `Condition_Label` is
-> the **current / pre-fold** table name; **`Glaucoma_Diagnosis`** is the
-> **proposed folded** target (§5.8). §5.6–§5.7 describe the ICD grounding using
-> the current name `Condition_Label` for continuity with §2; under the §5.8 fold,
-> read every "`Condition_Label`" here as the folded `Glaucoma_Diagnosis`
-> diagnosis vocabulary. The grounding design is identical either way — only the
-> table name and the `Normal or No dx` split differ.
-
-> **Settled design direction** (provisional only on the clinical *wording*). How
-> the diagnosis vocabulary is grounded in an external standard. The
-> *implementation mechanism* (cross-walk table, compute join, `eye-ai-ml` impact)
-> is §5.7; the vocabulary fold and final term table are §5.8.
-
-**Each `Condition_Label` term *is* an ICD-11 concept.** The condition vocabulary
-is not a local scheme that ICD-11 merely tags; each term **is** an ICD-11 concept,
-with the short name as its display label — `GS` = ICD-11 `9C60`, `POAG` = `9C61.0`,
-and so on. The ICD-11 code is the term's **identity**. This gives **one vocabulary
-(ICD-11 concepts) reached two ways** — a human chart reviewer picks the ICD-11
-concept directly (ICD-11-native, not ICD-free), and legacy ICD-10 records are
-translated *up* to the same concept (§5.7). Both arrive at the same term; ICD-10
-never stands alone as the identity.
-
-**Curated subset, at the category level.** Ground the vocabulary in a curated
-subset of **only the glaucoma codes**, at the **category level**
-(`H40.0` / `H40.1` / `H40.2`) — not the granular per-eye / per-stage sub-codes.
-Working at the category level keeps the ICD-10 ↔ ICD-11 crosswalk effectively
-**1-to-1 and lossless**. *Rationale (Carl):* a small curated subset keeps the
-vocabulary tables small and the crosswalk easy to maintain and audit. (Scale: the
-live data holds ~27,962 ICD-coded rows / 1,209 distinct codes, of which only the
-~134 H40 glaucoma codes — at category level just `H40.0/.1/.2` — matter here.)
-
-**The ICD-10 ↔ ICD-11 mapping (the canonical table — referenced throughout).**
-
-| `Condition_Label` | ICD-10-CM category | ICD-11 (MMS) code | ICD-11 title | Crosswalk |
-|---|---|---|---|---|
-| `GS` (Glaucoma Suspect) | `H40.0` (H40.00–H40.06) | **`9C60`** | Glaucoma suspect | Concept-equivalent but **structurally relocated** — ICD-11 breaks "glaucoma suspect" out as its **own stem code `9C60`**, a *sibling* of `9C61` Glaucoma (in ICD-10 it sits *inside* the H40 block). This **reinforces §5.2**: a suspect is not staged disease. A few H40.0 sub-codes move under `9C61` in ICD-11 (ocular hypertension → `9C61.01`; primary angle-closure suspect → `9C61.10`). |
-| `POAG` | `H40.1` (H40.10–H40.15) | **`9C61.0`** | Primary open-angle glaucoma | Equivalent, 1-to-1 |
-| `PACG` | `H40.2` | **`9C61.1`** | Primary angle closure or angle closure glaucoma | Equivalent, 1-to-1 |
-| `Unspecified Glaucoma` | `H40.9` | **`9C61.Z`** | Glaucoma, unspecified | Equivalent |
-| `Normal or No dx` | — (no glaucoma code) | — | — | Absence of disease *(pre-fold; §5.8 splits this into `Normal` + `No Diagnosis`)* |
-| `Other` | — (non-glaucoma; default) | — | — | Catch-all for codes outside the curated glaucoma subset |
-
-At this coarse category level the mapping is **1-to-1 and lossless** for
-`POAG` / `PACG` / `Unspecified Glaucoma`, with the single `GS` caveat above
-(concept-equivalent, structurally relocated). The secondary/developmental
-ICD-11 subtypes (`9C61.2` secondary OAG, `9C61.3` secondary ACG, `9C61.4`
-developmental) have **no dedicated `Condition_Label` member** and currently fall
-into `Other` — a disposition to decide clinically (§6.2, §7).
-
-**How the codes and identifier are stored — using the vocabulary's standard shape
-only.** A Deriva controlled vocabulary has a fixed schema — `RID`, `Name`,
-`Description`, `Synonyms`, `ID`, `URI` (plus system columns). **We do not add
-custom columns** (no `ICD10_code` / `ICD11_code` fields on the term). That
-uniformity is the contract Chaise and the deriva-ml APIs depend on; external
-grounding belongs in the slots the vocabulary already provides. So:
-
-- **ICD-11 → the `ID` / `URI` identifier.** The term's `ID` / `URI` holds the real,
-  authoritative **ICD-11 WHO URI** (`http://id.who.int/icd/...`), not a
-  locally-minted id. This is the term's one canonical external identity. *Why
-  ICD-11 for the identifier:* WHO publishes ICD-11 as linked data with official
-  canonical URIs, so authoritative identifiers come for free; ICD-10-CM has no
-  single official URI scheme (CDC/NCHS code lists), and ICD-11 is forward-looking
-  as international data moves to it.
-- **ICD-10 → the `ICD10_Condition_Map` association table**, *not* a column on the
-  term. The live data is natively ICD-10-CM (~27,962 stored codes, and US EHRs
-  keep sending it), and one condition maps from *many* ICD-10 codes
-  (`H40.00`–`H40.06` → `GS`). A many-to-one external relation attaches to a
-  vocabulary through an **association table** (§5.7), which is also what lets the
-  exact per-code data resolve to a condition. It is never modelled as extra
-  columns on the vocabulary.
-- **`Synonyms` stays human-only.** With ICD-11 in `ID`/`URI` and ICD-10 in the
-  cross-walk table, `Synonyms` holds **human-readable alternate names only**
-  (e.g. "Primary Open-Angle Glaucoma", WHO index terms). The `H40.*` patterns
-  currently mis-stored in `Condition_Label.Synonyms` (§2.1) move out. Lookup **by
-  code** uses `ID`/`URI` (and the cross-walk for ICD-10); lookup **by name** uses
-  `Synonyms` — see §5.7 for why a code never goes in `Synonyms`.
-
-The vocabulary term is unchanged in shape; all ICD-10 breadth lives in the
-association table described next.
-
-> **Status & verification (single source — referenced elsewhere as "the §5.6
-> status").** ICD-11 codes **verified 2026-06-30** against the WHO ICD-11 MMS
-> (`9C60` suspect; `9C61.0/.1/.Z` established glaucoma). The URI **scheme** is
-> settled — `http://id.who.int/icd/release/11/{version}/mms/{code}` — but the
-> **exact per-term IRIs must be confirmed against the WHO API/browser**
-> (`icd.who.int`) before catalog work; they are not minted here. **Confirmed via
-> deriva MCP (2026-06-30):** `ICD10_Eye` is a controlled vocabulary (1,209 terms)
-> and the `Clinical_Records ⇄ ICD10_Eye` association is `Clinical_Records_ICD10_Eye`
-> (27,962 rows). Still **unverified**: the disposition of `9C61.2/.3/.4` (clinical
-> — Dr. Bolo / Dr. Xu). Primary clinical reference: the **AAO Glaucoma ICD-10 Quick
-> Reference Guide** (§9).
-
-### 5.7 Implementation mechanism (the "how" — for `eye-ai-ml` / `data-curation`)
-
-This section details the `ICD10_Condition_Map` cross-walk **table** introduced in
-§5.6: how it turns `compute_condition_label` into a join, and what that retires.
-Codes and the crosswalk itself are in the §5.6 mapping table; this section does
-not restate them.
-
-**Tables involved.**
-
-| Object | Role | Code / keys |
-|---|---|---|
-| `Condition_Label` | the ICD-11 concept (display name `GS`, `POAG`, …) | `ID`/`URI` = its ICD-11 code (identity) |
-| `ICD10_Eye` | one term per legacy ICD-10 code | `ID`/`URI` = that ICD-10 code |
-| `ICD10_Condition_Map` *(new, association)* | **ICD-10 → ICD-11 cross-walk** | FKs: `ICD10_Eye` → `Condition_Label` |
-
-![ERD — the Chart_Label feature carries Condition_Label and Severity_Label as two side-by-side axes on one row; Condition_Label is the ICD-11 concept (chart review picks it directly, legacy ICD-10 cross-walks up), and severity is valid only when the condition is glaucoma.](img/icd11-condition-erd.png)
-
-*Figure 1 — the full Chart_Label model: the two axes (condition + severity, §5.1–§5.3),
-the ICD-11 grounding of the diagnosis vocabulary (§5.6), and the ICD-10→ICD-11
-cross-walk (this section). The figure uses the current name `Condition_Label`; under
-the §5.8 fold read it as the folded `Glaucoma_Diagnosis`. Source:
-[`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg).*
-
-**Why a cross-walk table (not more columns).** The ICD-10 side at exact-code
-granularity is *many* codes per concept (`H40.00`–`H40.06` all → `GS`) — a
-many-to-one relation. A single-valued `ID`/`URI` cannot hold a family, and
-`Synonyms` is for human names, not codes. Only an association table fits. Map
-**exact codes** (FKs to real `ICD10_Eye` terms), not wildcard patterns (`H40.0*`),
-so no wildcard-matching logic is needed.
-
-**Lookup by code uses `ID`, never `Synonyms`.** A term's code IS its `ID`/`URI`,
-so `lookup_by_id("ICD11:9C60") → term` is a typed, indexed, one-hop lookup — that
-*is* semantic lookup by code, needing no duplication of the code into `Synonyms`.
-`Synonyms` hold WHO index terms (human names) for lookup by name. Putting a code
-in its own row's `Synonyms` would merely shadow `ID` and re-blur code-vs-name.
-(A code belongs in `Synonyms` only as a deprecated *alias* code; the primary code
-is always `ID`.)
-
-**The two bridges — and the compute join.** `compute_condition_label()`'s input
-is a DataFrame `RID, Clinical_Records, ICD10_Eye` — one row per (record, code) —
-i.e. a read of the **`Clinical_Records_ICD10_Eye` association table already in the
-catalog** (confirmed via deriva MCP 2026-06-30 — 27,962 rows; also consistent with
-`eye_ai.py:293` + fixture `test_eye_ai_units.py:131`). So two distinct bridges
-represent all the codes as data:
-
-| Bridge | Relates | Kind | Status |
-|---|---|---|---|
-| `Clinical_Records_ICD10_Eye` | record ↔ the codes it carries | **observed data** | exists (the input, 27,962 rows) |
-| `ICD10_Condition_Map` | ICD-10 code ↔ its ICD-11 concept | **classification rule** | proposed |
-
-With both, the code→condition step is a pure join —
-`Clinical_Records ─ ICD10_Eye ─ ICD10_Condition_Map ─ Condition_Label` — and the
-Python dict disappears. Keep the two bridges distinct: one records *facts* (this
-record's codes), the other the *rule* (what a code means); they evolve on
-different schedules.
-
-**End-to-end: many ICD-10 codes → one ICD-11 `Condition_Label`.** A record
-typically carries several codes. Resolution: (1) **map every code** to its ICD-11
-concept via the join — e.g. `H40.11`+`H40.00` → {`POAG`, `GS`}; (2) **pick the
-highest-priority concept** by clinical severity `PACG > POAG > GS > Other`
-(`eye_ai.py:295`) — here POAG wins → `Condition_Label = POAG`. The stored label
-is thus an ICD-11 concept; the codes are input, the winning term is output. (The
-priority tie-break now orders ICD-11 *concepts*, which is where it belongs. If it
-should become catalog data rather than code, it belongs in its own ranking table
-keyed to `Condition_Label` — **not** as an added column on the vocabulary, whose
-standard shape stays fixed per §5.6.)
-
-**What this retires in `eye-ai-ml`** (verified against `eye_ai/eye_ai.py`,
-2026-06-30). `compute_condition_label()` (`eye_ai.py:268`) does two things:
-
-1. **ICD-10 → condition mapping** via an inline `icd_mapping` dict + `startswith`.
-   **The cross-walk table replaces this** — delete the dict, read the mapping from
-   the table. (It is the only copy in the library — one site + test
-   `test_eye_ai_units.py:139`.)
-2. **Multi-code priority resolution** (the `PACG>POAG>GS>Other` tie-break). **Not
-   replaced** by the table — it is a per-record reconciliation policy that still
-   needs a home (library, or a documented rule on the join's output).
-
-So the **`icd_mapping` dict is no longer needed**; the function shrinks to the
-priority step (or is removed if that moves elsewhere). `insert_condition_label()`
-(`eye_ai.py:302`) is unaffected. **Placement:** the cross-walk is upstream of
-`Condition_Label`, *not* a hop off the Subject — the chart-review path references
-the term directly, the ICD-10 path reaches it through the cross-walk. **Retiring
-the dict is an `eye-ai-ml` change**, contingent on `ICD10_Condition_Map` existing
-first (§8).
-
-### 5.8 One shared diagnosis vocabulary — `Glaucoma_Diagnosis` (proposed fold)
-
-> **Proposed design direction** (2026-06-30 discussion). This section proposes
-> **folding `Condition_Label` and the current 3-term image/visit/subject
-> `Glaucoma_Diagnosis` into one shared vocabulary**, named **`Glaucoma_Diagnosis`**,
-> and separating the
-> non-diagnosis concepts onto their own axes. Provisional; a `data-curation`
-> change, and it depends on the catalog checks in §5.8.4.
-
-> **⚠️ Proposed change — pending clinical confirmation (Dr. Xu & Dr. Bolo).**
-> This fold is a **proposal, not a settled decision.** It **reverses** the earlier
-> team-noted position to *keep `Condition_Label` and `Glaucoma_Diagnosis` as two
-> separate vocabularies*, so it needs **explicit sign-off from Dr. Xu and Dr. Bolo
-> before any implementation.**
->
-> - **In scope:** merge the two diagnosis vocabularies into one shared
->   `Glaucoma_Diagnosis`, with assertion provenance carried by `Diagnosis_Tag` and
->   the non-diagnosis axes (**gradability**, **status**) separated out (§5.8.2).
-> - **Unchanged / not in question:** the ICD-11 grounding and the
->   `ICD10_Condition_Map` cross-walk (§5.6–§5.7), and **severity as its own axis**
->   (`Severity_Label`, §6.0–§6.1).
-
-#### 5.8.1 Why one vocabulary
-
-Today two vocabularies describe overlapping glaucoma status: `Condition_Label`
-(fine chart-review subtypes) and `Glaucoma_Diagnosis` (coarse No / Suspected /
-Unknown, applied at **image, visit, and subject** levels — *not* image-only). At
-the subject level they label the **same entity**.
-
-The driving requirement: **if a model labels an image "Glaucoma" and a clinician
-records "Glaucoma", those must be the same term** — one controlled-vocabulary
-value — so that comparing model output to clinical ground truth is a direct value
-comparison (`prediction == label`), not a cross-vocabulary mapping. Storing the
-same concept in two vocabularies is denormalization of the concept, and the cost
-lands precisely on the platform's central query.
-
-So: **one vocabulary**, referenced by the image / visit / subject / chart tables
-alike. The difference between "a model asserted it" and "a clinician asserted it"
-is **provenance of the assertion** — carried by `Diagnosis_Tag` (§2.4:
-`CNN_Prediction`, `Expert_Consensus`, …) — **not** by which vocabulary the value
-comes from. Provenance is an attribute of the assertion, not of the concept.
-
-**Name.** The merged vocabulary is named **`Glaucoma_Diagnosis`** (it *is* the
-glaucoma diagnosis, and that name is already consumed at all three levels). The
-old 3-term `Glaucoma_Diagnosis` is **replaced** by the merged vocabulary below;
-`Condition_Label`'s terms move into it.
-
-#### 5.8.2 Three axes — diagnosis, gradability, status
-
-The current vocabularies conflate three independent questions. Separate them:
-
-| Axis | Question | Home | Values |
-|---|---|---|---|
-| **Diagnosis** | which glaucoma, or none? | **`Glaucoma_Diagnosis`** (this vocab) | GS, POAG, PACG, Unspecified Glaucoma, Normal, Other, No Diagnosis |
-| **Gradability** | could the image be assessed? | gradability vocab / flag | Gradable, **Ungradable** |
-| **Status** | what is the review state? | `Diagnosis_Status` (§2.4) | Graded, Validated, Rejected |
-
-Key distinctions that drive the placement (all from the 2026-06-30 discussion):
-
-- **`Normal` ≠ `No Diagnosis`.** The old `Normal or No dx` term fused two
-  *opposite* states: `Normal` = assessed, no glaucoma (a real negative finding —
-  ICD codes the encounter, `Z01.00` "exam without abnormal findings"); `No
-  Diagnosis` = **no diagnosis made** (no determination on record). They split.
-- **`No Diagnosis` stays on the diagnosis axis, as a local term.** "No diagnosis"
-  is a legitimate *value* of the diagnosis field, so it stays in `Glaucoma_Diagnosis`
-  (one column, ML-comparable — a model/query gets a direct in-domain answer
-  including "none made"). It has **no ICD code** (the absence of an assessment is
-  not a clinical event), so it is a **local term** with an EyeAI URI — *"no ICD
-  code"* means *"local term"*, not *"different axis"*. Because `No Diagnosis` lives
-  here, **`Diagnosis_Status` does NOT also get a `Not assessed` value** — that would
-  duplicate the concept.
-- **`Unknown` ≡ `No Diagnosis`.** They are the same concept ("no determination on
-  record"); represented by the single `No Diagnosis` term. The old
-  `Glaucoma_Diagnosis.Unknown` synonym `Ungradable` was a **mis-synonym** (it
-  paired a status/absence concept with an image-quality concept) and is dropped.
-- **`Ungradable` is not a diagnosis.** "Couldn't assess the image" is an
-  image-quality fact → the **gradability** axis, not this vocabulary. (An image
-  classifier that can abstain carries `Ungradable` as one of *its* output
-  classes on the gradability axis — the one place the image-model output and the
-  clinical diagnosis legitimately differ.)
-
-#### 5.8.3 The proposed `Glaucoma_Diagnosis` table
-
-This is the **single source of truth for the proposed diagnosis terms** — their
-names, descriptions, synonyms, and identities. (§6 references this table for
-diagnosis wording; §6.0 covers only severity.) Standard Deriva vocabulary shape
-only (`RID`, `Name`, `Description`, `Synonyms`, `ID`, `URI` + system columns) —
-**no custom columns**. `ID`/`URI` is the identity (lookup by code); `Synonyms` is
-human-readable names (lookup by name). Grounded-vs-local is the **URI namespace**
-(`id.who.int/…` = ICD-11 authority; `eye-ai.org/…` = EyeAI local), never a null
-test. Descriptions marked **(confirm clinically)** need Dr. Bolo / Dr. Xu sign-off.
+Read off the data: genuine severity grades (Mild/Moderate/Severe) appear only on
+POAG (648 rows) and PACG (45 rows) — established glaucoma; everything else is
+`Unspecified/Indeterminate` or a condition-as-severity sentinel (698 `GS`/`GS`, 27
+`Normal`/`Normal`). ICD-derived severity stands alone in
+`Execution_Clinical_Records_Glaucoma_Severity` (**3,674 rows**;
+`ICD_Severity_Label`), whose target `Clinical_Records` carries the condition
+separately in `Clinical_Records.ICD_Condition_Label`.
+
+## Appendix B — Proposed vocabulary tables (full)
+
+> **Provisional.** Descriptions marked **(confirm clinically)** need Dr. Bolo /
+> Dr. Xu sign-off; severity staging *thresholds* are **TBD — clinical**. Standard
+> Deriva vocabulary shape only (`RID`, `Name`, `Description`, `Synonyms`, `ID`,
+> `URI` + system columns) — no custom columns. Grounded-vs-local is the URI
+> namespace (`id.who.int/…` = ICD-11; `eye-ai.org/…` = EyeAI-local).
+
+### B.1 `Glaucoma_Diagnosis` (folded diagnosis vocabulary)
+
+The single source of truth for the proposed diagnosis terms. `ID`/`URI` is the
+identity (lookup by code); `Synonyms` are human-readable names (lookup by name).
+ICD-10 codes are **not** in these rows — they live in the `ICD10_Condition_Map`
+cross-walk (§3.4). Full ICD-11 URIs follow
+`http://id.who.int/icd/release/11/{version}/mms/{code}` (abbreviated below).
 
 | Name | Description | Synonyms (human-readable) | `ID` / `URI` |
 |---|---|---|---|
@@ -634,55 +534,18 @@ test. Descriptions marked **(confirm clinically)** need Dr. Bolo / Dr. Xu sign-o
 | `POAG` | Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an **open** angle, no secondary cause. *(confirm clinically)* | "Primary Open-Angle Glaucoma" | `ICD11:9C61.0` / `…/mms/9C61.0` |
 | `PACG` | Primary angle-closure glaucoma — glaucoma with appositional/synechial **closure** of the angle. *(confirm clinically)* | "Primary Angle-Closure Glaucoma" | `ICD11:9C61.1` / `…/mms/9C61.1` |
 | `Unspecified Glaucoma` | Glaucoma present, **subtype not specified**. *(confirm clinically)* | "Glaucoma, unspecified"; "Glaucoma NOS" | `ICD11:9C61.Z` / `…/mms/9C61.Z` |
-| `Normal` | Assessed; **no glaucoma** present (a genuine negative finding). *(confirm clinically)* | "No Glaucoma"; "Normal" | `ICD10:Z01.00` *or* `EYEAI:Normal` **(TBD, §5.8.4)** |
+| `Normal` | Assessed; **no glaucoma** present (a genuine negative finding). *(confirm clinically)* | "No Glaucoma"; "Normal" | `ICD10:Z01.00` *or* `EYEAI:Normal` **(TBD)** |
 | `Other` | A **non-glaucoma** condition (outside the curated glaucoma subset). | "Non-glaucoma"; "Other condition" | `EYEAI:Other` / `eye-ai.org/id/condition/Other` |
 | `No Diagnosis` | **No diagnosis made** — no glaucoma determination on record (≡ the former `Unknown`). *(confirm whether "not assessed" needs its own wording)* | "No dx"; "Not assessed" | `EYEAI:No_Diagnosis` / `eye-ai.org/id/condition/No_Diagnosis` |
 
-Full ICD-11 URIs follow `http://id.who.int/icd/release/11/{version}/mms/{code}`
-(abbreviated `…/mms/{code}` above); see the §5.6 status box and §8.3 for the
-release-version pin. Notes:
+- **`Ungradable` and `Not assessed` are deliberately absent** — gradability axis and (former) status idea respectively; the latter is covered by `No Diagnosis`.
+- **`Normal`'s identifier** is an open item: `Z01.00` is a *reason-for-visit* encounter code, not a disease code, so ICD-Z-vs-local is a genuine sub-choice (§4.3).
 
-- **ICD-10 codes are not in these rows.** The `H40.*` families map to the glaucoma
-  terms through the `ICD10_Condition_Map` cross-walk (§5.7), not via `Synonyms` or
-  columns. `Synonyms` holds human-readable names / WHO index terms only.
-- **`Ungradable` and `Not assessed` are deliberately absent** — gradability axis
-  and (former) status idea respectively; the latter is now covered by `No Diagnosis` here.
-- **`9C61.2/.3/.4`** (secondary / developmental glaucoma) still have no dedicated
-  member and fall into `Other` until added — clinical decision (§7).
+### B.2 `Severity_Label` (cleaned)
 
-#### 5.8.4 Open items before this lands (`data-curation`)
-
-- **`Normal`'s identifier** — ICD-Z encounter code (`Z01.00`, "exam without
-  abnormal findings") vs an EyeAI-local URI. `Z01.00` is a *reason-for-visit*
-  encounter code, not a disease code, so this is a genuine sub-choice.
-- **EyeAI URI scheme** — confirm how EyeAI mints local term URIs
-  (`eye-ai.org/id/…` vs a catalog ERMrest URL vs a PURL) before the local terms
-  are created.
-- **The fold itself needs catalog verification** — what populates
-  `Subject_Diagnosis` vs the `Chart_Label` feature, and how the ~194K image-level
-  rows and the 2,302 chart rows reconcile onto one vocabulary. (`ICD10_Eye` and the
-  `Clinical_Records_ICD10_Eye` bridge are already confirmed — §8.3 — but the
-  Subject_Diagnosis-vs-Chart_Label reconciliation is not yet.)
-
-## 6. Naming cleanup proposals
-
-§6.0 gives the proposed **severity** descriptions and synonyms; §6.1–§6.2 give the
-**action** per term (keep / rename / split / retire) and rationale; §6.3 adds the
-severity **method of determination** (`Severity_Method`); §6.4 covers the GAMMA
-band. **Diagnosis** term descriptions and synonyms are **not** here — they live in
-the §5.8.3 `Glaucoma_Diagnosis` table (the single source); §6.2 references it. The
-**ICD grounding** is §5.6.
-
-> **Provisional.** Everything below is for discussion; clinical criteria are
-> **TBD — clinical**, pending Dr. Bolo and Dr. Xu.
-
-### 6.0 Proposed `Severity_Label` definitions (descriptions & synonyms)
-
-The proposed **description** and **human-readable synonyms** for each severity
-term. Applies **only to established glaucoma** (§5.1–§5.2). Staging *thresholds*
-are deliberately **TBD — clinical**. (Diagnosis-term definitions are in §5.8.3;
-`GS` and `Normal or No dx` are proposed for removal from `Severity_Label` — they
-are diagnoses, not stages — §4, §6.1.)
+Applies **only to established glaucoma** (§3.1). `GS` and `Normal or No dx` are
+retired (they are diagnoses, not stages — Appendix A.2, §3.5). Staging *thresholds*
+are **TBD — clinical**.
 
 | Term | Proposed description | Proposed synonyms |
 |---|---|---|
@@ -691,89 +554,11 @@ are diagnoses, not stages — §4, §6.1.)
 | `Severe` | Severe / advanced-stage glaucomatous damage. **Criteria TBD — clinical**. | "Advanced" |
 | `Not Staged` (+ optional `Indeterminate`) | Separate *"glaucoma present, stage **not recorded**"* from *"stage genuinely **indeterminate**"*; replaces `Unspecified/Indeterminate` (removes the slash). | "Stage unspecified"; "Indeterminate stage" |
 
-> **Note.** The stage set `Mild` / `Moderate` / `Severe` / `Indeterminate` mirrors
-> the **ICD-10 7th-character glaucoma staging** convention, per the AAO guide (§9)
-> — so severity aligns with how stage is already coded in the source data.
-> Thresholds remain **TBD — Dr. Bolo / Dr. Xu**.
+### B.3 `Severity_Method` (new — the staging basis)
 
-### 6.1 `Severity_Label` — actions
-
-| Current term | Action | Rationale |
-|---|---|---|
-| `Mild` / `Moderate` / `Severe` | **Keep**, add real criteria | Genuine stages; today's descriptions are circular (§4 item 3). Add reproducible criteria — **TBD — clinical** (VF MD / RNFL / CDR). |
-| `Unspecified/Indeterminate` (`4-YFWW`) | **Split & rename** → `Not Staged` (+ optional `Indeterminate`) | One label conflates "stage not recorded" vs "genuinely indeterminate", and the slash packs a synonym (§4 item 2). |
-| `GS` (`4-YFWY`) | **Retire from severity** | A condition, not a stage — represent via `Condition_Label` (§4 item 1). Requires data migration (below). |
-| `Normal or No dx` (`5-29BJ`) | **Retire from severity** | Absence of disease, not a stage — represent via `Condition_Label` (§4 item 1). Requires data migration (below). |
-
-(Proposed descriptions & synonyms for the kept terms: §6.0.)
-
-> **Migration note (data migration — §8 change 4, not this doc):** retiring
-> severity `GS` and `Normal or No dx` requires re-mapping existing `Chart_Label`
-> rows (698 `GS`/`GS`, 287 `GS`/`Unspecified`, 61+27 Normal rows; §3) so the
-> condition is preserved and severity becomes not-applicable / not-staged.
-
-### 6.2 Diagnosis vocabulary — actions (current `Condition_Label` → folded `Glaucoma_Diagnosis`)
-
-Per-term actions for migrating the current `Condition_Label` members into the
-folded `Glaucoma_Diagnosis` (§5.8). The final term set + identities are §5.8.3.
-
-| Current term | Action | Rationale |
-|---|---|---|
-| `GS`, `POAG`, `PACG` | **Keep** names as display labels; ground in ICD-11 | Each term *is* its ICD-11 concept with the WHO URI as identity, and `H40.*` codes move out of `Synonyms` — full design in §5.6/§5.7. |
-| `Normal or No dx` | **Split** → `Normal` (diagnosis) + `No Diagnosis` (local term, ≡ former `Unknown`) | Two opposite states fused in one term (§5.8.2): `Normal` = assessed-healthy; `No Diagnosis` = no determination. Decided in §5.8. |
-| `Unspecified Glaucoma` | **Keep** | Subtype unspecified (LAC patient-level). Confirm eligibility for severity grading (§5.2). |
-| `Other` | **Keep — reconcile scope** | Catch-all for non-glaucoma. Tension: §5.6 tentatively routes ICD-11 `9C61.2/.3/.4` (secondary/developmental **glaucoma**) here for lack of a member — so `Other` would hold some glaucoma. Decide whether to add those members instead (clinical — §7). |
-
-**Worked example — the vocabulary-row layout for `GS`.** Shows how one folded
-`Glaucoma_Diagnosis` row fills the standard vocabulary columns concretely
-(the term set + values are §5.8.3; this just illustrates the column layout):
-`Name` = display label, `ID`/`URI` = the ICD-11 identity (lookup by code),
-`Synonyms` = WHO index terms (lookup by name). Description/synonyms provisional;
-the `9C60` code is verified (§5.6 status).
-
-| Column | Value |
-|---|---|
-| `RID` | `2-NKSW` *(the existing GS row, §2.1)* |
-| `Name` | `GS` |
-| `Description` | Glaucoma suspect — risk factors for glaucoma (elevated IOP / ocular hypertension, suspicious optic disc or RNFL, narrow/occludable angle, or steroid response) **without** definite glaucomatous optic neuropathy or field loss. *(confirm clinically)* |
-| `Synonyms` | `Glaucoma Suspect`, `Borderline glaucoma`, `Ocular hypertension`, `Narrow angle glaucoma suspect`, … *(WHO `9C60` index terms — human names, not codes; copy the authoritative set from icd.who.int)* |
-| `ID` / `URI` | `ICD11:9C60` / `http://id.who.int/icd/release/11/mms/9C60` |
-
-Siblings follow the same shape: `POAG` = `9C61.0`, `PACG` = `9C61.1`,
-`Unspecified Glaucoma` = `9C61.Z`. ICD-10 equivalents (`GS`: `H40.00`–`H40.06`)
-are **not** in the row — they live in the `ICD10_Condition_Map` cross-walk table
-(§5.6, §5.7), not in columns on the term.
-
-### 6.3 Severity method of determination — `Severity_Method` + the `(Severity, Method)` pair
-
-Per Dr. Xu's caution (§7), `Mild/Moderate/Severe` are ambiguous without a named
-**basis** — the same grade means different things under different staging systems,
-and two systems must never be silently mixed in one column. The resolution:
-**record the method of determination as a first-class value alongside the severity
-grade**, so each severity is the pair **`(Severity_Label, Severity_Method)`**.
-
-**Why a separate `Severity_Method` vocabulary (not a workflow type, not a
-compound term).** The method is a *semantic property of the severity value* — "this
-`Mild` was determined by HPA staging" — not a fact about which code ran and not
-part of the grade itself. So:
-
-- It is **not** encoded into the severity term (`HPA_Mild`, …) — that repeats the
-  pack-two-axes-into-one-label anti-pattern this document removes elsewhere (cf.
-  `Unspecified/Indeterminate`, `Normal or No dx`) and destroys the clean
-  three-value scale.
-- It is **not** left implicit in the producing `Workflow`/`Execution` — method
-  varies **per row** (a grader may use HPA on one subject, another system on the
-  next), applies to human chart-review values that have no workflow, and would
-  otherwise require a provenance walk to read. Provenance (which code ran) and
-  method (which clinical basis) are complementary and both kept.
-
-This keeps the `Severity_Label` scale exactly `Mild` / `Moderate` / `Severe` (plus
-the `Not Staged` / `Indeterminate` sentinels, §6.0) and adds the basis as a
-parallel controlled vocabulary.
-
-**Proposed `Severity_Method` vocabulary** (new domain vocab; standard shape,
-`Synonyms` human-only; codes are illustrative — confirm the set with Dr. Bolo /
-Dr. Xu):
+New domain vocabulary; recorded per-row as a feature column beside the severity
+value (§3.6). Local vocabulary → EyeAI-routed URIs. Member set is **TBD — clinical**
+(at minimum `HPA` and `ICD_7th_char`, the two populated severity sources today).
 
 | Name | Description | `ID` / `URI` |
 |---|---|---|
@@ -782,158 +567,39 @@ Dr. Xu):
 | `Structural` | Stage from structural criteria (RNFL thickness / CDR) rather than VF. *(confirm clinically)* | `EYEAI:Structural` / `…/severity-method/Structural` |
 | `Clinician_Global` | Clinician's overall global staging judgment, basis not otherwise specified. *(confirm clinically)* | `EYEAI:Clinician_Global` / `…/severity-method/Clinician_Global` |
 
-> The exact member set is **TBD — clinical** (Dr. Bolo / Dr. Xu); at minimum
-> `HPA` and `ICD_7th_char` are expected, since the two populated severity sources
-> today are chart-review and ICD-derived. Local vocabulary → EyeAI-routed URIs
-> (§5.6 convention).
+## Appendix C — References / provenance
 
-**Where the method value is recorded.** Severity lives **only in features**, never
-as a raw column — confirmed from the live catalog (`Clinical_Records` has *no*
-severity column; only condition (`ICD_Condition_Label`) and the raw measurements
-`IOP` / `CDR` / `CCT` / … that *feed* severity). So `Severity_Method` is added as a
-**feature column beside the severity column**, on each severity-bearing feature:
-
-| Feature (target) | Severity column | New method column |
-|---|---|---|
-| `Execution_Subject_Chart_Label` (Chart_Label on Subject) | `Severity_Label` | `Severity_Method` |
-| `Execution_Clinical_Records_Glaucoma_Severity` (ICD-derived) | `ICD_Severity_Label` | `ICD_Severity_Method` |
-
-Both go in as part of the feature definition (features are multi-column), so the
-method inherits the feature machinery — including the provenance link to the
-producing Execution. The method column is **NOT-NULL whenever the severity is a
-graded value** (`Mild`/`Moderate`/`Severe`); it is not-applicable for the
-`Not Staged` / `Indeterminate` sentinels.
-
-### 6.4 New term needed for the GAMMA mapping
-
-### 6.4 New term needed for the GAMMA mapping
-
-Dr. Kyle's **GAMMA** mapping will require a severity term **"Moderate-to-Severe"**
-(per Dr. Bolo's mapping, GAMMA's **"Progressive"** category maps to a
-**Moderate-to-Severe** severity band, which needs to be added to the
-vocabulary). Open question for the
-meeting: does a `Moderate-to-Severe` band fit the cleaned-up Mild/Moderate/Severe
-scheme as an additional member, or should cross-dataset band collapses
-(GAMMA/GLEAM) be handled as a **mapping layer** on top of canonical
-Mild/Moderate/Severe rather than as new vocabulary terms? Flagged so the cleanup
-doesn't lock GAMMA/GLEAM out.
-
-## 7. Open clinical questions for Dr. Bolo & Dr. Xu (for the meeting)
-
-1. **Severity criteria.** What clinical criteria define `Mild` / `Moderate` /
-   `Severe`? HPA (Hodapp-Parrish-Anderson) staging? VF MD thresholds? Structural
-   (RNFL/CDR) criteria, or a combination? (Dr. Bolo.)
-2. **Separate but conditional?** Confirm severity should be a separate attribute
-   that applies **only** when an established glaucoma condition is present
-   (Professor Carl's question; strawman in §5.2).
-3. **Method of determination.** Resolved in **§6.3**: record the staging basis as
-   a separate `Severity_Method` vocabulary, so each severity is the pair
-   `(Severity_Label, Severity_Method)`. Remaining clinical input: **confirm the
-   `Severity_Method` member set** (HPA, ICD 7th-char, structural, … — §6.3).
-4. **Remove non-stage values?** Confirm retiring `GS` and `Normal or No dx` from
-   `Severity_Label` (they are conditions, not stages).
-5. **Suspects and severity.** Does a glaucoma suspect (`GS`) have a severity at
-   all? (Strawman: no — not applicable.)
-6. **GLEAM / GAMMA.** What, if anything, must the cleaned-up vocabulary provide so
-   the GLEAM and GAMMA mappings land cleanly — notably GAMMA's `Moderate-to-Severe`
-   band (§6.4) — without distorting the canonical clinical definitions?
-
-## 8. Change plan (consolidated)
-
-The actionable synthesis of §§5–7. **Dependency ordering and repo split matter** —
-executing these in the wrong order leaves half-built states.
-
-### 8.1 The changes
-
-| # | Change | What it entails | Where |
-|---|---|---|---|
-| **1** | **Clean up `Severity_Label`** | Retire `GS` and `Normal or No dx` (conditions, not stages); split `Unspecified/Indeterminate` → `Not Staged` vs `Indeterminate`; add real clinical criteria to Mild/Moderate/Severe. (§6.1) | `data-curation` |
-| **2** | **Fold into one `Glaucoma_Diagnosis` vocabulary** | Merge `Condition_Label` + the current 3-term image/visit/subject `Glaucoma_Diagnosis` into one shared vocab named **`Glaucoma_Diagnosis`** (§5.8). Terms + identities per §5.8.3: ICD-11 `ID`/`URI` for `GS/POAG/PACG/Unspecified Glaucoma`; split `Normal or No dx` → `Normal` (condition) + `No Diagnosis` (local); `Other`, `No Diagnosis` as EyeAI-local terms; `H40.*` out of `Synonyms`. Separate `Ungradable` (gradability axis) and drop the `Unknown`↔`Ungradable` mis-synonym. | `data-curation` |
-| **3** | **Create the ICD-10 cross-walk table** | New association table `ICD10_Eye → Glaucoma_Diagnosis` (`ICD10_Condition_Map`), **exact codes** (not wildcards). Prereq: `ICD10_Eye` must enumerate every ICD-10 code the data uses. (§5.7) | `data-curation` |
-| **4** | **Migrate diagnosis data onto the folded vocab** | Repoint the `Chart_Label` feature rows and the image/visit/subject `*_Diagnosis` rows to the merged `Glaucoma_Diagnosis` terms; re-map cleaned severity values (counts in §6.1). **Data migration**, distinct from the schema/vocab changes 1–3. | `data-curation` |
-| **5** | **Update `compute_condition_label`** | Replace the `icd_mapping` dict with a **join through the cross-walk**; **keep** the multi-code priority tie-break (it already exists, do not re-add). `insert_condition_label` unaffected. (§5.7) | `eye-ai-ml` |
-| **6** | **Add severity method of determination** | Create the `Severity_Method` vocabulary (§6.3), then add a method column to each severity-bearing feature — `Severity_Method` on `Execution_Subject_Chart_Label` and `ICD_Severity_Method` on `Execution_Clinical_Records_Glaucoma_Severity` — NOT-NULL when severity is graded. Records each severity as the `(Severity_Label, Severity_Method)` pair. | `data-curation` |
-
-### 8.2 Dependency ordering
-
-```
-ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
-                     └──▶ (3) create cross-walk table ───────┴─▶ (5) update code ──▶ (4) migrate diagnosis data
-(1) Severity cleanup ──┐
-(6) Severity_Method ───┴─ independent of the diagnosis fold; can run in parallel
-```
-
-- The cross-walk (3) needs both endpoints ready: the folded `Glaucoma_Diagnosis` (2) **and** `ICD10_Eye` populated with exact codes.
-- The code change (5) needs the cross-walk (3) to exist.
-- The data migration (4) needs the folded vocabulary (2) and the cleaned severity (1).
-- Severity work (1) and the method vocab/columns (6) are on the **severity axis**, independent of the diagnosis fold; (6) needs the `Severity_Method` member set confirmed (§8.3) and the severity features to exist (they do).
-- **Repo split:** 1–4 and 6 are catalog/schema/data → `data-curation` (Feature Registration Request); 5 is code → `eye-ai-ml`, and its PR **cannot merge until 3 lands** in the catalog.
-
-### 8.3 Gates (must resolve before the clinical parts land)
-
-- **Severity criteria** for Mild/Moderate/Severe — clinical (Dr. Bolo, §7 Q1).
-- **`Severity_Method` member set** — confirm the staging systems (HPA, ICD 7th-char,
-  structural, …) before creating the vocabulary in change 6 (§6.3, clinical).
-- **`9C61.2/.3/.4` disposition** — become `Glaucoma_Diagnosis` members or fold into `Other`? Affects change 2 and the priority ordering in change 5 (§5.8, §7).
-- **`Normal`'s identifier** — ICD-Z encounter code (`Z01.00`) vs an EyeAI-local URI (§5.8.4).
-- **EyeAI URI scheme** for local terms (`Other`, `No Diagnosis`, maybe `Normal`) — §5.8.4.
-- **GAMMA `Moderate-to-Severe` band** (§6.4) — may add a `Severity_Label` member in change 1.
-- **ICD-11 release-version pin** — pin a **specific ICD-11 release** in the term
-  URIs (e.g. `…/release/11/2025-01/mms/…`) rather than the bare `{version}`
-  placeholder, since ICD-11 codes/titles can shift between releases. Confirm the
-  current WHO release at implementation time and **record it in this spec** (keep
-  the release-independent foundation `…/icd/entity/{id}` URI as the stable anchor).
-- **Catalog verification** — ✅ **resolved (confirmed via deriva MCP, 2026-06-30):**
-  `ICD10_Eye` **is** a controlled vocabulary (1,209 terms), and the
-  `Clinical_Records ⇄ ICD10_Eye` association is **`Clinical_Records_ICD10_Eye`**
-  (27,962 rows — the input to `compute_condition_label`).
-- **Fold verification (still open)** — before the §5.8 fold (change 2/4), confirm
-  what populates `Subject_Diagnosis` vs the `Chart_Label` feature and how the
-  image/visit/subject `*_Diagnosis` rows reconcile with the chart rows onto the
-  merged `Glaucoma_Diagnosis` vocabulary.
-
-## 9. References / provenance
-
-- This document consolidates the read-only investigation from the 2026-06-30
-  review of the diagnosis/condition/severity landscape.
+- Consolidates the read-only investigation from the 2026-06-30 review of the
+  diagnosis/condition/severity landscape.
 - **Catalog objects referenced** (schema `eye-ai`): vocabularies `Condition_Label`,
   `Severity_Label`, `Glaucoma_Diagnosis`, `Diagnosis_Tag`, `Diagnosis_Status`,
   `ICD10_Eye`, `Grading_Condition`; feature/association tables
-  `Execution_Subject_Chart_Label` (Chart_Label feature on Subject),
-  `Execution_Clinical_Records_Glaucoma_Severity` (Glaucoma_Severity feature on
-  Clinical_Records), `Clinical_Records`, `Image_Diagnosis`, `Observation_Diagnosis`,
-  `Subject_Diagnosis`.
-- **Proposed new object (not yet in catalog)**: `ICD10_Condition_Map` — an
-  association table that **cross-walks legacy ICD-10 → the ICD-11 concept**
-  (`ICD10_Eye → Condition_Label`, i.e. the folded `Glaucoma_Diagnosis` under §5.8;
-  §5.7), the data-driven replacement for the hard-coded `icd_mapping` in
-  `compute_condition_label()`. Name is a placeholder; creation is a `data-curation`
-  change.
-- **Proposed new object (not yet in catalog)**: `Severity_Method` — a domain
-  vocabulary of severity staging systems (HPA, ICD 7th-char, …), referenced by a
-  new method column on each severity-bearing feature so severity is recorded as
-  the `(Severity_Label, Severity_Method)` pair (§6.3). Creation is a
-  `data-curation` change.
+  `Execution_Subject_Chart_Label` (Chart_Label on Subject),
+  `Execution_Clinical_Records_Glaucoma_Severity` (Glaucoma_Severity on
+  Clinical_Records), `Clinical_Records`, `Clinical_Records_ICD10_Eye`,
+  `Image_Diagnosis`, `Observation_Diagnosis`, `Subject_Diagnosis`.
+- **Proposed new objects (not yet in catalog)**:
+  - `ICD10_Condition_Map` — association table cross-walking legacy ICD-10 → the
+    ICD-11 concept (`ICD10_Eye → Glaucoma_Diagnosis`, §3.4); data-driven
+    replacement for the hard-coded `icd_mapping` in `compute_condition_label()`.
+  - `Severity_Method` — domain vocabulary of severity staging systems (App. B.3),
+    referenced by a method column on each severity-bearing feature (§3.6).
 - **Library code referenced** (`eye-ai-ml/eye_ai/eye_ai.py`):
   `compute_condition_label()`, `insert_condition_label()`, `severity_analysis()`
-  (laterality — see §5.5).
-- **Roadmap context:** repository layering per `eye-ai-usc/eye-ai-platform`
-  (front door / repository index).
-- **Clinical & coding references** (for the `Condition_Label` ICD grounding, §5.6):
-  - AAO *Glaucoma ICD-10 Quick Reference Guide* — **primary** clinical reference
-    for the H40 glaucoma codes:
+  (laterality — see the §1 note).
+- **Clinical & coding references:**
+  - AAO *Glaucoma ICD-10 Quick Reference Guide* — primary clinical reference for
+    the H40 glaucoma codes:
     <https://www.aao.org/Assets/5adb14a6-7e5d-42ea-af51-3db772c4b0c2/636713219263270000/bc-2568-update-icd-10-quick-reference-guides-glaucoma-final-v2-color-pdf?inline=1>
   - icd10data.com — ICD-10-CM H40 glaucoma codes:
     <https://www.icd10data.com/ICD10CM/Codes/H00-H59/H40-H42/H40->
-  - WHO **ICD-11 (MMS)** — authoritative ICD-11 glaucoma codes and canonical URIs
-    (`http://id.who.int/icd/...`): glaucoma block `9C61`, glaucoma suspect `9C60`;
-    browse at <https://icd.who.int/browse11>. (ICD-10-CM has no single official URI
-    scheme — CDC/NCHS code lists — which is why the identifier URI uses ICD-11.)
+  - WHO **ICD-11 (MMS)** — authoritative ICD-11 glaucoma codes and canonical URIs:
+    glaucoma block `9C61`, glaucoma suspect `9C60`; <https://icd.who.int/browse11>.
 - **Process note — no catalog edits from this document.** Any term rename,
-  removal, description change, or new term (§6) is a catalog change and must be
-  requested through **`data-curation`** via its *"Feature Registration Request"*
-  issue template. This document is the clinical rationale that such requests cite;
-  it does not itself mutate the catalog.
+  removal, description change, or new term (§3–§4) is a catalog change requested
+  through **`data-curation`** via its *"Feature Registration Request"* template.
+  This document is the clinical rationale such requests cite; it does not mutate
+  the catalog.
 
 ---
 
