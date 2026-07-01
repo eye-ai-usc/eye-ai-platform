@@ -301,6 +301,10 @@ null/not-applicable otherwise, or a constraint/validation at write time in the
 `Chart_Label` and `Glaucoma_Severity` features. This is a `data-curation` change,
 out of scope for this document beyond recording the intent.
 
+The **ERD in §5.7 (Figure 1)** shows this whole model — both axes on the
+`Chart_Label` row, the conditional severity constraint, and the ICD grounding of
+`Condition_Label` — once the ICD pieces (§5.6) are in place.
+
 ### 5.4 Define terms clinically, not by how the label was produced
 
 A term's definition must describe **the eye**, never the mechanism that assigned
@@ -428,10 +432,11 @@ crosswalk itself are in the §5.6 mapping table; this section does not restate t
 | `ICD10_Eye` | one term per legacy ICD-10 code | `ID`/`URI` = that ICD-10 code |
 | `ICD10_Condition_Map` *(new, association)* | **ICD-10 → ICD-11 cross-walk** | FKs: `ICD10_Eye` → `Condition_Label` |
 
-![ERD — Condition_Label IS the ICD-11 concept; chart review picks the ICD-11 term directly while legacy ICD-10 records cross-walk up to the same term.](img/icd11-condition-erd.png)
+![ERD — the Chart_Label feature carries Condition_Label and Severity_Label as two side-by-side axes on one row; Condition_Label is the ICD-11 concept (chart review picks it directly, legacy ICD-10 cross-walks up), and severity is valid only when the condition is glaucoma.](img/icd11-condition-erd.png)
 
-*Figure 1 — ERD for the ICD-11 coding model. Source:
-[`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg).*
+*Figure 1 — the full Chart_Label model: the two axes (condition + severity, §5.1–§5.3),
+the ICD-11 grounding of `Condition_Label` (§5.6), and the ICD-10→ICD-11 cross-walk
+(this section). Source: [`img/icd11-condition-erd.svg`](img/icd11-condition-erd.svg).*
 
 **Why a cross-walk table (not more columns).** The ICD-10 side at exact-code
 granularity is *many* codes per concept (`H40.00`–`H40.06` all → `GS`) — a

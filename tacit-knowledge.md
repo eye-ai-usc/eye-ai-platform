@@ -308,6 +308,20 @@ replacement for `compute_condition_label()`'s hard-coded `icd_mapping`
 (`H40.0x→GS`, `H40.1x→POAG`, `H40.2→PACG`, else `Other`), moving that logic out
 of Python and into `data-curation`-managed data.
 
+**ERD scope — must show BOTH axes, not just condition.** (Prof. Carl caught this.)
+The first ERD drew only the condition/ICD side and omitted `Severity_Label`
+entirely — but the doc's core model (§5.1–§5.3) is that Condition and Severity are
+two side-by-side FK axes on the `Chart_Label` feature row
+(`Execution_Subject_Chart_Label`), with severity conditional on the condition
+being glaucoma. A figure sitting after that model that shows only one axis reads as
+incomplete. Fix: the ERD now shows the Chart_Label feature carrying BOTH
+`Condition_Label` and `Severity_Label` FKs, `Severity_Label` as its own vocab, and
+the orange "severity valid only if condition = glaucoma" constraint (§5.2). There
+is NO `Condition_Severity` table — severity is a second column on the feature row,
+not a separate association. Figure lives in §5.7 (after ICD grounding is
+explained) with a forward pointer from §5.3, to avoid showing ICD-11 codes before
+§5.6 introduces them.
+
 **Placement — the map is upstream of `Condition_Label`, not a hop off the
 Subject.** Two paths populate `Condition_Label`, and the map is only on one of
 them. (1) *Chart-review path*: Subject → `Chart_Label` feature
