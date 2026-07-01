@@ -332,6 +332,26 @@ model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
 not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
 in the doc — discussion only; needs live-catalog check of what populates each.
 
+**Tech-writer re-review #3 (2026-07-01, Claude + Codex) — post-restructure cleanup.**
+Both passes agreed the proposal-first structure works; findings were stale wording
++ cross-refs from the recent edits, not structural. Fixed: broken ref `§5 Q6`→`§5
+Q8` (GAMMA is Q8, Codex caught); stale figure caption ("figure uses
+Condition_Label" — false after the ERD was updated to Glaucoma_Diagnosis + a 3rd
+column) rewritten, alt-text updated for the Severity_Method column; Appendix A.3
+"single consolidated vocabulary" (read as if the fold happened) → "3-term
+vocabulary shared by the … tables" + a "distinct from the proposed fold" note; §3.3
+`Normal` "ICD codes the encounter Z01.00" softened to "identifier still open";
+Appendix B.1 `Not assessed` synonym clarified (synonym of the diagnosis term, NOT a
+Diagnosis_Status value); §3.5 severity-method paragraph trimmed to a §3.6 pointer
+(dedup); line-294 ICD-10-7th-char wording fixed so it doesn't undercut the
+method-agnostic message; grammar "HPA vs ICD vs structural define" → "HPA, ICD
+7th-char, and structural staging define"; §4.3 retitled "Gates and verified
+assumptions" (had a resolved ✅ item); §5 retitled "Open questions & decisions"
+(has non-clinical fold-signoff/dataset Qs). JUDGMENT CALLS not applied: Codex #9
+(split the dense §3.4) — declined, splitting right after a restructure risks churn
+and the section is already concern-ordered; #12 tone (⚠️/✅ emoji, "Professor
+Carl") — kept, deliberate emphasis appropriate for a strawman working doc.
+
 **Severity criteria belong to the METHOD, not the grade term.** (Prof. Carl caught
 an inconsistency.) An earlier line said "keep Mild/Moderate/Severe, add real
 clinical criteria (VF MD/RNFL/CDR thresholds) to the term" — which contradicts the
