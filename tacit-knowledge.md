@@ -308,6 +308,257 @@ replacement for `compute_condition_label()`'s hard-coded `icd_mapping`
 (`H40.0x→GS`, `H40.1x→POAG`, `H40.2→PACG`, else `Other`), moving that logic out
 of Python and into `data-curation`-managed data.
 
+**Model-label and clinical-label should share ONE vocabulary (normalization).**
+(Prof. Carl's framing.) Key distinction: *agreement* (do the values match — they
+need NOT) is separate from *shared domain* (should a model's "Glaucoma" and the
+chart's "Glaucoma" be the SAME term — yes). Storing the same concept in two
+vocabularies (`Glaucoma_Diagnosis` vs `Condition_Label`) is denormalization of the
+concept; the cost lands on the platform's most important query — model prediction
+vs clinical ground truth — which becomes a cross-vocabulary mapping instead of a
+value equality (`prediction == label`). DB-designer position: provenance ("a model
+said it" vs "a clinician said it") is an attribute of the ASSERTION, not the
+CONCEPT — model it via `Diagnosis_Tag` (already exists: CNN_Prediction,
+Expert_Consensus, …) and/or which table, NOT via a duplicate vocabulary. Normalized
+target: ONE `Condition_Label` (ICD-11-grounded) referenced by image/visit/subject/
+chart tables alike; provenance via `Diagnosis_Tag`; gradability via
+`Diagnosis_Status`; `Glaucoma_Diagnosis` retired or demoted to a coarse view. Two
+real obstacles, both resolvable: (1) GRANULARITY — one vocab holds both coarse and
+fine terms with a defined coarse↔fine relation; a producer asserts at the
+resolution it supports (model→GS/coarse, clinician→POAG). (2) `Unknown`/`Ungradable`
+is an image-QUALITY state, not a diagnosis — move it onto the gradability/status
+axis (`Diagnosis_Status`), don't put it in the condition vocab. COUNTERWEIGHT:
+bigger change, ~194K image rows repoint to Condition_Label; worth it IF
+model-vs-clinical comparison is central to the platform (likely yes for Eye-AI),
+not if Glaucoma_Diagnosis is a throwaway per-image screen. NOT YET DECIDED / not
+in the doc — discussion only; needs live-catalog check of what populates each.
+
+**DECIDED (Prof. Carl): the merged vocabulary is named `Glaucoma_Diagnosis`, not
+`Condition_Label`.** The fold of Condition_Label + the old image-level
+Glaucoma_Diagnosis into ONE shared vocabulary takes the name `Glaucoma_Diagnosis`
+(the merged thing IS the glaucoma diagnosis, and that name was already consumed at
+image/visit/subject). So: the old 3-term `Glaucoma_Diagnosis` (No/Suspected/
+Unknown) is REPLACED by the 7-term merged vocab; `Condition_Label` as a table name
+goes away (its terms move into `Glaucoma_Diagnosis`). All the design points
+(ICD-11 identity, local EyeAI terms, No dx local condition term, cross-walk table)
+now attach to `Glaucoma_Diagnosis`. Captured in the doc (§5.8 + revised §2.3).
+
+**DECIDED (Prof. Carl): `No dx` is a LOCAL term in `Condition_Label`;
+`Diagnosis_Status` does NOT get `Not assessed`.** Supersedes the status-axis lean
+below. Rationale: "no diagnosis" is a legitimate VALUE of the diagnosis field —
+one column, in-domain, ML-comparable (a model/query asking "what's the condition?"
+gets a direct answer incl. "none made"). Key reconciliation with the ICD-code
+argument: "no ICD code" forces `No dx` to be a LOCAL term (EyeAI URI), it does NOT
+force it onto a different axis — local-ness and axis are independent choices. So
+`No dx` = local condition term (`EYEAI:No_dx`, `eye-ai.org/id/condition/No_dx`).
+CONSEQUENCE: because the concept now lives in Condition_Label, `Diagnosis_Status`
+must NOT also carry `Not assessed` (would duplicate the concept — the thing we've
+been avoiding). Status stays Graded/Validated/Rejected. `Unknown` ≡ `No dx` (per
+earlier decision) → represented by this one term. `Ungradable` still off this
+table (gradability axis). Updated Condition_Label = 7 terms: GS, POAG, PACG,
+Unspecified Glaucoma (ICD); Normal (ICD-Z `Z01.00`? or local — sub-choice); Other,
+No dx (local).
+
+**[SUPERSEDED by the decision above] ICD-codeability is the discriminator: `No dx`
+has NO ICD code → status axis; `Normal` DOES (`Z01.00`) → condition.** (Resolves the prior "unsettled" note.)
+Verified against ICD-10-CM: `Z01.00` = "Encounter for examination of eyes and
+vision WITHOUT abnormal findings" (real billable code) and `Z13.5` = screening —
+both code an encounter that HAPPENED, i.e. they map to **Normal** (examined, no
+disease), NOT to "no dx". "No dx" = no determination ever made = no encounter, no
+finding → nothing for ICD to code (ICD codes clinical events; absence of one isn't
+codeable). Apply the design rule (Condition_Label terms are ICD-groundable):
+Normal → groundable (Z01.00) → belongs in Condition_Label; No dx → not groundable
+because it isn't a clinical event → belongs on the STATUS axis (Diagnosis_Status.
+Not assessed). So the answer to "why can't No dx go in the diagnosis table" is
+principled, not just purist: it has no ICD grounding because it's the absence of
+an assessment, not a diagnosis. TIPS the earlier-unsettled axis choice toward
+`Not assessed` on the status axis. Hedge: Normal's grounding is a Z "reason-for-
+visit" encounter code, not a disease code — so whether Normal's ID is Z01.00 or an
+EyeAI-local URI is a sub-choice; but the CONTRAST holds (Normal has a candidate
+code, No dx has none). Sources: icd10data.com Z01.00, Z13.5. (Prof. Carl pushed back — earlier note
+over-stated "No dx → status" as forced. Correction.) "No dx" literally = no
+diagnosis = the Not-assessed/Unknown concept, so `Normal or No dx` still clearly
+fuses two things (Normal = negative diagnosis; No dx = no diagnosis) and should
+split. BUT the split TARGET for "No dx" is a real choice, not a given:
+- **In `Condition_Label`** (as a `No dx` term): "no diagnosis" is a legitimate
+  VALUE of the diagnosis field ("none made" answers "what's the diagnosis?").
+  Keeps one column, keeps model-vs-clinical a single-domain comparison with "no
+  dx" as a comparable value — the SAME argument we used for the ML reject class.
+  Consistent with already putting Normal/Other/Unspecified (non-pure-ICD) in the
+  vocab. Simpler.
+- **In `Diagnosis_Status`** (as `Not assessed`): purist view — "no determination"
+  is a workflow state, not an eye-fact; keeps condition = eye-facts only.
+The DECIDING question: does `Diagnosis_Status` already track an ORTHOGONAL
+"assessed?" axis (Graded/Validated/Rejected) that "Not assessed" naturally
+extends, AND does "assessed?" need to vary independently of the condition value?
+If YES → status axis (else you duplicate the axis). If NO — if "no diagnosis" is
+purely one possible answer to the diagnosis question and never coexists with an
+actual diagnosis → `No dx` in Condition_Label is simpler and correct; shipping it
+to a status table is over-engineering. This is a catalog/workflow fact (how
+Diagnosis_Status is actually used vs condition), NOT resolvable by reasoning.
+UNSETTLED. Data split of the 88 rows also still needs the catalog.
+
+**OPEN DATA Q: are there subjects with unknown / no-determination glaucoma status?**
+Can't answer from the doc snapshot — needs a live catalog query (deriva MCP not
+connected). What the snapshot shows: all 2,302 `Chart_Label` rows carry a REAL
+condition (GS/POAG/PACG/Other/Normal or No dx/Unspecified) — no explicit
+`Unknown`. BUT two catches: (1) `Normal or No dx` (61+27=88 rows) conflates
+"assessed-healthy" vs "no determination" — some of those 88 may BE
+no-determination subjects, unresolvable from the label (exactly what the split
+fixes); (2) Subject_Diagnosis/Observation_Diagnosis cover ~7,020 each vs only
+2,302 chart-labeled subjects — subjects with an image diagnosis but NO Chart_Label
+row are effectively "not assessed" clinically, and Glaucoma_Diagnosis has an
+`Unknown` value (378 image rows). To answer, query: Subject_Diagnosis where
+Glaucoma_Diagnosis=Unknown; subjects in imaging but absent from Chart_Label; and
+disambiguate the Normal-or-No-dx rows. Meta-point: that this is HARD to count today
+is itself evidence for the proposal — with a clean status axis + Normal split it'd
+be a one-line query.
+
+**`Unknown` is not dropped — it relocates to `Diagnosis_Status` as `Not assessed`.**
+(Prof. Carl check.) Removing `Unknown`/`Not assessed` from `Condition_Label` does
+NOT delete the concept — it still needs a home, on the STATUS axis. `Diagnosis_Status`
+today = Graded/Validated/Rejected (§2.4), with NO "no determination" value, so we
+must ADD `Not assessed` (≡ Unknown) there. Modeling sub-choice: represent "no
+determination" either (1) as an explicit `Not assessed` status term (first-class,
+queryable — better for a screening worklist; "we know it's unassessed" is
+actionable and unambiguous), or (2) as absence-of-row (null/missing carries it —
+ambiguous: unassessed vs record-lost). Lean explicit for a screening platform.
+Full three-axis term counts: Condition (Condition_Label) = GS, POAG, PACG,
+Unspecified Glaucoma, Normal, Other; Gradability = Gradable, Ungradable; Status
+(Diagnosis_Status) = Graded, Validated, Rejected, + Not assessed(≡Unknown, NEW).
+Discussion-only; not in the doc.
+
+**Proposed `Condition_Label` shape (concept-complete draft).** Standard vocab
+columns only (RID, Name, Description, Synonyms, ID, URI). Terms: GS→ICD11:9C60,
+POAG→9C61.0, PACG→9C61.1, Unspecified Glaucoma→9C61.Z (all WHO URIs; H40.* leaves
+Synonyms for ICD10_Condition_Map); Normal→EyeAI URI (split out of the old
+`Normal or No dx`, keeps only the assessed-healthy meaning); Other→EyeAI URI.
+NOT in this table: Ungradable (gradability axis), Unknown/Not-assessed (status
+axis — the "or No diagnosis made" half of the old Normal-or-No-dx). Grounded vs
+local = URI namespace (id.who.int vs eye-ai.org). Open sub-decisions: (a) does
+`Normal` get a WHO ICD-11 URI or an EyeAI one (is "no glaucoma" ICD-representable,
+or modeled as absence?) — TBD; (b) 9C61.2/.3/.4 still have no member → Other
+unless added (§7); (c) RID handling when splitting the old 5-26KY `Normal or No
+dx` row is a data-curation mechanic; (d) exact per-term IRIs + EyeAI URI scheme
+still TBD-verify. Discussion-only; not in the doc.
+
+**RESOLVED: `Unknown` ≡ `Not assessed` (one concept); `Ungradable` is separate.**
+(Prof. Carl decision.) Do NOT conflate `Unknown` with `Ungradable`. `Unknown` and
+`Not assessed` ARE the same concept = "no diagnostic determination on record" →
+one STATUS value (`Diagnosis_Status`). `Ungradable` = "image couldn't be assessed"
+→ separate GRADABILITY axis. So the three distinct concepts land cleanly: `Normal`
+= assessed-healthy → CONDITION; `Unknown`/`Not assessed` = no determination →
+STATUS (single value, not two); `Ungradable` → GRADABILITY. IMPORTANT catalog
+implication: `Glaucoma_Diagnosis.Unknown` currently has synonym `Ungradable`
+(§2.3) — under this ruling that is a MIS-SYNONYM (it pairs a status concept with a
+gradability concept, two different axes) and must be broken when Glaucoma_Diagnosis
+is decomposed. Discussion-only; not in the doc.
+
+**`Normal` ≠ `Unknown` — `Normal or No dx` packs opposites and must split.**
+(Prof. Carl.) The term's verbatim description "No signs of glaucoma OR No diagnosis
+made" fuses two OPPOSITE information states: **Normal** = assessed, eye is healthy
+(a positive negative finding — "we know it's negative") vs **No dx / Not assessed**
+= no determination exists ("we don't know"). For a screening platform this is
+critical: screened-healthy (done) vs never-screened (still needs a visit). They
+scatter across axes: **Normal** stays a real CONDITION value (arguably
+ICD-groundable as absence-of-glaucoma); **Unknown/No dx/Not assessed** leaves the
+condition axis for STATUS (`Diagnosis_Status`, = absence of a Graded state). So
+`Normal or No dx` should SPLIT (as §6.0 already tentatively flags). Consequence for
+the Glaucoma_Diagnosis fold: its 3 terms do NOT map to 3 condition terms — they
+scatter across ALL THREE axes (`No Glaucoma`→Normal[condition];
+`Suspected`→GS[condition]; `Unknown`→Ungradable[gradability] OR Not-assessed
+[status] depending on meaning). That Glaucoma_Diagnosis mixes condition + condition
++ not-a-condition in one vocab is the strongest argument yet that it was a
+mixed-axis vocabulary all along and should be DECOMPOSED, not preserved.
+Discussion-only; not in the doc.
+
+**Condition_Label needs NO NEW local terms — the gaps belong on other axes.**
+(Prof. Carl.) Checked §2.1: the 6 terms are GS, POAG, PACG, Other, Normal or No
+dx, Unspecified Glaucoma. There is NO `Unknown`/`Ungradable` term (those live in
+`Glaucoma_Diagnosis`, not here). Coverage: "glaucoma present, subtype unknown" =
+`Unspecified Glaucoma` ✅; "no disease / no dx" = `Normal or No dx` ✅ (note: its
+description already bundles "No signs of glaucoma OR No diagnosis made" — the
+"not assessed" idea is already (sloppily) folded in, which is the §6.0 split flag).
+So the earlier "add local terms to Condition_Label" step largely DISSOLVES: the
+condition axis needs no new local terms. `Ungradable` correctly has no home here
+(it's gradability, not a condition → gradability axis). `Unknown/Not assessed` is
+already (mis-)covered by `Normal or No dx`'s "or No diagnosis made" clause → if
+split, it moves to the STATUS axis (`Diagnosis_Status`), not a new condition term.
+The only non-ICD (EyeAI-URI) condition terms — `Normal or No dx`, `Other` —
+ALREADY EXIST; they are not new. Net: reinforces the three-axis model and
+simplifies the proposal (no new condition terms to mint).
+
+**`Unknown` and `Ungradable` are DIFFERENT concepts (and maybe different axes).**
+(Prof. Carl.) The catalog conflates them today — §2.3 has one term `Unknown` with
+synonym `Ungradable`. Pull apart: **Ungradable** = the input couldn't be assessed
+(artifact failure — blurry/dark/media opacity; a judgment is impossible).
+**Unknown / Not assessed** = no judgment was made or recorded (process gap — image
+may be fine, just not graded). Independent states: an image can be
+gradable-but-not-graded OR ungradable-but-someone-tried; collapsing loses the
+action difference (re-image the patient vs just grade it). Sharper: they may not
+share an axis — **Ungradable** is about image quality/assessability (gradability
+axis, property of the artifact); **Unknown/Not assessed** is about whether a
+determination exists (status/completeness axis — arguably just the absence of a
+`Graded` `Diagnosis_Status`). Clean model = THREE axes: Condition
+(`Condition_Label`, ICD-grounded) / Gradability (Gradable|Ungradable) / Status
+(`Diagnosis_Status`: Graded|Validated|Not assessed).
+
+TENSION with the prior note: (prior) ML reject/abstain belongs IN the prediction
+domain → put Ungradable in the shared vocab; (this) Ungradable/Unknown are
+assessability/status, not diagnosis → separate axes. Resolution depends on WHOSE
+output: an image-classifier that can abstain legitimately has `Ungradable` as one
+of ITS output classes (same domain as its other outputs), but the CLINICAL
+condition vocab should not. That is itself evidence the image-classifier output
+vocab and the clinical condition vocab are NOT the same thing — the reject class is
+exactly where the two domains legitimately diverge. So this PARTIALLY WALKS BACK
+"just add local terms to one shared Condition_Label": the abstain class is a reason
+the image-model domain and clinical domain may stay distinct after all. Unresolved;
+feeds the keep-vs-fold decision. Discussion-only; not in the doc.
+
+**Handling `Unknown`/`Ungradable` under one shared vocab: local terms with
+EyeAI-routed URIs (NOT null).** (Prof. Carl's option + correction.) Rather than
+move gradability to `Diagnosis_Status`, add `Ungradable`/`Unknown` as LOCAL terms
+IN the shared `Condition_Label` vocab. CORRECTION to an earlier note: local terms
+must get an **EyeAI-routed, resolvable URI** (e.g. `https://www.eye-ai.org/id/
+condition/Ungradable`), NOT a null URI. Reasons: (1) every term deserves a
+first-class resolvable identity — null makes local terms second-class; (2) the
+grounded-vs-local distinction is the URI's NAMESPACE/authority
+(`id.who.int/...` = ICD-11, `eye-ai.org/...` = EyeAI-local), a queryable explicit
+signal — do NOT overload URI-nullness to mean "local" (fragile, semantically
+wrong); the filter for ICD-grounded is `WHERE URI LIKE '%id.who.int%'`, not `URI
+IS NOT NULL`; (3) FAIR/linked-data correct — if EyeAI mints a concept the world
+has no standard for, EyeAI mints the URI in its own namespace (standard ontology
+extension-term practice); (4) URI authority encodes who DEFINED the concept (WHO
+vs EyeAI), a distinct axis from `Diagnosis_Tag` which records who ASSERTED a value.
+
+DB-designer verdict (unchanged): for an ML platform the shared-vocab-with-local-
+terms option is the better pragmatic choice — abstain/reject is a legitimate VALUE
+of a prediction and belongs in the SAME domain (one FK, one comparison, reject
+class included). Alternative (Unknown→`Diagnosis_Status`) forces a two-column
+"condition null + status why" state and drops the reject class out of model-vs-
+clinical comparison. Refinements: don't fuse `Ungradable` (image quality) with
+`Not assessed`/`Unknown` (no determination) if both needed (§4 slash-packing);
+mark local terms via their eye-ai.org URI + a "local / non-ICD" description.
+OPEN: exact EyeAI URI scheme/route (eye-ai.org/id/... vs catalog ermrest URL vs
+minted PURL) — pin against how EyeAI already mints identifiers. Discussion-only;
+not in the doc.
+
+**Glaucoma_Diagnosis is NOT image-only — it spans image/visit/subject.** (Prof.
+Carl caught this.) The doc's §2.3 heading and §1 call it the "image-level
+vocabulary", but its own "Consumed by" table shows three consumers:
+`Image_Diagnosis` (194,204, per image), `Observation_Diagnosis` (7,020, visit),
+`Subject_Diagnosis` (7,020, subject). So at the SUBJECT level it labels the same
+entity `Condition_Label` does. This demolishes the "different entity/grain"
+argument for keeping the two vocabularies separate. Surviving distinctions:
+(1) resolution — coarse No/Suspected/Unknown vs fine subtypes (a mapping, not a
+merge reason); (2) provenance — Glaucoma_Diagnosis is a grader/model signal that
+runs consistently across image→visit→subject, Condition_Label is a subject-level
+chart-review clinical determination; (3) `Unknown` is an image-quality/gradability
+state with no clinical-diagnosis equivalent. NET: at the subject level the two
+genuinely overlap; the keep-separate case now rests on provenance + the
+multi-level signal, not entity. NEEDS LIVE-CATALOG VERIFICATION (deriva MCP not
+connected): what populates Subject_Diagnosis vs the Chart_Label feature, and
+whether they agree per subject. Also fix the "image-level" mislabel in §1/§2.3.
+
 **Do NOT add custom columns to a Deriva vocabulary table.** (Prof. Carl,
 correcting merged content.) A controlled-vocabulary table has a fixed standard
 shape — `RID, Name, Description, Synonyms, ID, URI` (+ system cols). That
