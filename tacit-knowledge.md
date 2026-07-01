@@ -308,6 +308,21 @@ replacement for `compute_condition_label()`'s hard-coded `icd_mapping`
 (`H40.0x→GS`, `H40.1x→POAG`, `H40.2→PACG`, else `Other`), moving that logic out
 of Python and into `data-curation`-managed data.
 
+**Do NOT add custom columns to a Deriva vocabulary table.** (Prof. Carl,
+correcting merged content.) A controlled-vocabulary table has a fixed standard
+shape — `RID, Name, Description, Synonyms, ID, URI` (+ system cols). That
+uniformity is the contract Chaise and the deriva-ml APIs rely on. A term's
+external grounding goes in the **`ID`/`URI`** slot (one canonical identifier);
+bespoke columns like `ICD10_code` / `ICD11_code` violate the contract and must
+not be added. Consequence: the "dual ICD-10 + ICD-11 code columns on each term"
+idea (mechanism (a), which entered via a merged colleague draft) is **wrong and
+removed** — it is NOT a live option. This collapses the former (a)/(b) fork: there
+is only ONE design — ICD-11 identity in `ID`/`URI`; ICD-10 codes in the
+`ICD10_Condition_Map` association table (many exact codes → one term). Many-to-one
+external relations attach to a vocabulary via an association table, never via
+added columns. Fixed §5.6 accordingly (removed the dual-column subsection and the
+(a)/(b) open-decision box).
+
 **ERD scope — must show BOTH axes, not just condition.** (Prof. Carl caught this.)
 The first ERD drew only the condition/ICD side and omitted `Severity_Label`
 entirely — but the doc's core model (§5.1–§5.3) is that Condition and Severity are

@@ -26,8 +26,8 @@ The short version, for readers who want the outcome before the evidence:
 - **`Condition_Label` is grounded in ICD.** Each term *is* an ICD-11 concept
   (`GS`=`9C60`, `POAG`=`9C61.0`, `PACG`=`9C61.1`, `Unspecified`=`9C61.Z`) with the
   WHO URI as its identity. ICD-10 codes move **out of `Synonyms`** (where they are
-  mis-stored today) into dedicated code columns and/or an `ICD10_Condition_Map`
-  cross-walk table (§5.6–§5.7).
+  mis-stored today) into an `ICD10_Condition_Map` cross-walk table — no custom
+  columns are added to the vocabulary (§5.6–§5.7).
 - **The hard-coded mapping goes away.** With the cross-walk in the catalog, the
   `icd_mapping` dict in `eye-ai-ml`'s `compute_condition_label()` becomes a join;
   only the multi-code priority tie-break remains in code (§5.7).
@@ -374,37 +374,36 @@ ICD-11 subtypes (`9C61.2` secondary OAG, `9C61.3` secondary ACG, `9C61.4`
 developmental) have **no dedicated `Condition_Label` member** and currently fall
 into `Other` — a disposition to decide clinically (§6.2, §7).
 
-**How the codes and identifier are stored.**
+**How the codes and identifier are stored — using the vocabulary's standard shape
+only.** A Deriva controlled vocabulary has a fixed schema — `RID`, `Name`,
+`Description`, `Synonyms`, `ID`, `URI` (plus system columns). **We do not add
+custom columns** (no `ICD10_code` / `ICD11_code` fields on the term). That
+uniformity is the contract Chaise and the deriva-ml APIs depend on; external
+grounding belongs in the slots the vocabulary already provides. So:
 
-- **Dual code columns.** Each term carries both an **ICD-10-CM code** column (the
-  `H40.*` category code — matching the data we actually hold, which is natively
-  ICD-10-CM and keeps arriving that way from US EHRs) and an **ICD-11 code**
-  column (`9C60` / `9C61.x`).
-- **ICD-11 WHO URI as the identifier.** The term's `ID` / `URI` holds the real,
+- **ICD-11 → the `ID` / `URI` identifier.** The term's `ID` / `URI` holds the real,
   authoritative **ICD-11 WHO URI** (`http://id.who.int/icd/...`), not a
-  locally-minted id. *Why ICD-11 for the URI:* WHO publishes ICD-11 as linked data
-  with official canonical URIs, so authoritative identifiers come for free;
-  ICD-10-CM has no single official URI scheme (CDC/NCHS code lists). The ICD-11
-  URI is also forward-looking as international data moves to ICD-11.
-- **`Synonyms` becomes human-only.** Once codes live in their dedicated columns
-  and the URI in the identifier, `Synonyms` holds **human-readable alternate names
-  only** (e.g. "Primary Open-Angle Glaucoma", WHO index terms). The `H40.*`
-  patterns currently mis-stored in `Condition_Label.Synonyms` (§2.1) move out.
-  This gives lookup **by code** (the identifier / code columns) and **by name**
-  (`Synonyms`) without overloading either — see §5.7 for why a code never goes in
-  `Synonyms`.
+  locally-minted id. This is the term's one canonical external identity. *Why
+  ICD-11 for the identifier:* WHO publishes ICD-11 as linked data with official
+  canonical URIs, so authoritative identifiers come for free; ICD-10-CM has no
+  single official URI scheme (CDC/NCHS code lists), and ICD-11 is forward-looking
+  as international data moves to it.
+- **ICD-10 → the `ICD10_Condition_Map` association table**, *not* a column on the
+  term. The live data is natively ICD-10-CM (~27,962 stored codes, and US EHRs
+  keep sending it), and one condition maps from *many* ICD-10 codes
+  (`H40.00`–`H40.06` → `GS`). A many-to-one external relation attaches to a
+  vocabulary through an **association table** (§5.7), which is also what lets the
+  exact per-code data resolve to a condition. It is never modelled as extra
+  columns on the vocabulary.
+- **`Synonyms` stays human-only.** With ICD-11 in `ID`/`URI` and ICD-10 in the
+  cross-walk table, `Synonyms` holds **human-readable alternate names only**
+  (e.g. "Primary Open-Angle Glaucoma", WHO index terms). The `H40.*` patterns
+  currently mis-stored in `Condition_Label.Synonyms` (§2.1) move out. Lookup **by
+  code** uses `ID`/`URI` (and the cross-walk for ICD-10); lookup **by name** uses
+  `Synonyms` — see §5.7 for why a code never goes in `Synonyms`.
 
-**Open design decision — where the ICD-10 codes live.** Two mechanisms, to be
-resolved in the `data-curation` request; **not mutually exclusive**:
-
-- **(a) Dual code columns on each term**, at category level (above) — simplest,
-  keeps everything on the term, lossless because it stays coarse.
-- **(b) A separate `ICD10_Condition_Map` cross-walk table** at exact-code level
-  (§5.7) — needed to map the granular per-code data, e.g. to drive
-  `compute_condition_label` off catalog data instead of a hard-coded dict.
-
-The category-level columns (a) can be the human-facing grounding while the
-exact-code table (b) drives computation. §5.7 describes (b).
+The vocabulary term is unchanged in shape; all ICD-10 breadth lives in the
+association table described next.
 
 > **Status & verification (single source — referenced elsewhere as "the §5.6
 > status").** ICD-11 codes **verified 2026-06-30** against the WHO ICD-11 MMS
@@ -420,9 +419,10 @@ exact-code table (b) drives computation. §5.7 describes (b).
 
 ### 5.7 Implementation mechanism (the "how" — for `eye-ai-ml` / `data-curation`)
 
-This section covers mechanism (b) from §5.6: the cross-walk **table**, how it
-turns `compute_condition_label` into a join, and what that retires. Codes and the
-crosswalk itself are in the §5.6 mapping table; this section does not restate them.
+This section details the `ICD10_Condition_Map` cross-walk **table** introduced in
+§5.6: how it turns `compute_condition_label` into a join, and what that retires.
+Codes and the crosswalk itself are in the §5.6 mapping table; this section does
+not restate them.
 
 **Tables involved.**
 
@@ -476,8 +476,10 @@ concept via the join — e.g. `H40.11`+`H40.00` → {`POAG`, `GS`}; (2) **pick t
 highest-priority concept** by clinical severity `PACG > POAG > GS > Other`
 (`eye_ai.py:295`) — here POAG wins → `Condition_Label = POAG`. The stored label
 is thus an ICD-11 concept; the codes are input, the winning term is output. (The
-priority tie-break now orders ICD-11 *concepts*, which is where it belongs, and
-could itself become a priority column on `Condition_Label`.)
+priority tie-break now orders ICD-11 *concepts*, which is where it belongs. If it
+should become catalog data rather than code, it belongs in its own ranking table
+keyed to `Condition_Label` — **not** as an added column on the vocabulary, whose
+standard shape stays fixed per §5.6.)
 
 **What this retires in `eye-ai-ml`** (verified against `eye_ai/eye_ai.py`,
 2026-06-30). `compute_condition_label()` (`eye_ai.py:268`) does two things:
@@ -582,7 +584,8 @@ synonyms are provisional (§6.0); the `9C60` code is verified (§5.6 status).
 
 Siblings follow the same shape: `POAG` = `9C61.0`, `PACG` = `9C61.1`,
 `Unspecified Glaucoma` = `9C61.Z`. ICD-10 equivalents (`GS`: `H40.00`–`H40.06`)
-are **not** in the row — they live in the cross-walk / code columns (§5.6, §5.7).
+are **not** in the row — they live in the `ICD10_Condition_Map` cross-walk table
+(§5.6, §5.7), not in columns on the term.
 
 ### 6.3 Severity naming precision
 
