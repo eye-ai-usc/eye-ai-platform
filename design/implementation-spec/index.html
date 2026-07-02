@@ -1,0 +1,2542 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A clinical ML research platform for automated glaucoma detection — onboarding, dependency governance, and research tooling for the eye-ai-usc project.">
+      
+      
+      
+        <link rel="canonical" href="https://eye-ai-usc.github.io/eye-ai-platform/design/implementation-spec/">
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../diagnosis-severity-definitions/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Implementation Spec - EyeAI Platform</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#eyeai-github-org-restructuring-claude-code-implementation-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="EyeAI Platform" class="md-header__button md-logo" aria-label="EyeAI Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EyeAI Platform
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Implementation Spec
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eye-ai-usc/eye-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eye-ai-usc/eye-ai-platform
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../onboarding/quickstart/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/etl-workflow/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../releases/compatibility-matrix/" class="md-tabs__link">
+          
+  
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/" class="md-tabs__link">
+          
+  
+  
+  Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../MAINTENANCE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Maintenance
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="EyeAI Platform" class="md-nav__button md-logo" aria-label="EyeAI Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    EyeAI Platform
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eye-ai-usc/eye-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eye-ai-usc/eye-ai-platform
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/update-env/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update Your Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/mcp-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/catalog-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/new-researcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Researcher Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/etl-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ETL Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/experiment-tracing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiment Tracing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/catalog-migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/compatibility-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Spec
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#step-0-repo-audit-do-this-first-before-any-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 0 — Repo Audit (do this first, before any changes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-create-eyeai-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Create eyeai-platform
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1 — Create eyeai-platform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-create-the-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Create the repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-create-directory-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Create directory skeleton
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-populate-readmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Populate README.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-populate-ecosystemmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Populate ECOSYSTEM.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-populate-docsonboardingquickstartmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Populate docs/onboarding/quickstart.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-populate-docsonboardingmcp-setupmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Populate docs/onboarding/mcp-setup.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-populate-docsreleasescompatibility-matrixmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Populate docs/releases/compatibility-matrix.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-populate-lockfilesstablemanifesttoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Populate lockfiles/stable/manifest.toml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#19-generate-lockfilesstableuvlock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.9 Generate lockfiles/stable/uv.lock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#110-populate-docsonboardingmcp-setupmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.10 Populate docs/onboarding/mcp-setup.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#111-create-githubissue_templatefeature-registrationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.11 Create .github/ISSUE_TEMPLATE/feature-registration.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-create-githubworkflowsintegration-testyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.12 Create .github/workflows/integration-test.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-create-githubworkflowsnotify-releaseyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.13 Create .github/workflows/notify-release.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#114-populate-templatesresearcher-repocookiecutterjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.14 Populate templates/researcher-repo/cookiecutter.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#115-populate-templatesresearcher-repoproject_namepyprojecttoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.15 Populate templates/researcher-repo/{{project_name}}/pyproject.toml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#116-populate-templatesresearcher-repoproject_namegithubrenovatejson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.16 Populate templates/researcher-repo/{{project_name}}/.github/renovate.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#117-populate-templatesresearcher-repoproject_namecatalog_patchesreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.17 Populate templates/researcher-repo/{{project_name}}/catalog_patches/README.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-restructure-eyeai-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Restructure eyeai-catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2 — Restructure eyeai-catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-audit-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Audit current state
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-create-migrations-directory-structure-if-not-present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Create migrations/ directory structure if not present
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-populate-migrationsreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Populate migrations/README.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-create-githubissue_templatefeature-registrationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Create .github/ISSUE_TEMPLATE/feature-registration.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-register-legacy-eye-ai-exec-schema-changes-compact-bulk-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Register legacy eye-ai-exec schema changes (compact bulk approach)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-add-testsvalidate_migrationspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Add tests/validate_migrations.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-add-github-actions-ci-for-migrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Add GitHub Actions CI for migrations/
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-create-research-satellite-repos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Create Research Satellite Repos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3 — Create Research Satellite Repos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-define-subproject-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Define subproject list
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-for-each-confirmed-subproject-create-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 For each confirmed subproject: create repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-for-each-subproject-repo-migrate-researcher-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 For each subproject repo: migrate researcher code
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-for-each-retired-researcher-repo-add-archive-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 For each retired researcher repo: add archive notice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-deprecate-old-template-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Deprecate Old Template Repo
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 4 — Deprecate Old Template Repo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-add-banner-to-old-template-repo-readme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Add banner to old template repo README
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-archive-the-old-template-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Archive the old template repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Verification Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../diagnosis-severity-definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnosis & Severity Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MAINTENANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#step-0-repo-audit-do-this-first-before-any-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 0 — Repo Audit (do this first, before any changes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-create-eyeai-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Create eyeai-platform
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1 — Create eyeai-platform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-create-the-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Create the repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-create-directory-skeleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Create directory skeleton
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-populate-readmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Populate README.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-populate-ecosystemmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Populate ECOSYSTEM.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-populate-docsonboardingquickstartmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Populate docs/onboarding/quickstart.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-populate-docsonboardingmcp-setupmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Populate docs/onboarding/mcp-setup.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-populate-docsreleasescompatibility-matrixmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Populate docs/releases/compatibility-matrix.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-populate-lockfilesstablemanifesttoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Populate lockfiles/stable/manifest.toml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#19-generate-lockfilesstableuvlock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.9 Generate lockfiles/stable/uv.lock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#110-populate-docsonboardingmcp-setupmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.10 Populate docs/onboarding/mcp-setup.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#111-create-githubissue_templatefeature-registrationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.11 Create .github/ISSUE_TEMPLATE/feature-registration.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-create-githubworkflowsintegration-testyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.12 Create .github/workflows/integration-test.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-create-githubworkflowsnotify-releaseyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.13 Create .github/workflows/notify-release.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#114-populate-templatesresearcher-repocookiecutterjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.14 Populate templates/researcher-repo/cookiecutter.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#115-populate-templatesresearcher-repoproject_namepyprojecttoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.15 Populate templates/researcher-repo/{{project_name}}/pyproject.toml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#116-populate-templatesresearcher-repoproject_namegithubrenovatejson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.16 Populate templates/researcher-repo/{{project_name}}/.github/renovate.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#117-populate-templatesresearcher-repoproject_namecatalog_patchesreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.17 Populate templates/researcher-repo/{{project_name}}/catalog_patches/README.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-restructure-eyeai-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Restructure eyeai-catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2 — Restructure eyeai-catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-audit-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Audit current state
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-create-migrations-directory-structure-if-not-present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Create migrations/ directory structure if not present
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-populate-migrationsreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Populate migrations/README.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-create-githubissue_templatefeature-registrationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Create .github/ISSUE_TEMPLATE/feature-registration.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-register-legacy-eye-ai-exec-schema-changes-compact-bulk-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Register legacy eye-ai-exec schema changes (compact bulk approach)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-add-testsvalidate_migrationspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Add tests/validate_migrations.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-add-github-actions-ci-for-migrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Add GitHub Actions CI for migrations/
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-create-research-satellite-repos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Create Research Satellite Repos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3 — Create Research Satellite Repos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-define-subproject-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Define subproject list
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-for-each-confirmed-subproject-create-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 For each confirmed subproject: create repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-for-each-subproject-repo-migrate-researcher-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 For each subproject repo: migrate researcher code
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-for-each-retired-researcher-repo-add-archive-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 For each retired researcher repo: add archive notice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-deprecate-old-template-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Deprecate Old Template Repo
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 4 — Deprecate Old Template Repo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-add-banner-to-old-template-repo-readme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Add banner to old template repo README
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-archive-the-old-template-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Archive the old template repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Verification Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/eye-ai-usc/eye-ai-platform/edit/main/docs/design/implementation-spec.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="eyeai-github-org-restructuring-claude-code-implementation-spec">EyeAI GitHub Org Restructuring — Claude Code Implementation Spec</h1>
+<blockquote>
+<p><strong>Instructions for Claude Code:</strong> This document is a complete, self-contained implementation specification. Execute each task in the order listed. For each task, check the actual state of the EyeAI GitHub org first, then apply only the changes needed. Do not make changes outside the scope of each task. Flag anything ambiguous before proceeding.</p>
+<p>GitHub org: <code>eye-ai-usc</code>
+Upstream org (read-only reference): <code>informatics-isi-edu</code> (Deriva)</p>
+</blockquote>
+<hr />
+<h2 id="step-0-repo-audit-do-this-first-before-any-changes">Step 0 — Repo Audit (do this first, before any changes)</h2>
+<p>Query the EyeAI GitHub org and produce a table with the following columns for every repo:</p>
+<p>| Repo Name | Last Commit | Primary Language | Has pyproject.toml? | deriva-ml version pinned | eyeai version pinned | Apparent purpose (1 line) |</p>
+<p>Then answer each of these questions explicitly before proceeding:</p>
+<ol>
+<li>Which repos contain catalog migration or schema change scripts outside the data curation repo?</li>
+<li>Which repos have overlapping ETL or data export scripts?</li>
+<li>Which researcher repos are working on the same research question (candidates for subproject consolidation)?</li>
+<li>Is there a template repo? What is its current state and how out of date is it?</li>
+<li>Where does the MCP agent live — EyeAI org or Deriva org?</li>
+<li>Are there any repos that don't fit the categories: platform / catalog / research satellite?</li>
+</ol>
+<p>Do not proceed past Step 0 until the audit table and answers are complete.</p>
+<hr />
+<h2 id="step-1-create-eyeai-platform">Step 1 — Create <code>eyeai-platform</code></h2>
+<h3 id="11-create-the-repo">1.1 Create the repo</h3>
+<ul>
+<li>New public repo in <code>eye-ai-usc</code> org named <code>eyeai-platform</code></li>
+<li>Description: "Front door for the EyeAI project — docs, onboarding, templates, and blessed dependency lockfiles"</li>
+<li>Initialize with README</li>
+</ul>
+<h3 id="12-create-directory-skeleton">1.2 Create directory skeleton</h3>
+<pre><code>eyeai-platform/
+├── README.md
+├── ECOSYSTEM.md
+├── docs/
+│   ├── onboarding/
+│   │   ├── quickstart.md
+│   │   ├── mcp-setup.md
+│   │   ├── catalog-overview.md
+│   │   └── new-researcher.md
+│   ├── guides/
+│   │   ├── etl-workflow.md
+│   │   ├── experiment-tracing.md
+│   │   └── catalog-migration.md
+│   └── releases/
+│       ├── CHANGELOG.md
+│       └── compatibility-matrix.md
+├── lockfiles/
+│   ├── stable/
+│   │   ├── uv.lock
+│   │   └── manifest.toml
+│   ├── testing/
+│   │   └── .gitkeep
+│   └── archive/
+│       └── .gitkeep
+├── templates/
+│   └── researcher-repo/
+│       ├── cookiecutter.json
+│       └── {{project_name}}/
+│           ├── pyproject.toml
+│           ├── uv.lock
+│           ├── README.md
+│           ├── .github/
+│           │   └── renovate.json
+│           ├── data/
+│           │   ├── export_config.yaml
+│           │   └── prepare.py
+│           ├── features/
+│           │   └── .gitkeep
+│           ├── models/
+│           │   └── .gitkeep
+│           ├── experiments/
+│           │   └── .gitkeep
+│           └── catalog_patches/
+│               └── README.md
+└── .github/
+    ├── ISSUE_TEMPLATE/
+    │   └── feature-registration.md
+    └── workflows/
+        ├── integration-test.yml
+        └── notify-release.yml
+</code></pre>
+<h3 id="13-populate-readmemd">1.3 Populate README.md</h3>
+<p>Content: one paragraph describing the EyeAI project, followed by a table listing every repo in the org with its purpose and a link. Use the audit results from Step 0 to fill in the table.</p>
+<h3 id="14-populate-ecosystemmd">1.4 Populate ECOSYSTEM.md</h3>
+<p>For each repo in the org, write:
+- Repo name and link
+- Owner/maintainer
+- Purpose (2–3 sentences)
+- Status (active / maintenance / archived)
+- Relationship to other repos</p>
+<h3 id="15-populate-docsonboardingquickstartmd">1.5 Populate docs/onboarding/quickstart.md</h3>
+<p>Content must cover, in order:
+1. Prerequisites (Python version, uv installation)
+2. Installing the blessed stack: <code>uv sync --frozen</code> using the stable lockfile from this repo
+3. Installing and configuring the MCP agent (point to mcp-setup.md for details)
+4. Cloning or creating a research repo from the template
+5. Running a first experiment end-to-end</p>
+<h3 id="16-populate-docsonboardingmcp-setupmd">1.6 Populate docs/onboarding/mcp-setup.md</h3>
+<p>Content: full instructions for installing and configuring the EyeAI MCP stack (<code>deriva-mcp-core</code> + <code>deriva-ml-mcp-plugin</code> + <code>eye-ai-deriva-mcp-plugin</code>) and the Claude Code skills plugins. See Step 1.10 for the detailed content spec. Pull installation commands from the upstream READMEs in <code>informatics-isi-edu</code>.</p>
+<h3 id="17-populate-docsreleasescompatibility-matrixmd">1.7 Populate docs/releases/compatibility-matrix.md</h3>
+<p>Create the initial table with the current known-good stack versions (from audit results):</p>
+<table>
+<thead>
+<tr>
+<th>Stack Tag</th>
+<th>eye-ai</th>
+<th>deriva-ml</th>
+<th>Python</th>
+<th>Status</th>
+<th>Date Blessed</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stable</code></td>
+<td>v1.5.3</td>
+<td>v1.17.10</td>
+<td>3.12</td>
+<td>✅ Stable</td>
+<td>2026-06-16</td>
+<td>Initial blessed stack — git tags, sourced from informatics-isi-edu/deriva-ml and eye-ai-usc/eye-ai-ml</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>MCP stack</strong> (<code>deriva-mcp-core</code>, <code>deriva-ml-mcp-plugin</code>, <code>eye-ai-deriva-mcp-plugin</code>) is
+installed separately via <code>uv tool install</code> and is not version-pinned here. See <code>docs/onboarding/mcp-setup.md</code>.</p>
+</blockquote>
+<h3 id="18-populate-lockfilesstablemanifesttoml">1.8 Populate lockfiles/stable/manifest.toml</h3>
+<pre><code class="language-toml">[stack]
+blessed_date = &quot;2026-06-16&quot;
+blessed_by = &quot;eyeai-infra&quot;
+python = &quot;3.12&quot;
+
+[versions]
+&quot;deriva-ml&quot; = &quot;v1.17.10&quot;
+&quot;eye-ai&quot; = &quot;v1.5.3&quot;
+
+[sources]
+&quot;deriva-ml&quot; = &quot;git+https://github.com/informatics-isi-edu/deriva-ml.git@v1.17.10&quot;
+&quot;eye-ai&quot; = &quot;git+https://github.com/eye-ai-usc/eye-ai-ml.git@v1.5.3&quot;
+
+[notes]
+summary = &quot;Initial blessed stack. Baseline from existing active researcher environments.&quot;
+breaking_changes = &quot;None&quot;
+migration_required = false
+
+# MCP stack (deriva-mcp-core, deriva-ml-mcp-plugin, eye-ai-deriva-mcp-plugin) is
+# installed separately via 'uv tool install' and is not pinned here.
+# See docs/onboarding/mcp-setup.md for the current installation recipe.
+</code></pre>
+<h3 id="19-generate-lockfilesstableuvlock">1.9 Generate lockfiles/stable/uv.lock</h3>
+<p><strong>This is a manual local step.</strong> Run the following in a terminal, then paste the output
+back so it can be committed to the repo:</p>
+<pre><code class="language-bash">cd /tmp &amp;&amp; uv init --python 3.12 eyeai-stable &amp;&amp; cd eyeai-stable &amp;&amp; \
+uv add \
+  &quot;eye-ai @ git+https://github.com/eye-ai-usc/eye-ai-ml.git@v1.5.3&quot; \
+  &quot;deriva-ml @ git+https://github.com/informatics-isi-edu/deriva-ml.git@v1.17.10&quot; &amp;&amp; \
+cat uv.lock
+</code></pre>
+<p>The MCP tool stack is NOT included — it is installed separately via <code>uv tool install</code>
+and does not belong in the research environment lockfile.</p>
+<h3 id="110-populate-docsonboardingmcp-setupmd">1.10 Populate docs/onboarding/mcp-setup.md</h3>
+<p>Full instructions for installing and configuring the EyeAI MCP agent stack.
+The MCP stack consists of three components installed into a single isolated <code>uv tool</code> venv:
+- <code>deriva-mcp-core</code> (<code>informatics-isi-edu/deriva-mcp-core</code>) — base MCP server
+- <code>deriva-ml-mcp-plugin</code> (<code>informatics-isi-edu/deriva-ml-mcp-plugin</code>) — DerivaML ML tools
+- <code>eye-ai-deriva-mcp-plugin</code> (<code>informatics-isi-edu/eye-ai-deriva-mcp-plugin</code>) — Eye-AI RAG plugin</p>
+<p>The Claude Code skills plugins are installed separately via the <code>deriva-plugins</code> marketplace.
+Pull exact installation commands from the README files of each upstream repo.</p>
+<p>Key steps to cover:
+1. Install the MCP tool stack (single <code>uv tool install</code> command with <code>--with</code> for each plugin)
+2. Authenticate: <code>deriva-globus-auth-utils login --host www.eye-ai.org</code>
+3. Configure Claude Code stdio mode: <code>claude mcp add -t stdio deriva -- deriva-mcp-core --transport stdio</code>
+4. Enable mutations for ML work: create <code>~/deriva-mcp.env</code> with <code>DERIVA_MCP_DISABLE_MUTATING_TOOLS=false</code> and <code>DERIVA_MCP_RAG_ENABLED=true</code>
+5. Install Claude Code skills: <code>/plugin marketplace add informatics-isi-edu/deriva-plugins</code>, then <code>/plugin install deriva</code> and <code>/plugin install deriva-ml</code></p>
+<blockquote>
+<p>Note: MCP setup instructions may be extended as the upstream stack evolves.
+Always check the upstream READMEs for the most current recipes.</p>
+</blockquote>
+<h3 id="111-create-githubissue_templatefeature-registrationmd">1.11 Create .github/ISSUE_TEMPLATE/feature-registration.md</h3>
+<pre><code class="language-markdown">---
+name: Feature Registration Request
+about: Request that a researcher-computed feature be registered as a catalog column
+title: &quot;Register feature: [FEATURE NAME]&quot;
+labels: catalog-registration
+assignees: ''
+---
+
+**Feature name:**
+
+**Target catalog table:**
+
+**Compute script location:** [link to file in research repo]
+
+**Ingest script location:** [link to file in research repo, if separate]
+
+**Description of what this feature represents:**
+
+**How values are computed (brief):**
+
+**Are values already computed and stable?** [ ] Yes
+
+**Subproject:**
+
+**Requesting researcher:**
+</code></pre>
+<h3 id="112-create-githubworkflowsintegration-testyml">1.12 Create .github/workflows/integration-test.yml</h3>
+<pre><code class="language-yaml">name: Integration Test — Latest Stack
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  test-latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Install with latest upstream
+        run: |
+          uv sync \
+            --upgrade-package &quot;eye-ai&quot; \
+            --upgrade-package deriva-ml
+      - name: Run smoke tests
+        run: uv run pytest tests/integration/ -v
+      - name: Open PR with updated testing lockfile on success
+        if: success()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: &quot;chore: update testing lockfile — $(date +%Y-%m-%d)&quot;
+          branch: &quot;lockfile/testing-$(date +%Y%m%d)&quot;
+          commit-message: &quot;Update testing/uv.lock with latest upstream&quot;
+          add-paths: lockfiles/testing/uv.lock
+</code></pre>
+<h3 id="113-create-githubworkflowsnotify-releaseyml">1.13 Create .github/workflows/notify-release.yml</h3>
+<pre><code class="language-yaml">name: Notify on Blessed Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        # TODO: add SLACK_WEBHOOK_URL secret in org Settings → Secrets → Actions
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              &quot;text&quot;: &quot;New EyeAI stack blessed: ${{ github.event.release.tag_name }}\nChangelog: ${{ github.event.release.html_url }}\nTo update: git pull &amp;&amp; uv sync --frozen&quot;
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+</code></pre>
+<h3 id="114-populate-templatesresearcher-repocookiecutterjson">1.14 Populate templates/researcher-repo/cookiecutter.json</h3>
+<pre><code class="language-json">{
+  &quot;project_name&quot;: &quot;eyeai-research-my-subproject&quot;,
+  &quot;researcher_name&quot;: &quot;your_name&quot;,
+  &quot;subproject_description&quot;: &quot;One sentence describing the research question&quot;,
+  &quot;eye_ai_version&quot;: &quot;v1.5.3&quot;,
+  &quot;deriva_ml_version&quot;: &quot;v1.17.10&quot;,
+  &quot;python_version&quot;: &quot;3.12&quot;
+}
+</code></pre>
+<h3 id="115-populate-templatesresearcher-repoproject_namepyprojecttoml">1.15 Populate templates/researcher-repo/{{project_name}}/pyproject.toml</h3>
+<pre><code class="language-toml">[project]
+name = &quot;{{ project_name }}&quot;
+dynamic = [&quot;version&quot;]
+description = &quot;{{ subproject_description }}&quot;
+requires-python = &quot;&gt;=3.12&quot;
+dependencies = [
+    &quot;eye-ai&quot;,
+    &quot;deriva-ml&quot;,
+]
+
+[tool.uv]
+python-preference = &quot;only-managed&quot;
+default-groups = [&quot;dev&quot;, &quot;jupyter&quot;]
+package = true
+
+[tool.uv.sources]
+eye-ai = { git = &quot;https://github.com/eye-ai-usc/eye-ai-ml.git&quot;, tag = &quot;{{ eye_ai_version }}&quot; }
+deriva-ml = { git = &quot;https://github.com/informatics-isi-edu/deriva-ml.git&quot;, tag = &quot;{{ deriva_ml_version }}&quot; }
+
+[dependency-groups]
+dev = [&quot;pytest&quot;, &quot;ruff&quot;, &quot;ipython&quot;]
+jupyter = [&quot;ipykernel&quot;, &quot;jupyter&quot;]
+</code></pre>
+<h3 id="116-populate-templatesresearcher-repoproject_namegithubrenovatejson">1.16 Populate templates/researcher-repo/{{project_name}}/.github/renovate.json</h3>
+<pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://docs.renovatebot.com/renovate-schema.json&quot;,
+  &quot;extends&quot;: [&quot;config:base&quot;],
+  &quot;packageRules&quot;: [
+    {
+      &quot;matchPackageNames&quot;: [&quot;eye-ai&quot;, &quot;deriva-ml&quot;],
+      &quot;groupName&quot;: &quot;EyeAI core stack&quot;,
+      &quot;prTitle&quot;: &quot;chore: update EyeAI core stack&quot;,
+      &quot;prBody&quot;: &quot;Check the [compatibility matrix](https://github.com/eye-ai-usc/eyeai-platform/blob/main/docs/releases/compatibility-matrix.md) before merging.&quot;,
+      &quot;schedule&quot;: [&quot;after 9am on monday&quot;]
+    }
+  ]
+}
+</code></pre>
+<h3 id="117-populate-templatesresearcher-repoproject_namecatalog_patchesreadmemd">1.17 Populate templates/researcher-repo/{{project_name}}/catalog_patches/README.md</h3>
+<pre><code class="language-markdown"># Catalog Patches
+
+If your work requires a new column or table in the EyeAI Deriva catalog:
+
+1. Do **not** modify the catalog directly from this repo.
+2. When your feature computation is stable, open a **Feature Registration Request** issue in:
+   https://github.com/eye-ai-usc/data-curation/issues/new?template=feature-registration.md
+3. A data manager will handle the schema migration and contact you if more information is needed.
+4. Your compute and ingest scripts stay here permanently — do not move them.
+</code></pre>
+<hr />
+<h2 id="step-2-restructure-eyeai-catalog">Step 2 — Restructure <code>eyeai-catalog</code></h2>
+<h3 id="21-audit-current-state">2.1 Audit current state</h3>
+<ul>
+<li>List all existing directories and files</li>
+<li>Identify: does a <code>migrations/</code> directory already exist?</li>
+<li>Identify: where are ingestion scripts currently organized?</li>
+</ul>
+<h3 id="22-create-migrations-directory-structure-if-not-present">2.2 Create migrations/ directory structure if not present</h3>
+<pre><code>eyeai-catalog/
+├── migrations/
+│   └── README.md
+├── schema/
+│   └── current/
+│       ├── tables/
+│       └── vocabularies/
+├── ingestion/
+│   ├── la-county/
+│   ├── usc-keck/
+│   └── open-source/
+└── tests/
+    └── validate_migrations.py
+</code></pre>
+<h3 id="23-populate-migrationsreadmemd">2.3 Populate migrations/README.md</h3>
+<p>Content must include:
+- Two migration types: data management migrations (no external pointer) and feature registration migrations (with pointer to research repo)
+- Naming convention: <code>YYYYMMDD_HHMMSS_{author}_{description}.py</code>
+- Required header block template (see below)
+- Rule: migrations are for stable, production-ready changes only — not exploratory work
+- How to run a migration against the catalog</p>
+<p><strong>Migration header template:</strong></p>
+<pre><code class="language-python">&quot;&quot;&quot;
+Migration: {short_name}
+Type: {data_management | feature_registration}
+Author: {github_handle}
+Date: {YYYY-MM-DD}
+Catalog table: {EyeAI.TableName}
+Description: {What this migration does}
+Source computation: {URL to compute script in research repo, or N/A}
+Reversible: {yes | no}
+&quot;&quot;&quot;
+</code></pre>
+<h3 id="24-create-githubissue_templatefeature-registrationmd">2.4 Create .github/ISSUE_TEMPLATE/feature-registration.md</h3>
+<p>Same content as the template created in Step 1.10. This is the issue template researchers use to request catalog registration.</p>
+<h3 id="25-register-legacy-eye-ai-exec-schema-changes-compact-bulk-approach">2.5 Register legacy eye-ai-exec schema changes (compact bulk approach)</h3>
+<p><code>eye-ai-exec/notebooks/schema_changes/</code> contains 15 historical schema-change notebooks
+(last modified 2025-09, repo is stale and will not be modified further).</p>
+<p>Rather than copying 15 notebooks, create ONE bulk retroactive registration entry:</p>
+<pre><code>migrations/
+└── 20240101_000000_legacy_eyeai-exec_schema-changes/
+    ├── migration.py
+    └── README.md
+</code></pre>
+<p><strong><code>migration.py</code></strong> — header only, no executable code:</p>
+<pre><code class="language-python">&quot;&quot;&quot;
+Migration: legacy_eyeai-exec_schema-changes
+Type: feature_registration
+Author: legacy (pre-migration)
+Date: 2024-01-01
+Catalog table: multiple (see README.md)
+Description: Retroactive registration of historical catalog schema changes
+             made via notebooks in eye-ai-exec/notebooks/schema_changes/.
+             These changes were made before the migrations/ convention was established.
+Source computation: https://github.com/eye-ai-usc/eye-ai-exec/tree/main/notebooks/schema_changes/
+Reversible: unknown (historical)
+&quot;&quot;&quot;
+# This migration is an archival record only. No code to execute.
+# All schema changes were applied directly to the catalog before this system existed.
+</code></pre>
+<p><strong><code>README.md</code></strong> — list all 15 notebooks as historical record:</p>
+<pre><code class="language-markdown"># Legacy Schema Changes — eye-ai-exec
+
+These schema changes were made before the migrations/ convention was established.
+The canonical source is the eye-ai-exec repo (archived/stale as of 2025-09).
+
+Source: https://github.com/eye-ai-usc/eye-ai-exec/tree/main/notebooks/schema_changes/
+
+## Notebooks registered here
+
+- add_filetable.ipynb
+- asset_table_reorg.ipynb
+- change_diag_image_annot.ipynb
+- change_image_annotation.ipynb
+- check_lac_clinic.ipynb
+- compute_age.ipynb
+- cv_table_change.ipynb
+- fix_diag_exec.ipynb
+- increase_version_number.ipynb
+- observation_datasets.ipynb
+- setup_feature_angle_laterality.ipynb
+- test_eye-ai_changes.ipynb
+- test_schema_separation.ipynb
+- update_annotation.ipynb
+
+Also in eye-ai-exec/notebooks/feature/:
+- create_chart_label.ipynb
+- create_condition_label_feature.ipynb
+</code></pre>
+<p>Do not delete the originals from eye-ai-exec.</p>
+<h3 id="26-add-testsvalidate_migrationspy">2.6 Add tests/validate_migrations.py</h3>
+<p>A CI script that:
+- Checks every file in <code>migrations/</code> has a valid header block
+- Checks naming convention is followed
+- Does not execute migrations (that is a manual step)</p>
+<h3 id="27-add-github-actions-ci-for-migrations">2.7 Add GitHub Actions CI for migrations/</h3>
+<pre><code class="language-yaml"># .github/workflows/validate-migrations.yml
+name: Validate Migrations
+on:
+  pull_request:
+    paths:
+      - 'migrations/**'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv run python tests/validate_migrations.py
+</code></pre>
+<hr />
+<h2 id="step-3-create-research-satellite-repos">Step 3 — Create Research Satellite Repos</h2>
+<blockquote>
+<p>⚠️ <strong>DEFERRED</strong> — Subproject satellite repo consolidation is not in scope for the initial
+restructuring. Execute when individual subprojects reach a natural pause point and their
+owners confirm they're ready to consolidate. The step text below is preserved for future use.</p>
+</blockquote>
+<h3 id="31-define-subproject-list">3.1 Define subproject list</h3>
+<p>Using audit results from Step 0, propose a mapping of existing researcher repos to subprojects. Present this mapping and wait for confirmation before creating any repos.</p>
+<p>Expected format:
+| Subproject repo name | Existing repos to consolidate | Research question |
+|---|---|---|
+| eyeai-research-{name} | repo-a, repo-b | ... |</p>
+<h3 id="32-for-each-confirmed-subproject-create-repo">3.2 For each confirmed subproject: create repo</h3>
+<ul>
+<li>New repo in <code>eye-ai-usc</code> org: <code>eyeai-research-{subproject}</code></li>
+<li>Initialize from the Cookiecutter template created in Step 1.13</li>
+<li>Description: the research question in one sentence</li>
+</ul>
+<h3 id="33-for-each-subproject-repo-migrate-researcher-code">3.3 For each subproject repo: migrate researcher code</h3>
+<p>For each existing researcher repo being consolidated:
+- Create a subdirectory <code>features/{researcher_name}/</code>, <code>models/{researcher_name}/</code>, <code>experiments/{researcher_name}/</code>
+- Use <code>git subtree</code> to migrate code with history preserved where possible; otherwise copy with a commit message attributing the source repo and original author
+- Do NOT squash history</p>
+<h3 id="34-for-each-retired-researcher-repo-add-archive-notice">3.4 For each retired researcher repo: add archive notice</h3>
+<p>Add to the top of the existing README.md:</p>
+<pre><code class="language-markdown">&gt; ⚠️ **This repo has been archived.** Active development continues in
+&gt; [eyeai-research-{subproject}](https://github.com/eye-ai-usc/eyeai-research-{subproject}).
+&gt; This repo is preserved for historical reference.
+</code></pre>
+<p>Then archive the repo (Settings → Archive repository).</p>
+<hr />
+<h2 id="step-4-deprecate-old-template-repo">Step 4 — Deprecate Old Template Repo</h2>
+<h3 id="41-add-banner-to-old-template-repo-readme">4.1 Add banner to old template repo README</h3>
+<pre><code class="language-markdown">&gt; ⚠️ **This template repo is deprecated.** The new template is maintained in
+&gt; [eyeai-platform](https://github.com/eye-ai-usc/eyeai-platform/tree/main/templates/researcher-repo).
+&gt; To start a new research repo: `uvx cookiecutter gh:eye-ai-usc/eyeai-platform --directory templates/researcher-repo`
+</code></pre>
+<h3 id="42-archive-the-old-template-repo">4.2 Archive the old template repo</h3>
+<hr />
+<h2 id="step-5-verification-checklist">Step 5 — Verification Checklist</h2>
+<p>After all steps are complete, verify:</p>
+<ul>
+<li>[ ] <code>eyeai-platform</code> exists in <code>eye-ai-usc</code> org and README lists all repos</li>
+<li>[ ] <code>docs/onboarding/quickstart.md</code> covers install → first experiment end-to-end</li>
+<li>[ ] <code>docs/onboarding/mcp-setup.md</code> covers full MCP + skills install</li>
+<li>[ ] <code>lockfiles/stable/manifest.toml</code> has eye-ai=v1.5.3 and deriva-ml=v1.17.10</li>
+<li>[ ] <code>lockfiles/stable/uv.lock</code> exists (generated locally and committed)</li>
+<li>[ ] <code>compatibility-matrix.md</code> has at least one <code>stable</code> row</li>
+<li>[ ] Integration test GitHub Action is valid YAML (can be triggered manually via workflow_dispatch)</li>
+<li>[ ] <code>data-curation/migrations/</code> exists with README and naming convention documented</li>
+<li>[ ] Bulk legacy migration entry for eye-ai-exec schema_changes exists</li>
+<li>[ ] Feature registration issue template exists in both <code>eyeai-platform</code> and <code>data-curation</code></li>
+<li>[ ] <code>data-curation</code> CI validates migration headers on PR</li>
+<li>[ ] <code>eye-ai-model-template</code> has deprecation banner pointing to eyeai-platform</li>
+<li>[ ] <code>ECOSYSTEM.md</code> in <code>eyeai-platform</code> lists every repo with current status</li>
+<li>[ ] (Step 3 DEFERRED) Subproject satellite repos — execute per-subproject at natural pause points</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "search.suggest", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

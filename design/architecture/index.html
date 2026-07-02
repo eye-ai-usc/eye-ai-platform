@@ -1,0 +1,2113 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A clinical ML research platform for automated glaucoma detection — onboarding, dependency governance, and research tooling for the eye-ai-usc project.">
+      
+      
+      
+        <link rel="canonical" href="https://eye-ai-usc.github.io/eye-ai-platform/design/architecture/">
+      
+      
+        <link rel="prev" href="../../releases/CHANGELOG/">
+      
+      
+        <link rel="next" href="../implementation-spec/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Architecture - EyeAI Platform</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#organizing-a-sustainable-github-infrastructure-for-an-interdisciplinary-clinical-ml-project-the-eyeai-case" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="EyeAI Platform" class="md-header__button md-logo" aria-label="EyeAI Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EyeAI Platform
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eye-ai-usc/eye-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eye-ai-usc/eye-ai-platform
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../onboarding/quickstart/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/etl-workflow/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../releases/compatibility-matrix/" class="md-tabs__link">
+          
+  
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../MAINTENANCE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Maintenance
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="EyeAI Platform" class="md-nav__button md-logo" aria-label="EyeAI Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    EyeAI Platform
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eye-ai-usc/eye-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eye-ai-usc/eye-ai-platform
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/update-env/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update Your Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/mcp-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/catalog-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/new-researcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Researcher Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/etl-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ETL Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/experiment-tracing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiment Tracing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/catalog-migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/compatibility-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#abstract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Abstract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-project-background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Project Background
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Project Background">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-eyeai-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The EyeAI Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-team-composition-and-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Team Composition and Roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-the-software-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 The Software Stack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-the-data-catalog-as-a-moving-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 The Data Catalog as a Moving Target
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-problems-with-the-current-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Problems with the Current Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Problems with the Current Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p1-per-researcher-repos-cause-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — Per-researcher repos cause fragmentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p2-no-subproject-level-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P2 — No subproject-level organization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p3-upstream-updates-are-painful-and-uncoordinated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P3 — Upstream updates are painful and uncoordinated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p4-the-template-repo-requires-constant-manual-maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P4 — The template repo requires constant manual maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p5-onboarding-documentation-is-scattered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P5 — Onboarding documentation is scattered
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p6-release-announcements-rely-entirely-on-slack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P6 — Release announcements rely entirely on Slack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p7-upstream-releases-are-incremental-and-often-unstable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P7 — Upstream releases are incremental and often unstable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p8-catalog-modification-scripts-have-no-centralized-home" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P8 — Catalog modification scripts have no centralized home
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-repository-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Repository Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Repository Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-platform-layer-eyeai-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Platform Layer: eyeai-platform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-the-catalog-layer-eyeai-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 The Catalog Layer: eyeai-catalog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-the-research-layer-eyeai-research-subproject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 The Research Layer: eyeai-research-{subproject}
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-key-workflow-feature-engineering-to-catalog-registration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Key Workflow: Feature Engineering to Catalog Registration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Key Workflow: Feature Engineering to Catalog Registration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-the-design-tension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 The Design Tension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-the-solution-frozen-snapshots-with-explicit-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 The Solution: Frozen Snapshots with Explicit Ownership
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-role-specific-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Role-Specific Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Dependency Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Dependency Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-the-blessed-lockfile-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 The Blessed Lockfile Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-the-compatibility-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 The Compatibility Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-why-this-matters-for-research-reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Why This Matters for Research Reproducibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-migration-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Migration Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Governance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation-spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../diagnosis-severity-definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnosis & Severity Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MAINTENANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#abstract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Abstract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-project-background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Project Background
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Project Background">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-eyeai-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The EyeAI Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-team-composition-and-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Team Composition and Roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-the-software-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 The Software Stack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-the-data-catalog-as-a-moving-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 The Data Catalog as a Moving Target
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-problems-with-the-current-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Problems with the Current Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Problems with the Current Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p1-per-researcher-repos-cause-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — Per-researcher repos cause fragmentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p2-no-subproject-level-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P2 — No subproject-level organization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p3-upstream-updates-are-painful-and-uncoordinated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P3 — Upstream updates are painful and uncoordinated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p4-the-template-repo-requires-constant-manual-maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P4 — The template repo requires constant manual maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p5-onboarding-documentation-is-scattered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P5 — Onboarding documentation is scattered
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p6-release-announcements-rely-entirely-on-slack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P6 — Release announcements rely entirely on Slack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p7-upstream-releases-are-incremental-and-often-unstable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P7 — Upstream releases are incremental and often unstable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p8-catalog-modification-scripts-have-no-centralized-home" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P8 — Catalog modification scripts have no centralized home
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-repository-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Repository Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Repository Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-platform-layer-eyeai-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Platform Layer: eyeai-platform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-the-catalog-layer-eyeai-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 The Catalog Layer: eyeai-catalog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-the-research-layer-eyeai-research-subproject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 The Research Layer: eyeai-research-{subproject}
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-key-workflow-feature-engineering-to-catalog-registration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Key Workflow: Feature Engineering to Catalog Registration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Key Workflow: Feature Engineering to Catalog Registration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-the-design-tension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 The Design Tension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-the-solution-frozen-snapshots-with-explicit-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 The Solution: Frozen Snapshots with Explicit Ownership
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-role-specific-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Role-Specific Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Dependency Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Dependency Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-the-blessed-lockfile-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 The Blessed Lockfile Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-the-compatibility-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 The Compatibility Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-why-this-matters-for-research-reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Why This Matters for Research Reproducibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-migration-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Migration Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Governance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/eye-ai-usc/eye-ai-platform/edit/main/docs/design/architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="organizing-a-sustainable-github-infrastructure-for-an-interdisciplinary-clinical-ml-project-the-eyeai-case">Organizing a Sustainable GitHub Infrastructure for an Interdisciplinary Clinical ML Project: The EyeAI Case</h1>
+<hr />
+<h2 id="abstract">Abstract</h2>
+<p>Long-running interdisciplinary machine learning projects in clinical research face a class of software infrastructure problems that are distinct from both pure research projects and pure software engineering projects. This document describes the organizational design decisions made for the EyeAI GitHub organization — a multi-year glaucoma detection project involving ophthalmologists, ML engineers, and data managers. We identify eight recurring failure modes in the current structure, propose a repository architecture that addresses each, and describe the role-specific workflows and automation mechanisms that make the system sustainable for a team with heterogeneous technical backgrounds. The design prioritizes low researcher overhead and automated provenance tracking over process enforcement.</p>
+<hr />
+<h2 id="1-project-background">1. Project Background</h2>
+<h3 id="11-the-eyeai-project">1.1 The EyeAI Project</h3>
+<p>EyeAI is a clinical ML research project with the primary aim of automated glaucoma detection from ophthalmic imaging data. The project is representative of a broader class of academic clinical ML efforts: it combines domain expertise from practicing clinicians, ML research from academic engineers, and data management from dedicated data staff, all operating against a shared data infrastructure that evolves continuously over the life of the project.</p>
+<p>Data is sourced from multiple clinical and open-source origins, including LA County clinic networks, USC Keck Medical School, and publicly available ophthalmic imaging benchmarks. All data is managed through the <strong>Deriva Platform</strong>, a data catalog and asset management system developed by a separate research group that provides schema-defined, structured access to research datasets. The EyeAI Deriva site is the authoritative data store for all project assets.</p>
+<h3 id="12-team-composition-and-roles">1.2 Team Composition and Roles</h3>
+<p>The team spans three functional roles with substantially different technical backgrounds and working styles:</p>
+<p><strong>Ophthalmologists and clinical collaborators</strong> contribute clinical knowledge, data access, and medical annotation. They can write basic Python scripts but are not software engineers. They need minimal-friction tooling and cannot be expected to follow complex multi-repo workflows.</p>
+<p><strong>ML engineers (CS professors and PhD students)</strong> are responsible for model development, experiment design, feature engineering, and research infrastructure. They work at varying levels of software engineering rigor — CS professors may write production-quality code while clinical PhD students may write exploratory notebooks.</p>
+<p><strong>Data managers</strong> are responsible for data ingestion from clinical sources, catalog integrity, and data quality. Their work is often entirely orthogonal to any specific modeling task — they may need to add a new data source or restructure a table with no associated model development.</p>
+<h3 id="13-the-software-stack">1.3 The Software Stack</h3>
+<p>The project depends on a layered software stack developed by the professor who leads the Deriva project:</p>
+<pre><code>Deriva              — data catalog platform and asset management
+  └── Deriva-ML     — ML experiment tracing layer; links model runs to catalog state
+      └── EyeAI     — domain library: ETL utilities, data export, AI-ready formatting
+          └── MCP Agent (mcp-eye-ai / deriva-mcp)
+                    — LLM agent layer for interpreting catalog data
+                      and constructing reproducible experiments
+</code></pre>
+<p>Each layer depends on the one below it. The stack is developed incrementally and released every several months without a fully stabilized release process. This creates a recurring pattern: a new release is announced, researchers update at different times, bugs surface independently, and debugging is duplicated across the team.</p>
+<h3 id="14-the-data-catalog-as-a-moving-target">1.4 The Data Catalog as a Moving Target</h3>
+<p>Unlike projects that train against static benchmarks, EyeAI's data catalog evolves continuously. New imaging data arrives from clinical partners. Researchers compute new features — cup-to-disc ratios, vessel caliber measurements, image quality scores — and add them as columns to existing catalog tables. Human annotations are ingested as they become available. Schema changes happen in response to new clinical requirements or modeling needs.</p>
+<p>This dynamic catalog creates a provenance challenge: for any experiment, it must be possible to reconstruct exactly what data and features were available at the time the experiment was run. Deriva-ML addresses part of this by tracing experiment runs back to catalog state. But the catalog modification scripts themselves — the scripts that define when and how the catalog changed — also need a traceable home.</p>
+<hr />
+<h2 id="2-problems-with-the-current-structure">2. Problems with the Current Structure</h2>
+<p>The current repository structure has grown organically since the project's early stages. Eight specific failure modes have emerged that motivate the reorganization.</p>
+<h3 id="p1-per-researcher-repos-cause-fragmentation">P1 — Per-researcher repos cause fragmentation</h3>
+<p>Each researcher maintains their own GitHub repository. Researchers working on the same research question cannot easily share data export configurations or reference each other's feature engineering code. Related work is spread across repositories with no shared structure.</p>
+<h3 id="p2-no-subproject-level-organization">P2 — No subproject-level organization</h3>
+<p>There is no single location containing all scripts related to a given research question. Data preparation, feature engineering, model code, and experiment configurations are either spread across multiple repos or mixed without clear separation. The full scope of any subproject is invisible from a single vantage point.</p>
+<h3 id="p3-upstream-updates-are-painful-and-uncoordinated">P3 — Upstream updates are painful and uncoordinated</h3>
+<p>When any component of the Deriva/EyeAI stack is updated, every researcher must manually update their environment. There is no automated mechanism to validate that a new version works against EyeAI's actual workflows, notify the team, or propagate the update in a coordinated way. Researchers unknowingly run different versions, causing subtle reproducibility failures.</p>
+<h3 id="p4-the-template-repo-requires-constant-manual-maintenance">P4 — The template repo requires constant manual maintenance</h3>
+<p>A model-template repository helps new researchers get started. However, every stack update requires a manual update to the template. The template consistently lags the active stack, meaning new members start with outdated dependencies.</p>
+<h3 id="p5-onboarding-documentation-is-scattered">P5 — Onboarding documentation is scattered</h3>
+<p>Installation instructions for Deriva-ML, EyeAI, and the MCP agent are distributed across the README files of multiple individual repos. There is no canonical document a new collaborator can follow from zero to running their first experiment.</p>
+<h3 id="p6-release-announcements-rely-entirely-on-slack">P6 — Release announcements rely entirely on Slack</h3>
+<p>New version announcements go out via a Slack channel. Not all collaborators — particularly clinical partners and part-time contributors — monitor Slack consistently. Version drift goes unnoticed until something breaks.</p>
+<h3 id="p7-upstream-releases-are-incremental-and-often-unstable">P7 — Upstream releases are incremental and often unstable</h3>
+<p>The upstream developer cannot always provide a fully tested release. Each release is followed by a period of debugging and patching, the cost of which is currently distributed across the team. Without a shared integration testing step, each researcher independently discovers the same bugs.</p>
+<h3 id="p8-catalog-modification-scripts-have-no-centralized-home">P8 — Catalog modification scripts have no centralized home</h3>
+<p>Catalog schema changes — adding feature columns, creating new tables, restructuring existing tables — currently live wherever the researcher who made the change happened to be working. There is no audit trail. A data manager who needs to make a catalog change with no associated modeling work has no clear repository for their script.</p>
+<hr />
+<h2 id="3-design-principles">3. Design Principles</h2>
+<p>The architecture is governed by five principles chosen specifically for a research team context, where over-engineered processes will be ignored.</p>
+<p><strong>Structure over rules.</strong> The directory layout and repository separation should make the right thing easy without requiring policy enforcement. If following the correct workflow requires significantly more effort than the incorrect one, the correct workflow will not be followed.</p>
+<p><strong>Asymmetric overhead by role.</strong> Friction must be minimized for ML engineers and clinical collaborators, who cannot be expected to maintain complex multi-repo workflows. Data managers, whose job is catalog integrity, absorb the coordination overhead of formal catalog registration. This is an explicit and intentional asymmetry, not a failure of the design.</p>
+<p><strong>One source of truth per concern.</strong> Onboarding documentation lives in one place. Catalog migrations live in one place. The blessed dependency stack lives in one place. Duplication creates drift, and drift in a research context is invisible until it causes a failed experiment.</p>
+<p><strong>Automation over announcements.</strong> Dependency updates should propagate via pull requests and CI, not Slack messages. A researcher who ignores Slack still gets a GitHub notification.</p>
+<p><strong>Research granularity, not person granularity.</strong> Repositories are organized by research question, not by individual. The scientifically meaningful unit of organization is the subproject, and this is reflected in the repository structure.</p>
+<hr />
+<h2 id="4-repository-architecture">4. Repository Architecture</h2>
+<p>The target architecture consists of three layers: a platform layer, a catalog layer, and a research layer.</p>
+<h3 id="41-the-platform-layer-eyeai-platform">4.1 The Platform Layer: <code>eyeai-platform</code></h3>
+<p><code>eyeai-platform</code> is a new repository that serves as the front door for the entire project. It contains no research code and no catalog migration scripts. Its sole purpose is orientation, onboarding, and dependency governance.</p>
+<p><strong>Onboarding documentation</strong> (<code>docs/onboarding/</code>) consolidates all installation and setup instructions that are currently scattered across individual repo READMEs. A new collaborator — regardless of role — is sent a single URL. The quickstart document covers the full path from a fresh machine to a running first experiment, including stack installation, MCP agent configuration, and research repo initialization.</p>
+<p><strong>Blessed lockfile registry</strong> (<code>lockfiles/</code>) is the mechanism by which dependency updates are coordinated across the team. The <code>stable/</code> directory contains a <code>uv.lock</code> file representing the current known-good combination of Deriva-ML, EyeAI, and MCP agent versions, along with a <code>manifest.toml</code> that records the versions, the date they were blessed, and notes on any breaking changes. An <code>archive/</code> directory preserves historical lockfiles by quarter, functioning as a browsable version history of the stack.</p>
+<p><strong>The Cookiecutter template</strong> (<code>templates/researcher-repo/</code>) replaces the standalone template repository. When the template is embedded in <code>eyeai-platform</code>, updating it means updating one directory rather than maintaining a separate repository. A new researcher initializes their repo with a single command that pulls the template and the current stable lockfile simultaneously.</p>
+<p><strong>Automation</strong> (<code>.github/workflows/</code>) handles two processes. A weekly integration test installs the latest upstream versions of all stack components, runs smoke tests against the EyeAI catalog, and opens a draft PR with an updated testing lockfile if tests pass. A release notification workflow fires when a new blessed stack is published, posting to Slack and triggering Renovate PRs in all satellite repos.</p>
+<h3 id="42-the-catalog-layer-eyeai-catalog">4.2 The Catalog Layer: <code>eyeai-catalog</code></h3>
+<p><code>eyeai-catalog</code> — the existing data curation repository — becomes the single source of truth for all catalog schema changes and data ingestion. This repository directly addresses P8 by giving every catalog modification a permanent, traceable home.</p>
+<p>The key structural addition is <code>migrations/</code>, a directory of timestamped Python scripts that record every change to the catalog schema. Migrations follow a naming convention (<code>YYYYMMDD_HHMMSS_{author}_{description}.py</code>) and a required header block that records the author, date, affected table, description, and — critically — a pointer to any external computation script if the migration registers a researcher-derived feature.</p>
+<p>Two classes of migrations are explicitly distinguished. <strong>Data management migrations</strong> are authored directly by data managers and have no external pointer — they represent pure catalog work such as adding a new data source's table or restructuring a vocabulary. <strong>Feature registration migrations</strong> are authored by data managers on behalf of researchers and contain a <code>Source computation</code> field pointing to the compute script in the researcher's own repository. This pointer is the provenance link: it records not just that a column exists, but exactly how its values were computed and where that code lives.</p>
+<p>Ingestion scripts for each data source (LA County, USC Keck, open-source datasets) are organized under <code>ingestion/</code> as subdirectories. This co-location with migrations reflects that ingestion and schema management share the same concern — they both modify the catalog state — and should be owned by the same people.</p>
+<h3 id="43-the-research-layer-eyeai-research-subproject">4.3 The Research Layer: <code>eyeai-research-{subproject}</code></h3>
+<p>One repository per research subproject replaces the current one-repository-per-researcher structure. A subproject is defined by a distinct research question, not by team membership. Researchers working on the same question share a repository and work in named subdirectories.</p>
+<p>The internal structure separates data export configuration, feature engineering, model code, and experiment configuration into top-level directories. Within each directory, researcher-named subdirectories minimize the surface area for merge conflicts: researchers rarely touch each other's subdirectories, and the shared <code>data/</code> directory is mostly declarative configuration rather than imperative code.</p>
+<p>Each subproject repo carries its own <code>uv.lock</code> file, initialized from the stable lockfile in <code>eyeai-platform</code> at creation time and updated via Renovate PRs when a new blessed stack is published.</p>
+<hr />
+<h2 id="5-key-workflow-feature-engineering-to-catalog-registration">5. Key Workflow: Feature Engineering to Catalog Registration</h2>
+<p>The feature engineering workflow is the most operationally important workflow in the system because it sits at the intersection of all three roles and all three repository layers. It is also the workflow where the tension between researcher autonomy and catalog provenance is most acute.</p>
+<h3 id="51-the-design-tension">5.1 The Design Tension</h3>
+<p>A researcher computing a new feature faces two competing requirements. Their compute script is research code: it iterates rapidly, it depends on their model and pipeline, it may be refactored multiple times before stabilizing, and forcing it into a formal repository during development would add friction that slows research. At the same time, once the feature is stable and ingested into the catalog, there must be a permanent record of how it was computed — a record robust enough to survive the researcher leaving the project or their repository being restructured.</p>
+<p>The naive solutions both fail. Keeping the script only in the researcher's repo creates pointer rot and discoverability problems. Copying the script into <code>eyeai-catalog</code> creates duplication drift and places research code in a repository owned by data managers.</p>
+<h3 id="52-the-solution-frozen-snapshots-with-explicit-ownership">5.2 The Solution: Frozen Snapshots with Explicit Ownership</h3>
+<p>The solution separates the compute script (which remains in the researcher's repo and may continue to evolve) from a frozen snapshot (which is copied into <code>eyeai-catalog</code> at the moment of catalog registration and explicitly marked as an archival record, not a maintained codebase).</p>
+<p>The migration directory in <code>eyeai-catalog</code> for a feature registration looks like:</p>
+<pre><code>migrations/
+└── 20250312_jsmith_add_cdrnr_feature/
+    ├── migration.py                    ← schema change only
+    ├── compute_cdrnr.SNAPSHOT.py       ← frozen copy, never edited here
+    ├── ingest_cdrnr.SNAPSHOT.py        ← frozen copy, never edited here
+    └── README.md                       ← points to canonical source in research repo
+</code></pre>
+<p>The <code>.SNAPSHOT</code> suffix communicates unambiguously that these files are archival records. Anyone who needs to re-run or modify the computation is directed to the canonical source in the research repo. Anyone auditing the catalog history can reconstruct exactly what was computed and how without following any external links.</p>
+<h3 id="53-role-specific-workflows">5.3 Role-Specific Workflows</h3>
+<p><strong>Researcher workflow (minimal overhead):</strong>
+The researcher develops their compute script entirely within their own research repository, at whatever level of formality suits their working style. When the feature is stable and ready for catalog ingestion, they open a Feature Registration Request issue in <code>eyeai-catalog</code> — a GitHub issue template that takes roughly two minutes to fill out. They provide the feature name, the target catalog table, links to their compute and ingest scripts, a brief description, and confirmation that the values are stable. They then return to their research work.</p>
+<p><strong>Data manager workflow (absorbs coordination overhead):</strong>
+The data manager picks up the Feature Registration Request issue. They review the linked scripts, write the schema migration (<code>migration.py</code>), copy frozen snapshots of the compute and ingest scripts with the <code>.SNAPSHOT</code> suffix, and open a PR to <code>eyeai-catalog/migrations/</code>. After review and merge, they run the migration against the catalog and notify the researcher. The issue is closed.</p>
+<p>This asymmetry is deliberate. Data managers are the appropriate owners of catalog integrity. Requiring researchers to navigate two repositories and follow formal migration conventions would introduce friction that would either slow research or, more likely, result in catalog changes being made informally without any record.</p>
+<hr />
+<h2 id="6-dependency-management">6. Dependency Management</h2>
+<h3 id="61-the-blessed-lockfile-pattern">6.1 The Blessed Lockfile Pattern</h3>
+<p>The <code>uv</code> package manager's lockfile format (<code>uv.lock</code>) provides deterministic, cross-platform environment specification. The blessed lockfile pattern uses this capability to decouple "upstream releases a new version" from "the team adopts a new version."</p>
+<p>The flow is as follows. When a new upstream version is released, a GitHub Action in <code>eyeai-platform</code> automatically installs it in a clean environment and runs integration smoke tests. If tests fail, an issue is opened and the team stays on the current blessed stack. If tests pass, the updated lockfile is committed to <code>lockfiles/testing/</code> as a draft PR, available for one or two active research repos to validate against real workflows during a soak period of one to two weeks. After the soak period, the PR is promoted to <code>lockfiles/stable/</code>, a new GitHub Release is published, and Renovate automatically opens update PRs in all satellite repos.</p>
+<h3 id="62-the-compatibility-matrix">6.2 The Compatibility Matrix</h3>
+<p><code>docs/releases/compatibility-matrix.md</code> in <code>eyeai-platform</code> maintains a human-readable table of known-good version combinations, their blessing dates, and any notes on breaking changes or required migrations. This table serves two purposes: it gives researchers a quick reference for what is known to work, and it provides a historical record that makes it possible to reproduce the environment of any past experiment.</p>
+<h3 id="63-why-this-matters-for-research-reproducibility">6.3 Why This Matters for Research Reproducibility</h3>
+<p>In a project where experiments are traced back to catalog state via Deriva-ML, environment reproducibility is a first-class concern. A model trained against catalog version N using stack version X may produce different results than the same model trained against the same catalog version using stack version Y. The blessed lockfile archive, combined with the catalog migration audit trail in <code>eyeai-catalog</code>, provides the two components needed to fully reconstruct the conditions of any past experiment.</p>
+<hr />
+<h2 id="7-migration-strategy">7. Migration Strategy</h2>
+<p>The migration from the current structure to the target architecture is phased to avoid disrupting active research.</p>
+<p><strong>Phase 1</strong> establishes <code>eyeai-platform</code> and consolidates documentation. No existing repositories are touched. This phase has zero risk and immediately addresses P5 and P6.</p>
+<p><strong>Phase 2</strong> formalizes <code>eyeai-catalog</code> by introducing the <code>migrations/</code> structure and communicating the new policy for catalog changes. Existing catalog scripts in researcher repos are registered retroactively as migrations with appropriate headers.</p>
+<p><strong>Phase 3</strong> establishes the lockfile infrastructure and automation. The current working stack is documented as the first blessed stack. The integration test workflow is set up, even if initial smoke tests are minimal.</p>
+<p><strong>Phase 4</strong> migrates the template to <code>eyeai-platform</code> as a Cookiecutter template and deprecates the standalone template repository.</p>
+<p><strong>Phase 5</strong> consolidates researcher repositories into subproject satellites. This phase is not time-bounded — each consolidation happens when the relevant subproject reaches a natural pause point. Researcher repos are not archived until their owners confirm the migration is complete.</p>
+<hr />
+<h2 id="8-governance">8. Governance</h2>
+<p>Governance is intentionally minimal. Research teams abandon processes that require sustained active enforcement.</p>
+<p>Merge rights to <code>eyeai-catalog/migrations/</code> are restricted to data managers and senior MLEs. This is the one hard access control in the system, and it is justified: catalog migrations are irreversible changes to shared infrastructure that affect all researchers.</p>
+<p>Merge rights to <code>lockfiles/stable/</code> in <code>eyeai-platform</code> are restricted to the infrastructure maintainer, and merges require passing CI. This protects the team from a broken blessed stack.</p>
+<p>Research satellite repos have no mandatory review policy. Researchers own their subdirectories and merge their own code. This reflects the reality that imposing code review on exploratory research code creates friction without proportionate benefit.</p>
+<p>An integration tester rotation is recommended: one MLE per month takes responsibility for monitoring the weekly integration test results and shepherding any new upstream release through the soak period. This distributes the infrastructure maintenance burden and builds stack knowledge across the team.</p>
+<hr />
+<h2 id="9-summary">9. Summary</h2>
+<p>The eight failure modes identified in the current structure map directly to the architectural decisions described above.</p>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1: Per-researcher repo fragmentation</td>
+<td>Subproject satellite repos with researcher subdirectories</td>
+</tr>
+<tr>
+<td>P2: No subproject-level organization</td>
+<td>Standardized internal structure per subproject repo</td>
+</tr>
+<tr>
+<td>P3: Upstream updates uncoordinated</td>
+<td>Blessed lockfile pattern with automated integration testing</td>
+</tr>
+<tr>
+<td>P4: Template repo maintenance burden</td>
+<td>Cookiecutter template embedded in eyeai-platform</td>
+</tr>
+<tr>
+<td>P5: Scattered onboarding docs</td>
+<td>Consolidated docs/onboarding/ in eyeai-platform</td>
+</tr>
+<tr>
+<td>P6: Slack-only release announcements</td>
+<td>GitHub Releases + Renovate PRs + automated Slack post</td>
+</tr>
+<tr>
+<td>P7: Team absorbs upstream instability</td>
+<td>Soak period between upstream release and team adoption</td>
+</tr>
+<tr>
+<td>P8: No home for catalog modifications</td>
+<td>eyeai-catalog/migrations/ with formal registration workflow</td>
+</tr>
+</tbody>
+</table>
+<p>The design is not intended to be permanent. As the project grows and the team's practices mature, specific components — the soak period duration, the integration test coverage, the subproject boundaries — should be revisited. The goal is a structure that is sustainable under current team conditions, not one that is optimal in the abstract.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "search.suggest", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

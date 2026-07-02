@@ -1,0 +1,145 @@
+<svg viewBox="0 0 960 800" width="960" height="800" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="960" height="800" fill="#ffffff"/>
+  <style>
+    .nm  { font-size: 13px; font-weight: 700; fill: #1a1a1a; }
+    .sub { font-size: 9.5px; font-style: italic; fill: #6b6b6b; }
+    .col { font-size: 11px; fill: #333333; }
+    .pk  { font-size: 11px; font-weight: 600; fill: #1a1a1a; }
+    .fk  { font-size: 11px; fill: #1f6feb; }
+    .note{ font-size: 10.5px; fill: #6b6b6b; }
+    .box { fill: #ffffff; stroke: #cfcfcf; stroke-width: 1.5; }
+    .hdr { fill: #f1f1f1; }
+    .div { stroke: #e2e2e2; stroke-width: 1; }
+    .rel { stroke: #8a8a8a; stroke-width: 1.6; fill: none; }
+    .lbl { font-size: 10px; font-weight: 600; fill: #555555; }
+    .cond{ stroke: #c98a1b; stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  </style>
+
+  <text x="20" y="34" font-size="19" font-weight="700" fill="#1a1a1a">Chart_Label model — Diagnosis + Severity + Severity_Method on one row</text>
+  <text x="20" y="56" class="note" font-size="11.5">Glaucoma_Diagnosis IS the ICD-11 concept (chart review direct, or ICD-10 cross-walked up). Severity is a separate axis (grade + method), valid only when the diagnosis is glaucoma.</text>
+
+  <!-- ===================== TOP BAND: diagnosis + ICD grounding ===================== -->
+  <text x="20" y="90" class="lbl" fill="#444444">DIAGNOSIS AXIS — grounded in ICD-11; legacy ICD-10 cross-walks UP to the concept</text>
+
+  <!-- ICD10_Eye -->
+  <rect class="box" x="20" y="102" width="168" height="104" rx="8"/>
+  <path class="hdr" d="M20 110 a8 8 0 0 1 8 -8 h152 a8 8 0 0 1 8 8 v20 h-168 z"/>
+  <text class="nm" x="32" y="124">ICD10_Eye</text>
+  <text class="sub" x="32" y="140">vocab · one term per ICD-10 code</text>
+  <line class="div" x1="20" y1="147" x2="188" y2="147"/>
+  <text class="pk" x="32" y="166">Name (PK) — H40.02</text>
+  <text class="fk" x="32" y="185">ID / URI — ICD10:H40.02</text>
+
+  <!-- Map -->
+  <rect class="box" x="258" y="94" width="210" height="120" rx="8"/>
+  <path class="hdr" d="M258 102 a8 8 0 0 1 8 -8 h194 a8 8 0 0 1 8 8 v20 h-210 z"/>
+  <text class="nm" x="270" y="116">ICD10_Condition_Map</text>
+  <text class="sub" x="270" y="132">association · ICD-10 → ICD-11</text>
+  <line class="div" x1="258" y1="139" x2="468" y2="139"/>
+  <text class="pk" x="270" y="158">RID (PK)</text>
+  <text class="fk" x="270" y="176">ICD10_Eye (FK)</text>
+  <text class="fk" x="270" y="194">Glaucoma_Diagnosis (FK)</text>
+
+  <!-- ICD10_Eye -> map -->
+  <path class="rel" d="M188 161 H258"/>
+  <text class="lbl" x="203" y="155">N</text><text class="lbl" x="243" y="155">1</text>
+
+  <!-- Glaucoma_Diagnosis (hub, top-right) -->
+  <rect class="box" x="600" y="94" width="270" height="150" rx="8"/>
+  <path class="hdr" d="M600 102 a8 8 0 0 1 8 -8 h254 a8 8 0 0 1 8 8 v20 h-270 z"/>
+  <text class="nm" x="612" y="116">Glaucoma_Diagnosis  =  ICD-11 concept</text>
+  <text class="sub" x="612" y="132">vocab · folded; short name = display</text>
+  <line class="div" x1="600" y1="139" x2="870" y2="139"/>
+  <text class="pk" x="612" y="158">Name (PK) — GS  (display for 9C60)</text>
+  <text class="fk" x="612" y="176" font-weight="700">ID / URI — ICD11:9C60</text>
+  <text class="note" x="622" y="191">↑ identity · lookup BY CODE</text>
+  <text class="col" x="612" y="209">Synonyms — WHO index terms</text>
+  <text class="note" x="622" y="224">(human names · lookup BY NAME)</text>
+
+  <!-- map -> Glaucoma_Diagnosis -->
+  <path class="rel" d="M468 155 H600 V160"/>
+  <text class="lbl" x="483" y="149">N</text><text class="lbl" x="585" y="149">1</text>
+
+  <!-- Severity_Label (middle-right) -->
+  <rect class="box" x="600" y="286" width="270" height="96" rx="8"/>
+  <path class="hdr" d="M600 294 a8 8 0 0 1 8 -8 h254 a8 8 0 0 1 8 8 v20 h-270 z"/>
+  <text class="nm" x="612" y="308">Severity_Label</text>
+  <text class="sub" x="612" y="324">vocab · stage of established glaucoma</text>
+  <line class="div" x1="600" y1="331" x2="870" y2="331"/>
+  <text class="pk" x="612" y="350">Name (PK) — Mild / Moderate / Severe</text>
+  <text class="col" x="612" y="368">Not Staged / Indeterminate</text>
+
+  <!-- Severity_Method (lower-right) -->
+  <rect class="box" x="600" y="404" width="270" height="96" rx="8"/>
+  <path class="hdr" d="M600 412 a8 8 0 0 1 8 -8 h254 a8 8 0 0 1 8 8 v20 h-270 z"/>
+  <text class="nm" x="612" y="426">Severity_Method</text>
+  <text class="sub" x="612" y="442">vocab · staging basis (NEW)</text>
+  <line class="div" x1="600" y1="449" x2="870" y2="449"/>
+  <text class="pk" x="612" y="468">Name (PK) — HPA / ICD_7th_char</text>
+  <text class="col" x="612" y="486">Structural / Clinician_Global …</text>
+
+  <!-- ===================== BOTTOM-LEFT: Chart_Label feature ===================== -->
+  <text x="20" y="330" class="lbl" fill="#444444">CHART_LABEL FEATURE — carries the diagnosis + both severity columns on one row</text>
+
+  <!-- Chart_Label feature (the join row) -->
+  <rect class="box" x="20" y="344" width="330" height="180" rx="8"/>
+  <path class="hdr" d="M20 352 a8 8 0 0 1 8 -8 h314 a8 8 0 0 1 8 8 v20 h-330 z"/>
+  <text class="nm" x="32" y="366">Execution_Subject_Chart_Label</text>
+  <text class="sub" x="32" y="382">Chart_Label feature on Subject (2,302 rows)</text>
+  <line class="div" x1="20" y1="389" x2="350" y2="389"/>
+  <text class="fk" x="32" y="408">Subject (FK)</text>
+  <text class="fk" x="32" y="427" font-weight="700">Glaucoma_Diagnosis (FK)  — which glaucoma</text>
+  <text class="fk" x="32" y="446" font-weight="700">Severity_Label (FK)      — the stage</text>
+  <text class="fk" x="32" y="465" font-weight="700">Severity_Method (FK)     — the basis  (NEW)</text>
+  <line class="div" x1="20" y1="477" x2="350" y2="477"/>
+  <text class="note" x="32" y="496">diagnosis + the (Severity, Method) pair,</text>
+  <text class="note" x="32" y="510">all FK columns on the same row</text>
+
+  <!-- Chart_Label -> Glaucoma_Diagnosis (direct, ICD-11-native) -->
+  <path class="rel" d="M350 418 C480 418 500 168 600 168"/>
+  <text class="lbl" x="430" y="250">N</text><text class="lbl" x="585" y="182">1</text>
+  <text class="lbl" x="410" y="266" fill="#1f6feb">chart review picks</text>
+  <text class="lbl" x="410" y="279" fill="#1f6feb">the term directly</text>
+
+  <!-- Chart_Label -> Severity_Label -->
+  <path class="rel" d="M350 440 C470 440 500 330 600 330"/>
+  <text class="lbl" x="470" y="356">N</text><text class="lbl" x="585" y="344">1</text>
+
+  <!-- Chart_Label -> Severity_Method -->
+  <path class="rel" d="M350 462 C460 462 500 448 600 448"/>
+  <text class="lbl" x="470" y="474">N</text><text class="lbl" x="585" y="462">1</text>
+
+  <!-- conditional constraint: severity axis valid only if glaucoma -->
+  <path class="cond" d="M735 244 V286"/>
+  <text class="lbl" x="743" y="264" fill="#c98a1b">severity (grade + method)</text>
+  <text class="lbl" x="743" y="277" fill="#c98a1b">valid only if diagnosis = glaucoma</text>
+
+  <!-- (Severity, Method) pair bracket -->
+  <path class="cond" d="M876 334 C892 334 892 448 876 448" stroke="#6b6b6b" stroke-dasharray="3 3"/>
+  <text class="lbl" x="884" y="394" fill="#6b6b6b" transform="rotate(90 884 394)">(Severity, Method) pair</text>
+
+  <!-- ===================== Legend ===================== -->
+  <rect x="20" y="548" width="920" height="238" rx="8" fill="#f7f7f7" stroke="#e2e2e2" stroke-width="1"/>
+  <text x="36" y="572" font-size="13" font-weight="700" fill="#1a1a1a">The model in six lines</text>
+
+  <circle cx="44" cy="596" r="4" fill="#1f6feb"/>
+  <text x="58" y="600" class="col"><tspan font-weight="600">One folded vocabulary</tspan>  → Glaucoma_Diagnosis (Condition_Label + old Glaucoma_Diagnosis merged); a model's and a clinician's "Glaucoma" are the same term.</text>
+
+  <circle cx="44" cy="622" r="4" fill="#1f6feb"/>
+  <text x="58" y="626" class="col"><tspan font-weight="600">Diagnosis IS the ICD-11 concept</tspan>  → ICD-11 code is the identity (ID/URI); GS = display for 9C60. Provenance (model vs clinician) via Diagnosis_Tag, not the vocab.</text>
+
+  <circle cx="44" cy="648" r="4" fill="#1f6feb"/>
+  <text x="58" y="652" class="col"><tspan font-weight="600">Two ways to reach the diagnosis</tspan>  → chart review picks it directly; legacy ICD-10 cross-walks up via ICD10_Condition_Map (exact codes).</text>
+
+  <circle cx="44" cy="674" r="4" fill="#c98a1b"/>
+  <text x="58" y="678" class="col"><tspan font-weight="600">Severity is a separate, conditional axis</tspan>  → Mild/Moderate/Severe, meaningful only when the diagnosis is glaucoma; else not-applicable.</text>
+
+  <circle cx="44" cy="700" r="4" fill="#1f6feb"/>
+  <text x="58" y="704" class="col"><tspan font-weight="600">Severity records its method</tspan>  → each severity is the (Severity_Label, Severity_Method) pair; method (HPA, ICD 7th-char, …) is NOT-NULL when graded.</text>
+
+  <circle cx="44" cy="726" r="4" fill="#1f6feb"/>
+  <text x="58" y="730" class="col"><tspan font-weight="600">Lookup</tspan>  → by code via ID, by name via Synonyms (WHO index terms); codes never go in Synonyms.</text>
+
+  <text x="36" y="756" class="note">ICD-11 codes verified 2026-06-30 vs WHO ICD-11 MMS (suspect 9C60 is a sibling of the 9C61 Glaucoma block, not a child).</text>
+  <text x="36" y="774" class="note">Provisional — the vocabulary fold, the conditional severity constraint, and the Severity_Method member set pending Dr. Bolo / Dr. Xu.</text>
+</svg>

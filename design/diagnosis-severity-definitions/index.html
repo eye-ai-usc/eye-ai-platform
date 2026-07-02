@@ -1,0 +1,2987 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A clinical ML research platform for automated glaucoma detection — onboarding, dependency governance, and research tooling for the eye-ai-usc project.">
+      
+      
+      
+        <link rel="canonical" href="https://eye-ai-usc.github.io/eye-ai-platform/design/diagnosis-severity-definitions/">
+      
+      
+        <link rel="prev" href="../implementation-spec/">
+      
+      
+        <link rel="next" href="../../MAINTENANCE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Diagnosis & Severity Definitions - EyeAI Platform</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#diagnosis-severity-vocabularies-clinical-data-dictionary" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="EyeAI Platform" class="md-header__button md-logo" aria-label="EyeAI Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EyeAI Platform
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Diagnosis & Severity Definitions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eye-ai-usc/eye-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eye-ai-usc/eye-ai-platform
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../onboarding/quickstart/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/etl-workflow/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../releases/compatibility-matrix/" class="md-tabs__link">
+          
+  
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/" class="md-tabs__link">
+          
+  
+  
+  Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../MAINTENANCE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Maintenance
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="EyeAI Platform" class="md-nav__button md-logo" aria-label="EyeAI Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    EyeAI Platform
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eye-ai-usc/eye-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eye-ai-usc/eye-ai-platform
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/update-env/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update Your Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/mcp-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/catalog-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../onboarding/new-researcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Researcher Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/etl-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ETL Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/experiment-tracing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiment Tracing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/catalog-migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/compatibility-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation-spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnosis & Severity Definitions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnosis & Severity Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-summary-what-we-are-doing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Summary — what we are doing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Summary — what we are doing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-this-sits-in-the-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where this sits in the project
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-why-limitations-of-the-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why — limitations of the current state
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-proposed-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Proposed design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Proposed design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-two-axes-diagnosis-and-severity-separate-but-conditional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Two axes: diagnosis and severity, separate but conditional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-one-shared-diagnosis-vocabulary-glaucoma_diagnosis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 One shared diagnosis vocabulary: Glaucoma_Diagnosis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-three-axes-diagnosis-gradability-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Three axes: diagnosis, gradability, status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-icd-grounding-and-the-cross-walk-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 ICD grounding and the cross-walk mechanism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-severity-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Severity cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-severity-method-of-determination-the-severity-method-pair" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Severity method of determination — the (Severity, Method) pair
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-gamma-gleam-band-mapping-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 GAMMA / GLEAM band mapping (open)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-change-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Change plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Change plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-dependency-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Dependency ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-gates-and-verified-assumptions-resolve-the-open-ones-before-the-clinical-parts-land" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Gates and verified assumptions (resolve the open ones before the clinical parts land)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-open-questions-decisions-for-the-dr-bolo-dr-xu-meeting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Open questions &amp; decisions (for the Dr. Bolo &amp; Dr. Xu meeting)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-current-state-as-in-the-catalog-2026-06-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A — Current state (as in the catalog, 2026-06-30)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix A — Current state (as in the catalog, 2026-06-30)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a1-condition_label-6-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.1 Condition_Label — 6 terms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a2-severity_label-6-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.2 Severity_Label — 6 terms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a3-glaucoma_diagnosis-3-terms-imagevisitsubject-diagnostic-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.3 Glaucoma_Diagnosis — 3 terms (image/visit/subject diagnostic vocabulary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a4-supporting-vocabularies-distinct-from-diagnosis-do-not-conflate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.4 Supporting vocabularies (distinct from diagnosis — do not conflate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a5-how-the-terms-are-used-today-the-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.5 How the terms are used today (the evidence)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-proposed-vocabulary-tables-full" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B — Proposed vocabulary tables (full)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B — Proposed vocabulary tables (full)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#b1-glaucoma_diagnosis-folded-diagnosis-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.1 Glaucoma_Diagnosis (folded diagnosis vocabulary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b2-severity_label-cleaned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.2 Severity_Label (cleaned)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b3-severity_method-new-the-staging-basis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.3 Severity_Method (new — the staging basis)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-c-references-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix C — References / provenance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MAINTENANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-summary-what-we-are-doing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Summary — what we are doing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Summary — what we are doing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-this-sits-in-the-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where this sits in the project
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-why-limitations-of-the-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why — limitations of the current state
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-proposed-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Proposed design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Proposed design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-two-axes-diagnosis-and-severity-separate-but-conditional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Two axes: diagnosis and severity, separate but conditional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-one-shared-diagnosis-vocabulary-glaucoma_diagnosis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 One shared diagnosis vocabulary: Glaucoma_Diagnosis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-three-axes-diagnosis-gradability-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Three axes: diagnosis, gradability, status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-icd-grounding-and-the-cross-walk-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 ICD grounding and the cross-walk mechanism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-severity-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Severity cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-severity-method-of-determination-the-severity-method-pair" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Severity method of determination — the (Severity, Method) pair
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-gamma-gleam-band-mapping-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 GAMMA / GLEAM band mapping (open)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-change-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Change plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Change plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-dependency-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Dependency ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-gates-and-verified-assumptions-resolve-the-open-ones-before-the-clinical-parts-land" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Gates and verified assumptions (resolve the open ones before the clinical parts land)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-open-questions-decisions-for-the-dr-bolo-dr-xu-meeting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Open questions &amp; decisions (for the Dr. Bolo &amp; Dr. Xu meeting)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-current-state-as-in-the-catalog-2026-06-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A — Current state (as in the catalog, 2026-06-30)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix A — Current state (as in the catalog, 2026-06-30)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a1-condition_label-6-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.1 Condition_Label — 6 terms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a2-severity_label-6-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.2 Severity_Label — 6 terms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a3-glaucoma_diagnosis-3-terms-imagevisitsubject-diagnostic-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.3 Glaucoma_Diagnosis — 3 terms (image/visit/subject diagnostic vocabulary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a4-supporting-vocabularies-distinct-from-diagnosis-do-not-conflate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.4 Supporting vocabularies (distinct from diagnosis — do not conflate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a5-how-the-terms-are-used-today-the-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.5 How the terms are used today (the evidence)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-proposed-vocabulary-tables-full" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B — Proposed vocabulary tables (full)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B — Proposed vocabulary tables (full)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#b1-glaucoma_diagnosis-folded-diagnosis-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.1 Glaucoma_Diagnosis (folded diagnosis vocabulary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b2-severity_label-cleaned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.2 Severity_Label (cleaned)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b3-severity_method-new-the-staging-basis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.3 Severity_Method (new — the staging basis)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-c-references-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix C — References / provenance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/eye-ai-usc/eye-ai-platform/edit/main/docs/design/diagnosis-severity-definitions.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="diagnosis-severity-vocabularies-clinical-data-dictionary">Diagnosis &amp; Severity Vocabularies — Clinical Data Dictionary</h1>
+<ul>
+<li>Status: <strong>structure agreed / finalized</strong> — the two-axis model and vocabulary membership are settled by Dr. Xu, Dr. Bolo &amp; Carl (email thread, 2026-07-01); clinical <em>thresholds &amp; criteria</em> remain <strong>provisional</strong>, to be finalized with Dr. Bolo and Dr. Xu</li>
+<li>Date: 2026-07-01 (structure finalized; supersedes the 2026-06-30 strawman)</li>
+<li>Catalog: <code>www.eye-ai.org</code>, catalog <code>eye-ai</code>, schema <code>eye-ai</code></li>
+<li>Scope: clinical reference and design proposal only — <strong>this document does not modify the catalog</strong> (see Appendix C)</li>
+</ul>
+<blockquote>
+<p><strong>Provisional notice.</strong> The <em>structure</em> — the two-axis model, the vocabulary
+membership, and the settled decisions in §1 — is agreed by the team (email
+thread, 2026-07-01). What remains <strong>provisional</strong> are the clinical <em>criteria and
+thresholds</em>: each clinical definition, criterion, and threshold below is a
+placeholder written to be <em>argued with</em>, not a settled standard, until reviewed
+and ratified by Dr. Bolo and Dr. Xu. Where a definition is unknown, it is marked
+<strong>TBD — clinical</strong>.</p>
+</blockquote>
+<p><strong>How to read this document.</strong> The body is the narrative: <strong>§1</strong> what we're
+doing, <strong>§2</strong> why (the limits of the current vocabularies), <strong>§3</strong> the proposed
+design, <strong>§4</strong> the change plan, <strong>§5</strong> the open clinical questions. The reference
+material — the <em>current</em> catalog contents and the <em>proposed</em> vocabulary tables in
+full — lives in the appendices:</p>
+<ul>
+<li><strong>Appendix A</strong> — current-state inventory (every term, verbatim from the catalog) + how the terms are used today.</li>
+<li><strong>Appendix B</strong> — the proposed vocabulary tables in full (<code>Glaucoma_Diagnosis</code>, <code>Severity_Label</code>, <code>Severity_Method</code>).</li>
+<li><strong>Appendix C</strong> — references / provenance / process.</li>
+</ul>
+<hr />
+<h2 id="1-summary-what-we-are-doing">1. Summary — what we are doing</h2>
+<p>This document defines the <strong>diagnosis</strong> and <strong>severity</strong> vocabularies used to
+label glaucoma in the Eye-AI catalog, and proposes a cleanup. In one screen:</p>
+<ul>
+<li><strong>Diagnosis and severity are two separate axes.</strong> <em>Diagnosis</em> = which glaucoma,
+  or none. <em>Severity</em> = stage of established disease (<code>Mild</code>/<code>Moderate</code>/<code>Severe</code>),
+  applicable <strong>only when the diagnosis is a confirmed glaucoma subtype</strong> — "mild
+  glaucoma" = a glaucoma diagnosis <strong>+</strong> a <code>Mild</code> severity, not one fused term
+  (§3.1). <strong>Both axes always carry a value — no nulls:</strong> every subject/observation
+  has a <code>Glaucoma_Diagnosis</code> (Dr. Bolo), and severity always has a value —
+  non-glaucoma → <code>Not Applicable</code>, glaucoma-with-unknown-stage → <code>Unspecified</code>
+  (settled — Carl, Dr. Bolo &amp; Dr. Xu). <strong><code>Not Applicable</code> (no glaucoma → no severity
+  exists) and <code>Unspecified</code> (glaucoma, severity exists but unknown) are distinct
+  values — do not conflate them</strong> (§3.1).</li>
+<li><strong>One shared diagnosis vocabulary, ICD-grounded.</strong> Fold today's two overlapping
+  diagnosis vocabularies (<code>Condition_Label</code> + the image/visit/subject
+  <code>Glaucoma_Diagnosis</code>) into <strong>one vocabulary named <code>Glaucoma_Diagnosis</code></strong>, so a
+  model's "Glaucoma" and a clinician's "Glaucoma" are the <em>same</em> term (direct
+  model-vs-clinical comparison). It carries the ICD-11 glaucoma subtypes
+  (<code>POAG</code>, <code>PACG</code>, <code>Unspecified Glaucoma</code>) <strong>plus <code>Non-Glaucoma</code> and <code>Glaucoma
+  Suspect</code></strong>, and <strong>every subject/observation must have a value (no nulls on this
+  axis).</strong> Each glaucoma term <strong>is</strong> an ICD-11 concept (<code>GS</code> = Glaucoma Suspect =
+  <code>9C60</code>, <code>POAG</code>=<code>9C61.0</code>, <code>PACG</code>=<code>9C61.1</code>, <code>Unspecified</code>=<code>9C61.Z</code>) with the WHO
+  URI as its identity; <code>Non-Glaucoma</code> has <strong>no ICD code — it is a local EyeAI term</strong>
+  (Dr. Xu). Legacy ICD-10 codes move out of <code>Synonyms</code> into a cross-walk table
+  (§3.2–§3.4). Naming is reconciled to avoid duplicates — <code>Glaucoma Suspect</code>
+  <strong>is</strong> the existing <code>GS</code> term (<code>9C60</code>), and <code>Non-Glaucoma</code> reconciles the earlier
+  <code>Normal</code> concept into one term. Adding <code>Non-Glaucoma</code> + <code>Glaucoma Suspect</code>
+  <strong>completes the spectrum</strong> so every dataset maps (Dr. Xu). Full table:
+  <strong>Appendix B.1</strong>.</li>
+<li><strong>Three axes separated.</strong> <em>Diagnosis</em> (<code>Glaucoma_Diagnosis</code>), <em>gradability</em>
+  (<code>Ungradable</code> — could the image be assessed?), and <em>status</em> (<code>Diagnosis_Status</code>
+  — review state) are distinct questions and get distinct homes (§3.3).</li>
+<li><strong><code>Severity_Label</code> cleaned up.</strong> Retire the values that are really conditions
+  (<code>GS</code>, <code>Normal or No dx</code>); keep <code>Mild</code>/<code>Moderate</code>/<code>Severe</code> as method-agnostic
+  bands (the clinical <em>criteria</em> live with the method, not the grade — §3.5), and
+  split the old <code>Unspecified/Indeterminate</code> catch-all into <code>Indeterminate</code> (glaucoma,
+  staging attempted but inconclusive) and <code>Unspecified</code> (glaucoma, severity exists
+  but unknown). Severity applies <strong>only to confirmed glaucoma</strong>; non-glaucoma cases
+  take <strong><code>Not Applicable</code></strong>, so severity is <strong>never null</strong> (settled — §3.1). Final
+  value set: <code>Mild</code>, <code>Moderate</code>, <code>Severe</code>, <code>Indeterminate</code>, <code>Unspecified</code>,
+  <code>Not Applicable</code>. Full table: <strong>Appendix B.2</strong>.</li>
+<li><strong>Severity records its method of determination.</strong> The grade stays
+  <code>Mild/Moderate/Severe</code>; a parallel <code>Severity_Method</code> vocabulary records the
+  staging basis — clinician assessment (CMS criteria), visual-field mean deviation
+  (HPA criteria), administrative coding (ICD), algorithmic, a combination of these,
+  or unspecified — so each severity is the pair <code>(Severity_Label, Severity_Method)</code>
+  (§3.6). The basis may alternatively be captured by the producing workflow, and
+  the set can be expanded over time. Full table: <strong>Appendix B.3</strong>.</li>
+<li><strong>The hard-coded mapping goes away.</strong> With the ICD-10 cross-walk in the catalog,
+  the <code>icd_mapping</code> dict in <code>eye-ai-ml</code>'s <code>compute_condition_label()</code> becomes a
+  join; only the multi-code priority tie-break stays in code (§3.4).</li>
+<li><strong>Nothing here changes the catalog.</strong> All changes go through <code>data-curation</code>; the
+  executable plan (six changes, ordering, open questions) is §4. Clinical
+  definitions are provisional pending Dr. Bolo and Dr. Xu.</li>
+</ul>
+<h3 id="where-this-sits-in-the-project">Where this sits in the project</h3>
+<p>The <code>eye-ai-platform</code> repository is the project's front door. Per its layering:
+schema/vocabulary <strong>changes</strong> are executed in <strong><code>data-curation</code></strong> (via its
+<em>"Feature Registration Request"</em> template); the <strong><code>eye-ai-ml</code></strong> library reads and
+writes these vocabularies (<code>compute_condition_label()</code> /
+<code>insert_condition_label()</code>); <strong>this document</strong> is the clinical reference for what
+the terms mean — it informs the <code>data-curation</code> requests, it does not perform them.</p>
+<p>A guiding principle throughout: <strong>define terms clinically, not by how the label
+was produced.</strong> A term's definition describes the eye, never the mechanism. The
+same term is written by a human chart reviewer and by an automated ICD rule, and
+must mean the same thing both ways — so "Moderate POAG" is one clinical concept
+regardless of who or what produced it.</p>
+<blockquote>
+<p><strong>Note — two senses of "severity."</strong> This document concerns <code>Severity_Label</code>
+(the clinical <em>stage</em> of disease). It is unrelated to
+<code>EyeAI.severity_analysis()</code> in <code>eye-ai-ml</code>, which computes <em>which eye is worse</em>
+(laterality) from RNFL/HVF/CDR and flags <code>Severity_Mismatch</code>. Never conflate the
+two.</p>
+</blockquote>
+<h2 id="2-why-limitations-of-the-current-state">2. Why — limitations of the current state</h2>
+<p>The cleanup is driven by concrete problems in today's vocabularies, grounded in
+the actual catalog data (full inventory and usage counts in <strong>Appendix A</strong>):</p>
+<ol>
+<li>
+<p><strong>Two overlapping diagnosis vocabularies.</strong> <code>Condition_Label</code> (fine
+   chart-review subtypes) and <code>Glaucoma_Diagnosis</code> (coarse No/Suspected/Unknown,
+   used at image/visit/subject levels) both describe glaucoma status and overlap
+   at the subject level. A model's label and a clinician's label live in
+   <em>different</em> vocabularies, so comparing them requires a cross-vocabulary mapping
+   instead of a value comparison — the cost lands on the platform's central query.</p>
+</li>
+<li>
+<p><strong>ICD codes are mis-stored in <code>Synonyms</code>.</strong> The <code>Synonyms</code> field of <code>GS</code>,
+   <code>POAG</code>, <code>PACG</code> holds ICD-10 code patterns (<code>H40.*</code>), not human-readable names —
+   a machine lookup key masquerading as alternate names, and the key that
+   <code>compute_condition_label()</code>'s hard-coded <code>icd_mapping</code> reverses. The terms have
+   no proper external identifier.</p>
+</li>
+<li>
+<p><strong><code>Severity_Label</code> contains values that are really conditions, not stages.</strong>
+   <code>GS</code> and <code>Normal or No dx</code> duplicate <code>Condition_Label</code> members; the data proves
+   it (698 <code>GS</code>/<code>GS</code> rows, 27 <code>Normal</code>/<code>Normal</code> rows where severity just echoes the
+   condition). True severity only meaningfully applies to established glaucoma —
+   grading a "suspect" or "normal" eye on a Mild/Moderate/Severe scale is a
+   category error.</p>
+</li>
+<li>
+<p><strong><code>Unspecified/Indeterminate</code> packs two ideas into one label</strong> ("indeterminate
+   stage" vs "stage not recorded") via a slash, and is the dumping ground for any
+   condition with no graded stage (≈900 rows).</p>
+</li>
+<li>
+<p><strong>Severity descriptions are circular and carry no criteria.</strong> "Mild stage",
+   "Moderate stage", "Severe stage" restate the name — nothing a grader could
+   apply reproducibly, and no record of <em>which staging system</em> produced a grade.</p>
+</li>
+<li>
+<p><strong><code>Normal or No dx</code> fuses two opposite states.</strong> "Normal" (assessed, healthy)
+   and "No diagnosis" (no determination made) are opposites in information content,
+   welded into one term — you cannot tell screened-healthy from never-screened.</p>
+</li>
+</ol>
+<h2 id="3-proposed-design">3. Proposed design</h2>
+<blockquote>
+<p><strong>Provisional strawman</strong> to be confirmed/revised with Dr. Bolo and Dr. Xu.</p>
+</blockquote>
+<h3 id="31-two-axes-diagnosis-and-severity-separate-but-conditional">3.1 Two axes: diagnosis and severity, separate but conditional</h3>
+<ul>
+<li><strong>Diagnosis</strong> = which glaucoma, or none — <code>POAG</code>, <code>PACG</code>,
+  <code>Unspecified Glaucoma</code>, <code>Glaucoma Suspect</code> (<code>GS</code>), <code>Non-Glaucoma</code>, <code>Other</code>,
+  <code>No Diagnosis</code> (every subject/observation has a value — no nulls).</li>
+<li><strong>Severity</strong> = stage of established glaucomatous disease —
+  <code>Mild</code>/<code>Moderate</code>/<code>Severe</code> — <strong>applicable only when a glaucomatous condition is
+  present.</strong></li>
+</ul>
+<p>Severity is a <em>further attribute of an established glaucoma diagnosis</em>, not an
+independent label: you first have a diagnosis; severity refines it <strong>only</strong> when
+that diagnosis is a confirmed glaucoma subtype (<code>POAG</code>/<code>PACG</code>, and
+<code>Unspecified Glaucoma</code>). This answers <strong>Professor Carl's question</strong> — <em>is there
+such a thing as "mild glaucoma"?</em> — with <strong>separate but conditional</strong>: "mild
+glaucoma" = diagnosis <code>POAG</code> (or <code>PACG</code>) + severity <code>Mild</code>; severity is not baked
+into the diagnosis term. It follows that a suspect (<code>Glaucoma Suspect</code>/<code>GS</code>) and a
+<code>Non-Glaucoma</code> eye have no clinical stage — they take the severity value
+<code>Not Applicable</code>.</p>
+<p><strong>Settled decision — no nulls, use <code>Not Applicable</code> (Carl, Dr. Bolo &amp; Dr. Xu).</strong>
+Severity <strong>always carries a value — never null.</strong> The values split into three kinds:</p>
+<ul>
+<li><strong>Real stages — <code>Mild</code> / <code>Moderate</code> / <code>Severe</code></strong> (plus <code>Indeterminate</code> when
+  staging was attempted but came back inconclusive): confirmed glaucoma only.</li>
+<li><strong><code>Unspecified</code> (severity unknown) — glaucoma present, stage not yet
+  determined.</strong> The eye <em>has</em> a severity; it simply has not been established. Per
+  Carl (Slack): <em>"if you have glaucoma you have a severity, you just don't know
+  it."</em> Glaucoma cases only.</li>
+<li><strong><code>Not Applicable</code> — non-glaucoma.</strong> There is no glaucoma, so <strong>no severity
+  exists to assign</strong>; severity does not apply. Used for every non-glaucoma
+  diagnosis (<code>Non-Glaucoma</code>, <code>Glaucoma Suspect</code>, <code>Other</code>, <code>No Diagnosis</code>).</li>
+</ul>
+<blockquote>
+<p><strong>⚠️ <code>Not Applicable</code> and <code>Unspecified</code> are DIFFERENT values with different
+meanings — do not conflate them.</strong> <code>Not Applicable</code> = <em>no glaucoma, so no
+severity exists</em>. <code>Unspecified</code> = <em>glaucoma present, a severity exists but is
+unknown</em>. (Carl confirmed the distinction on Slack — "Yep".)</p>
+</blockquote>
+<p>This replaces the earlier "null vs sentinel" question — the team chose the
+<code>Not Applicable</code> sentinel over allowing NULL, so downstream code never has to
+distinguish "no stage" from "missing." Likewise, <strong>every subject/observation
+carries a <code>Glaucoma_Diagnosis</code> value — no nulls on the diagnosis axis</strong> either
+(Dr. Bolo). Additional severity scales may be added over time (Dr. Xu),
+defaulting to <code>Not Applicable</code> until populated. <strong>⚠️ Open question (§5 Q8):</strong> this
+default is in tension with the <code>Not Applicable</code> vs <code>Unspecified</code> rule above — for a
+<em>glaucoma</em> subject not yet assessed on a new scale, that rule would make the value
+<code>Unspecified</code> (a severity exists but is unknown), not <code>Not Applicable</code> (no severity
+exists). Flagged for the team; <strong>not resolved here.</strong> The schema <em>may</em> additionally
+enforce "a real stage requires a glaucoma diagnosis" via a write-time constraint on
+the features — a <code>data-curation</code> change, noted here as intent.</p>
+<h3 id="32-one-shared-diagnosis-vocabulary-glaucoma_diagnosis">3.2 One shared diagnosis vocabulary: <code>Glaucoma_Diagnosis</code></h3>
+<blockquote>
+<p><strong>✅ Agreed (email thread + Carl's Slack confirmation, 2026-07-01).</strong> The fold is
+approved: the two diagnosis vocabularies merge into one. Adding <code>Non-Glaucoma</code> and
+<code>Glaucoma Suspect</code> alongside the ICD-11 subtypes <strong>completes the spectrum</strong>
+(Dr. Xu) — there is now a home for suspects and for non-glaucoma, so the model can
+<strong>map all datasets</strong> (Dr. Xu). Unchanged / preserved: the ICD-11 grounding +
+cross-walk (§3.4), and severity as its own axis.</p>
+</blockquote>
+<p><strong>Fold <code>Condition_Label</code> and the current <code>Glaucoma_Diagnosis</code> into one
+vocabulary</strong>, named <strong><code>Glaucoma_Diagnosis</code></strong>, referenced by the image / visit /
+subject / chart tables alike. The driving requirement: <strong>a model's "Glaucoma" and
+a clinician's "Glaucoma" must be the <em>same</em> term</strong>, so that model-vs-ground-truth
+is a direct value comparison (<code>prediction == label</code>), not a cross-vocabulary
+mapping. Storing the same concept in two vocabularies is denormalization of the
+concept.</p>
+<p>The distinction "a model asserted it" vs "a clinician asserted it" is <strong>provenance
+of the assertion</strong> — carried by <code>Diagnosis_Tag</code> (<code>CNN_Prediction</code>,
+<code>Expert_Consensus</code>, …), <strong>not</strong> by which vocabulary the value comes from.
+Provenance is an attribute of the <em>assertion</em>, not of the <em>concept</em>.</p>
+<p>The merged vocabulary keeps the name <code>Glaucoma_Diagnosis</code> (it <em>is</em> the glaucoma
+diagnosis, and that name is already consumed at all three levels); the old 3-term
+<code>Glaucoma_Diagnosis</code> is replaced by it and <code>Condition_Label</code>'s terms move into it.
+Its members are the ICD-11 glaucoma subtypes (<code>POAG</code>, <code>PACG</code>, <code>Unspecified
+Glaucoma</code>) plus <code>Glaucoma Suspect</code> (= the existing <code>GS</code> term, <code>9C60</code> — reused, not
+duplicated) and <code>Non-Glaucoma</code> (reconciled with the existing <code>Normal</code> concept — one
+term, not two), alongside the local <code>Other</code> / <code>No Diagnosis</code>. Per Dr. Xu, <strong>there
+is no ICD diagnosis for <code>Non-Glaucoma</code>, so it is a local term</strong> (EyeAI URI, no ICD
+code). Every subject/observation carries a value — <strong>no nulls on this axis</strong>
+(Dr. Bolo). <strong>Full proposed table: Appendix B.1.</strong></p>
+<blockquote>
+<p><strong>"Referable Glaucoma" is an umbrella, not a member.</strong> In the original screening
+proposal, <em>Referable Glaucoma</em> was the positive class covering <strong>both glaucoma
+suspects and confirmed glaucoma</strong> (its complement, <em>No Referable Glaucoma</em>, = no
+glaucoma). It survives in the catalog today only as a legacy <strong>synonym</strong> on the
+coarse <code>Suspected Glaucoma</code> / <code>No Glaucoma</code> terms (Appendix A.3), not as a concept
+of its own. In the folded model it is best kept as a <strong>derived roll-up</strong> over the
+fine-grained terms — <code>Referable</code> = <code>Glaucoma Suspect</code> ∪ <code>POAG</code> ∪ <code>PACG</code> ∪
+<code>Unspecified Glaucoma</code>; <code>No Referable</code> = <code>Non-Glaucoma</code> — so screening models keep
+a coarse target while chart data uses the specific subtype. <strong>⚠️ Open question
+(§5 Q9):</strong> how the current coarse <code>Suspected Glaucoma</code> (= <em>Referable</em>) image /
+visit / subject rows map onto the fine-grained folded vocabulary during the fold
+(change 2/4) is <strong>not yet decided</strong> — in particular, do not assume they simply
+collapse to <code>Glaucoma Suspect</code>, since <em>Referable</em> also spanned confirmed glaucoma.</p>
+</blockquote>
+<h3 id="33-three-axes-diagnosis-gradability-status">3.3 Three axes: diagnosis, gradability, status</h3>
+<p>The current vocabularies conflate three independent questions. Separate them:</p>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Question</th>
+<th>Home</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Diagnosis</strong></td>
+<td>which glaucoma, or none?</td>
+<td><strong><code>Glaucoma_Diagnosis</code></strong></td>
+</tr>
+<tr>
+<td><strong>Gradability</strong></td>
+<td>could the image be assessed?</td>
+<td>gradability vocab / flag (<code>Gradable</code>, <code>Ungradable</code>)</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>what is the review state?</td>
+<td><code>Diagnosis_Status</code> (<code>Graded</code>, <code>Validated</code>, <code>Rejected</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The distinctions that drive the placement:</p>
+<ul>
+<li><strong><code>Non-Glaucoma</code> ≠ <code>No Diagnosis</code>.</strong> The old <code>Normal or No dx</code> fused two
+  opposites: <code>Non-Glaucoma</code> (reconciled from the earlier <code>Normal</code> proposal and the
+  current-state <code>No Glaucoma</code> term — one term, not two) = assessed, no glaucoma (a
+  real negative finding; per Dr. Xu it has <strong>no ICD code</strong>, so its identifier is an
+  <strong>EyeAI-local URI</strong>); <code>No Diagnosis</code> = no determination on record. <strong>They split.</strong></li>
+<li><strong><code>No Diagnosis</code> stays on the diagnosis axis, as a local term.</strong> "No diagnosis"
+  is a legitimate <em>value</em> of the diagnosis field (one column, ML-comparable). It
+  has no ICD code, so it is a <strong>local term</strong> with an EyeAI URI — <em>"no ICD code"</em>
+  means <em>"local term"</em>, not <em>"different axis."</em> Because it lives here,
+  <code>Diagnosis_Status</code> does <strong>not</strong> also get a <code>Not assessed</code> value (that would
+  duplicate the concept).</li>
+<li><strong><code>Unknown</code> ≡ <code>No Diagnosis</code></strong> — the same concept ("no determination"). The old
+  <code>Glaucoma_Diagnosis.Unknown</code> synonym <code>Ungradable</code> was a <strong>mis-synonym</strong> (it
+  paired a status concept with an image-quality concept) and is dropped.</li>
+<li><strong><code>Ungradable</code> is not a diagnosis</strong> — "couldn't assess the image" is an
+  image-quality fact → the <strong>gradability</strong> axis. (An image classifier that can
+  abstain carries <code>Ungradable</code> as one of <em>its</em> output classes on the gradability
+  axis — the one place image-model output and clinical diagnosis legitimately
+  differ.)</li>
+</ul>
+<h3 id="34-icd-grounding-and-the-cross-walk-mechanism">3.4 ICD grounding and the cross-walk mechanism</h3>
+<p><strong>Each <code>Glaucoma_Diagnosis</code> term <em>is</em> an ICD-11 concept</strong> — the ICD-11 code is the
+term's <strong>identity</strong>, held in the vocabulary's standard <code>ID</code>/<code>URI</code> columns. This
+gives one vocabulary reached two ways: a human chart reviewer picks the ICD-11
+concept directly (ICD-11-native, not ICD-free), and legacy ICD-10 records are
+translated <em>up</em> to the same concept. ICD-10 never stands alone as the identity.</p>
+<p><strong>Curated subset, at the category level.</strong> Ground the vocabulary in only the
+glaucoma codes, at the category level (<code>H40.0</code>/<code>H40.1</code>/<code>H40.2</code>) — not the granular
+per-eye/per-stage sub-codes. This keeps the ICD-10 ↔ ICD-11 crosswalk effectively
+<strong>1-to-1 and lossless</strong> and the vocabulary small and auditable. (Of ~27,962
+ICD-coded rows / 1,209 distinct codes, only the ~134 H40 glaucoma codes — at
+category level just <code>H40.0/.1/.2</code> — matter here.)</p>
+<p><strong>The canonical ICD-10 ↔ ICD-11 mapping:</strong></p>
+<table>
+<thead>
+<tr>
+<th><code>Glaucoma_Diagnosis</code></th>
+<th>ICD-10-CM category</th>
+<th>ICD-11 (MMS)</th>
+<th>ICD-11 title</th>
+<th>Crosswalk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GS</code></td>
+<td><code>H40.0</code> (H40.00–.06)</td>
+<td><strong><code>9C60</code></strong></td>
+<td>Glaucoma suspect</td>
+<td>Concept-equivalent, <strong>structurally relocated</strong> — ICD-11 makes suspect its own stem code <code>9C60</code>, a <em>sibling</em> of <code>9C61</code> Glaucoma (reinforces §3.1: a suspect is not staged disease). A few H40.0 sub-codes move under <code>9C61</code> (ocular hypertension → <code>9C61.01</code>; PAC suspect → <code>9C61.10</code>).</td>
+</tr>
+<tr>
+<td><code>POAG</code></td>
+<td><code>H40.1</code> (H40.10–.15)</td>
+<td><strong><code>9C61.0</code></strong></td>
+<td>Primary open-angle glaucoma</td>
+<td>Equivalent, 1-to-1</td>
+</tr>
+<tr>
+<td><code>PACG</code></td>
+<td><code>H40.2</code></td>
+<td><strong><code>9C61.1</code></strong></td>
+<td>Primary angle closure / angle closure glaucoma</td>
+<td>Equivalent, 1-to-1</td>
+</tr>
+<tr>
+<td><code>Unspecified Glaucoma</code></td>
+<td><code>H40.9</code></td>
+<td><strong><code>9C61.Z</code></strong></td>
+<td>Glaucoma, unspecified</td>
+<td>Equivalent</td>
+</tr>
+<tr>
+<td><code>Non-Glaucoma</code></td>
+<td>— (no glaucoma code)</td>
+<td>— (local term)</td>
+<td>—</td>
+<td>Assessed, no glaucoma (reconciles the earlier <code>Normal</code> proposal + current-state <code>No Glaucoma</code> into one term); <strong>no ICD code — EyeAI-local URI</strong> (Dr. Xu)</td>
+</tr>
+<tr>
+<td><code>Other</code></td>
+<td>— (non-glaucoma)</td>
+<td>—</td>
+<td>—</td>
+<td>Catch-all outside the curated glaucoma subset</td>
+</tr>
+<tr>
+<td><code>No Diagnosis</code></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>No determination on record; local (EyeAI) URI</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The secondary/developmental ICD-11 subtypes (<code>9C61.2</code> secondary OAG, <code>9C61.3</code>
+secondary ACG, <code>9C61.4</code> developmental) have <strong>no dedicated member</strong> and fall into
+<code>Other</code> until added — a clinical decision (§5). ICD-11 codes <strong>verified
+2026-06-30</strong> against the WHO ICD-11 MMS; the URI <em>scheme</em> is settled but exact
+per-term IRIs and the release-version pin are §4/§5 open items.</p>
+</blockquote>
+<p><strong>How codes are stored — standard vocabulary shape only.</strong> A Deriva controlled
+vocabulary has a fixed schema (<code>RID</code>, <code>Name</code>, <code>Description</code>, <code>Synonyms</code>, <code>ID</code>,
+<code>URI</code>). <strong>No custom columns are added.</strong> So:</p>
+<ul>
+<li><strong>ICD-11 → <code>ID</code>/<code>URI</code></strong> — the term's one canonical external identity (WHO
+  publishes ICD-11 as linked data with official URIs; ICD-10-CM has no single
+  official URI scheme, and ICD-11 is forward-looking).</li>
+<li><strong>ICD-10 → the <code>ICD10_Condition_Map</code> cross-walk table</strong>, <em>not</em> a column. One
+  condition maps from <em>many</em> ICD-10 codes (<code>H40.00</code>–<code>H40.06</code> → <code>GS</code>); a
+  many-to-one external relation attaches through an association table.</li>
+<li><strong><code>Synonyms</code> stays human-only</strong> — the <code>H40.*</code> patterns move out to the
+  cross-walk; lookup <strong>by code</strong> uses <code>ID</code>/<code>URI</code>, <strong>by name</strong> uses <code>Synonyms</code>.</li>
+<li><strong>Grounded-vs-local</strong> is the <strong>URI namespace</strong> (<code>id.who.int/…</code> = ICD-11 authority;
+  <code>eye-ai.org/…</code> = EyeAI-local), never a null test. Local terms (<code>Other</code>,
+  <code>No Diagnosis</code>, and <code>Non-Glaucoma</code> — no ICD code, per Dr. Xu) get EyeAI-routed
+  resolvable URIs.</li>
+</ul>
+<p><strong>The cross-walk turns <code>compute_condition_label</code> into a join.</strong> Its input is the
+<code>Clinical_Records_ICD10_Eye</code> association table already in the catalog (confirmed
+via deriva MCP 2026-06-30 — 27,962 rows). Two bridges represent all the codes as
+data: <code>Clinical_Records_ICD10_Eye</code> (observed data: which codes a record carries)
+and <code>ICD10_Condition_Map</code> (the classification rule: what a code means). With both,
+the code→condition step is a pure join —
+<code>Clinical_Records ─ ICD10_Eye ─ ICD10_Condition_Map ─ Glaucoma_Diagnosis</code> — and the
+Python dict disappears.</p>
+<p><strong>What this retires in <code>eye-ai-ml</code></strong> (verified against <code>eye_ai.py:268</code>).
+<code>compute_condition_label()</code> does two things: (1) ICD-10 → condition mapping via an
+inline <code>icd_mapping</code> dict — <strong>the cross-walk table replaces this</strong> (delete the
+dict, read from the table); (2) multi-code priority resolution
+(<code>PACG&gt;POAG&gt;GS&gt;Other</code> tie-break) — <strong>not</strong> replaced (a per-record reconciliation
+policy that still needs a home). So the dict is no longer needed; the function
+shrinks to the priority step. <code>insert_condition_label()</code> is unaffected. Retiring
+the dict is an <code>eye-ai-ml</code> change, contingent on <code>ICD10_Condition_Map</code> existing
+first (§4). Map <strong>exact codes</strong> (FKs to real <code>ICD10_Eye</code> terms), not wildcard
+patterns, so no wildcard-matching logic is needed.</p>
+<p><img alt="ERD — the Chart_Label feature carries three FK columns on one row: the diagnosis (folded Glaucoma_Diagnosis, the ICD-11 concept) plus the severity grade and its Severity_Method; the diagnosis is reached directly by chart review or via the ICD-10 cross-walk, and severity is valid only when the diagnosis is glaucoma." src="../img/icd11-condition-erd.png" /></p>
+<p><em>Figure 1 — the full Chart_Label model: the diagnosis + severity axes (§3.1), the
+folded <code>Glaucoma_Diagnosis</code> vocabulary and its ICD-11 grounding (§3.2, §3.4), the
+ICD-10→ICD-11 cross-walk (§3.4), and the <code>(Severity, Method)</code> pair (§3.6). Source:
+<a href="../img/icd11-condition-erd.svg"><code>img/icd11-condition-erd.svg</code></a>.</em></p>
+<h3 id="35-severity-cleanup">3.5 Severity cleanup</h3>
+<ul>
+<li><strong>Keep <code>Mild</code>/<code>Moderate</code>/<code>Severe</code></strong> as <strong>method-agnostic ordinal bands</strong> —
+  replace today's circular descriptions ("Mild stage") with a real conceptual
+  definition of each band. Thresholds are <strong>not</strong> on the term; they belong to the
+  staging method (§3.6). <strong>TBD — clinical.</strong></li>
+<li><strong>Split <code>Unspecified/Indeterminate</code></strong> → <code>Unspecified</code> ("glaucoma present, a
+  severity <strong>exists but is unknown</strong>") vs <code>Indeterminate</code> ("staging <strong>attempted but
+  inconclusive</strong>"); removes the slash. Both are values <em>for glaucoma</em>; the
+  non-glaucoma case is the separate <code>Not Applicable</code> value (§3.1) — <strong><code>Not
+  Applicable</code> and <code>Unspecified</code> are distinct, never interchangeable.</strong></li>
+<li><strong>Retire <code>GS</code> and <code>Normal or No dx</code> from severity</strong> — they are diagnoses, not
+  stages; represent them via <code>Glaucoma_Diagnosis</code>. Retiring them requires
+  re-mapping existing <code>Chart_Label</code> rows so the condition is preserved and severity
+  becomes <code>Not Applicable</code> (for the now non-glaucoma condition) or <code>Unspecified</code>
+  (glaucoma present, severity unknown) — data migration — §4 change 4; counts in
+  Appendix A.</li>
+</ul>
+<p>The graded labels <code>Mild</code>/<code>Moderate</code>/<code>Severe</code> stay compatible with the ICD-10
+7th-character staging convention (so severity aligns with how stage is already
+coded in the source data), while <code>Unspecified</code> / <code>Indeterminate</code> handle the
+non-graded glaucoma cases and <code>Not Applicable</code> handles non-glaucoma.
+<strong>Full proposed table: Appendix B.2.</strong></p>
+<h3 id="36-severity-method-of-determination-the-severity-method-pair">3.6 Severity method of determination — the <code>(Severity, Method)</code> pair</h3>
+<p><code>Mild</code>/<code>Moderate</code>/<code>Severe</code> are ambiguous without a named <strong>basis</strong> — the same
+grade means different things under different staging systems, and two systems must
+never be silently mixed in one column. Resolution: <strong>record the method of
+determination as a first-class value alongside the grade</strong>, so each severity is
+the pair <strong><code>(Severity_Label, Severity_Method)</code></strong>.</p>
+<p>Method is a <em>semantic property of the severity value</em> — "this <code>Mild</code> was determined
+by HPA staging" — not a fact about which code ran, and not part of the grade. So:</p>
+<ul>
+<li>It is <strong>not</strong> encoded into the severity term (<code>HPA_Mild</code>, …) — that repeats the
+  pack-two-axes-into-one-label anti-pattern this cleanup removes elsewhere, and
+  destroys the clean three-value scale.</li>
+<li>It is <strong>not</strong> left implicit in the producing <code>Workflow</code>/<code>Execution</code> — method
+  varies <strong>per row</strong> (a grader may use HPA on one subject, another system on the
+  next), applies to human chart-review values that have no workflow, and would
+  otherwise need a provenance walk to read. Provenance (which code ran) and method
+  (which clinical basis) are complementary and both kept.</li>
+</ul>
+<p><strong>Where the method is recorded.</strong> Severity lives <strong>only in features</strong>, never as a
+raw column (confirmed from the live catalog — <code>Clinical_Records</code> has no severity
+column, only the raw measurements <code>IOP</code>/<code>CDR</code>/<code>CCT</code>/… that <em>feed</em> severity). So
+<code>Severity_Method</code> is added as a <strong>feature column beside the severity column</strong>, on
+each severity-bearing feature:</p>
+<table>
+<thead>
+<tr>
+<th>Feature (target)</th>
+<th>Severity column</th>
+<th>New method column</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Execution_Subject_Chart_Label</code> (Chart_Label on Subject)</td>
+<td><code>Severity_Label</code></td>
+<td><code>Severity_Method</code></td>
+</tr>
+<tr>
+<td><code>Execution_Clinical_Records_Glaucoma_Severity</code> (ICD-derived)</td>
+<td><code>ICD_Severity_Label</code></td>
+<td><code>ICD_Severity_Method</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each goes in as part of the feature definition (features are multi-column), so the
+method inherits the feature machinery — including the provenance link to the
+producing Execution. The method column carries a value <strong>whenever the severity is a
+graded value</strong> (<code>Mild</code>/<code>Moderate</code>/<code>Severe</code>); for the non-graded severity values
+(<code>Unspecified</code>, <code>Indeterminate</code>, <code>Not Applicable</code>) it is <code>unspecified</code> /
+not-applicable. The staging <em>basis</em> may alternatively be captured by the producing
+<code>Workflow</code>/<code>Execution</code> (notably for <code>algorithmic</code> results), and the vocabulary can
+be expanded over time. <strong>Full proposed <code>Severity_Method</code> vocabulary: Appendix B.3.</strong></p>
+<h3 id="37-gamma-gleam-band-mapping-open">3.7 GAMMA / GLEAM band mapping (open)</h3>
+<p>Dr. Kyle's <strong>GAMMA</strong> mapping needs a <strong>"Moderate-to-Severe"</strong> band (GAMMA's
+"Progressive" category maps to it, per Dr. Bolo). Open question: does a
+<code>Moderate-to-Severe</code> band become an additional <code>Severity_Label</code> member, or should
+cross-dataset band collapses (GAMMA/GLEAM) be a <strong>mapping layer</strong> on top of
+canonical <code>Mild</code>/<code>Moderate</code>/<code>Severe</code> rather than new vocabulary terms? Flagged so
+the cleanup doesn't lock GAMMA/GLEAM out (§5 Q7).</p>
+<h2 id="4-change-plan">4. Change plan</h2>
+<p>The actionable synthesis of §3. <strong>Dependency ordering and repo split matter</strong> —
+executing these in the wrong order leaves half-built states.</p>
+<h3 id="41-the-changes">4.1 The changes</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Change</th>
+<th>What it entails</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><strong>Clean up <code>Severity_Label</code></strong></td>
+<td>Retire <code>GS</code> and <code>Normal or No dx</code> (conditions, not stages); split <code>Unspecified/Indeterminate</code> → <code>Indeterminate</code> + <code>Unspecified</code>; add <strong><code>Not Applicable</code></strong> for non-glaucoma (severity never null — §3.1). Keep <strong><code>Not Applicable</code></strong> (non-glaucoma → no severity exists) and <strong><code>Unspecified</code></strong> (glaucoma → severity exists but unknown) as <strong>distinct values, not interchangeable.</strong> Give <code>Mild/Moderate/Severe</code> method-agnostic descriptions (criteria live with the method — §3.5/§3.6, App. B.2). Final value set: <code>Mild</code>, <code>Moderate</code>, <code>Severe</code>, <code>Indeterminate</code>, <code>Unspecified</code>, <code>Not Applicable</code>.</td>
+<td><code>data-curation</code></td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><strong>Fold into one <code>Glaucoma_Diagnosis</code> vocabulary</strong></td>
+<td>Merge <code>Condition_Label</code> + the current 3-term image/visit/subject <code>Glaucoma_Diagnosis</code> into one shared vocab named <strong><code>Glaucoma_Diagnosis</code></strong> (§3.2). Terms + identities per App. B.1: ICD-11 <code>ID</code>/<code>URI</code> for <code>GS</code>(=<code>Glaucoma Suspect</code>)<code>/POAG/PACG/Unspecified Glaucoma</code>; split <code>Normal or No dx</code> → <code>Non-Glaucoma</code> + <code>No Diagnosis</code>; <code>Other</code>, <code>No Diagnosis</code> as EyeAI-local; <code>H40.*</code> out of <code>Synonyms</code>. <strong>Add <code>Non-Glaucoma</code> and <code>Glaucoma Suspect</code> only if not already present — reconcile, do not duplicate</strong> (<code>Glaucoma Suspect</code> = existing <code>GS</code>; <code>Non-Glaucoma</code> = reconciled <code>Normal</code>/<code>No Glaucoma</code>). <code>Non-Glaucoma</code> is a <strong>local EyeAI term — no ICD code</strong> (Dr. Xu). <strong>Every subject/observation must have a value — no nulls on this axis</strong> (Dr. Bolo). Separate <code>Ungradable</code> (gradability axis) and drop the <code>Unknown</code>↔<code>Ungradable</code> mis-synonym.</td>
+<td><code>data-curation</code></td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><strong>Create the ICD-10 cross-walk table</strong></td>
+<td>New association table <code>ICD10_Eye → Glaucoma_Diagnosis</code> (<code>ICD10_Condition_Map</code>), <strong>exact codes</strong> (not wildcards). Prereq: <code>ICD10_Eye</code> must enumerate every ICD-10 code the data uses. (§3.4)</td>
+<td><code>data-curation</code></td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>Migrate diagnosis data onto the folded vocab</strong></td>
+<td>Repoint the <code>Chart_Label</code> feature rows and the image/visit/subject <code>*_Diagnosis</code> rows to the merged <code>Glaucoma_Diagnosis</code> terms; re-map cleaned severity values — non-glaucoma rows become severity <code>Not Applicable</code>, glaucoma rows with no known stage become <code>Unspecified</code> (counts in App. A). <strong>Data migration</strong>, distinct from the schema/vocab changes 1–3.</td>
+<td><code>data-curation</code></td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><strong>Update <code>compute_condition_label</code></strong></td>
+<td>Replace the <code>icd_mapping</code> dict with a <strong>join through the cross-walk</strong>; <strong>keep</strong> the multi-code priority tie-break (do not re-add). <code>insert_condition_label</code> unaffected. (§3.4)</td>
+<td><code>eye-ai-ml</code></td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><strong>Add severity method of determination</strong></td>
+<td>Create the <code>Severity_Method</code> vocabulary — <strong>agreed member set</strong> in App. B.3 (clinician assessment/CMS, visual-field MD/HPA, administrative coding/ICD, algorithmic, combination, unspecified; expandable over time) — then add a method column to each severity-bearing feature — <code>Severity_Method</code> on <code>Execution_Subject_Chart_Label</code> and <code>ICD_Severity_Method</code> on <code>Execution_Clinical_Records_Glaucoma_Severity</code> — carrying a value when severity is graded. Records severity as the <code>(Severity_Label, Severity_Method)</code> pair. (§3.6)</td>
+<td><code>data-curation</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-dependency-ordering">4.2 Dependency ordering</h3>
+<pre><code>ICD10_Eye enumerated ──▶ (2) fold into Glaucoma_Diagnosis ──┐
+                     └──▶ (3) create cross-walk table ───────┴─▶ (5) update code ──▶ (4) migrate diagnosis data
+(1) Severity cleanup ──┐
+(6) Severity_Method ───┴─ severity axis; independent of the diagnosis fold, can run in parallel
+</code></pre>
+<ul>
+<li>The cross-walk (3) needs both endpoints ready: the folded <code>Glaucoma_Diagnosis</code> (2) <strong>and</strong> <code>ICD10_Eye</code> populated with exact codes.</li>
+<li>The code change (5) needs the cross-walk (3) to exist.</li>
+<li>The data migration (4) needs the folded vocabulary (2) and the cleaned severity (1).</li>
+<li>Severity work (1) and the method vocab/columns (6) are on the severity axis, independent of the diagnosis fold; the <code>Severity_Method</code> member set is now <strong>agreed</strong> (App. B.3), so (6) needs only the severity features (they exist).</li>
+<li><strong>Repo split:</strong> 1–4 and 6 are catalog/schema/data → <code>data-curation</code>; 5 is code → <code>eye-ai-ml</code>, and its PR <strong>cannot merge until 3 lands</strong> in the catalog.</li>
+</ul>
+<h3 id="43-gates-and-verified-assumptions-resolve-the-open-ones-before-the-clinical-parts-land">4.3 Gates and verified assumptions (resolve the open ones before the clinical parts land)</h3>
+<ul>
+<li><strong><code>Severity_Method</code> member set</strong> — ✅ <strong>agreed (email thread, 2026-07-01):</strong> clinician assessment (CMS), visual-field mean deviation (HPA), administrative coding (ICD), algorithmic, combination, unspecified — expandable over time (App. B.3). Each named method carries its own published cut-points, so no separate per-method cut-point input is needed (§3.6).</li>
+<li><strong>Severity null policy</strong> — ✅ <strong>settled (Carl, Dr. Bolo &amp; Dr. Xu):</strong> severity is never null. Non-glaucoma → <code>Not Applicable</code> (no severity exists); glaucoma with unknown stage → <code>Unspecified</code> (severity exists but unknown) — <strong>two distinct values, not interchangeable</strong> (Carl, Slack). The diagnosis axis is likewise never null (<code>No Diagnosis</code> is the explicit sentinel).</li>
+<li><strong><code>9C61.2/.3/.4</code> disposition</strong> — become <code>Glaucoma_Diagnosis</code> members or fold into <code>Other</code>? Affects change 2 and the priority ordering in change 5 (§3.4, §5).</li>
+<li><strong><code>Non-Glaucoma</code>'s identifier</strong> — ✅ <strong>settled (Dr. Xu):</strong> no ICD diagnosis exists, so it is an <strong>EyeAI-local term</strong> (no ICD code; Appendix B.1 note).</li>
+<li><strong>EyeAI URI scheme</strong> for local terms (<code>Other</code>, <code>No Diagnosis</code>, <code>Non-Glaucoma</code>).</li>
+<li><strong>GAMMA <code>Moderate-to-Severe</code> band</strong> (§3.7) — may add a <code>Severity_Label</code> member in change 1.</li>
+<li><strong>ICD-11 release-version pin</strong> — pin a specific ICD-11 release in the term URIs (e.g. <code>…/release/11/2025-01/mms/…</code>) rather than the bare <code>{version}</code> placeholder; confirm the current WHO release at implementation time and record it (keep the release-independent foundation <code>…/icd/entity/{id}</code> URI as the stable anchor).</li>
+<li><strong>Catalog verification</strong> — ✅ <strong>resolved (deriva MCP, 2026-06-30):</strong> <code>ICD10_Eye</code> <strong>is</strong> a controlled vocabulary (1,209 terms); the <code>Clinical_Records ⇄ ICD10_Eye</code> association is <strong><code>Clinical_Records_ICD10_Eye</code></strong> (27,962 rows); <code>Clinical_Records</code> has <strong>no</strong> severity column (so severity-method is a feature column only).</li>
+<li><strong>Fold verification (open)</strong> — before the fold (change 2/4), confirm what populates <code>Subject_Diagnosis</code> vs the <code>Chart_Label</code> feature and how the image/visit/subject <code>*_Diagnosis</code> rows reconcile with the chart rows onto the merged vocabulary — including how the coarse <code>Suspected Glaucoma</code> (= <em>Referable</em>) screening label maps onto the fine-grained terms (§5 Q9).</li>
+</ul>
+<h2 id="5-open-questions-decisions-for-the-dr-bolo-dr-xu-meeting">5. Open questions &amp; decisions (for the Dr. Bolo &amp; Dr. Xu meeting)</h2>
+<blockquote>
+<p><strong>Note (2026-07-01).</strong> Q1–Q5 below were settled in the email thread (Dr. Xu,
+Dr. Bolo, Carl); they are kept here, marked ✅ <strong>RESOLVED</strong>, as the record of what
+was decided. Q6–Q9 remain genuinely open (Q8–Q9 surfaced during verification).
+Numbering is preserved so cross-refs (e.g. §3.7 → Q7) stay valid.</p>
+</blockquote>
+<ol>
+<li>✅ <strong>RESOLVED (email thread, 2026-07-01).</strong> <code>Severity_Method</code> member set is agreed: clinician assessment (CMS), visual-field mean deviation (HPA), administrative coding (ICD), algorithmic, combination, unspecified — expandable over time (App. B.3). Each named method <strong>already defines its own cut-points</strong> (HPA <em>is</em> the Hodapp-Parrish-Anderson definition; ICD administrative coding <em>is</em> the ICD definition), so picking a method brings its criteria with it — Eye-AI does not re-derive them (§3.5–§3.6). A future <em>local/house</em> method with no external standard would need its cut-points defined then.</li>
+<li>✅ <strong>RESOLVED.</strong> Severity is a separate attribute that applies <strong>only</strong> when the diagnosis is a confirmed glaucoma subtype; non-glaucoma diagnoses take severity <code>Not Applicable</code> (never null) — settled by Carl &amp; Dr. Bolo (§3.1).</li>
+<li>✅ <strong>RESOLVED — fold accepted (email thread + Carl's Slack confirmation, 2026-07-01).</strong> The final two-axis model is built on the single folded <code>Glaucoma_Diagnosis</code> vocabulary (§3.2); the earlier keep-separate position is superseded. Adding <code>Non-Glaucoma</code> + <code>Glaucoma Suspect</code> <strong>completes the spectrum</strong> so all datasets map (Dr. Xu).</li>
+<li>✅ <strong>RESOLVED.</strong> <code>GS</code> and <code>Normal or No dx</code> are retired from <code>Severity_Label</code> (they are diagnoses, not stages); non-glaucoma severity is <code>Not Applicable</code>, glaucoma-with-unknown-stage is <code>Unspecified</code> — distinct values (§3.5, App. B.2).</li>
+<li>✅ <strong>RESOLVED.</strong> A glaucoma suspect (<code>Glaucoma Suspect</code>/<code>GS</code>) is not a confirmed glaucoma subtype, so it has no clinical stage — severity <code>Not Applicable</code> (§3.1).</li>
+<li><strong><code>9C61.2/.3/.4</code> disposition.</strong> Add secondary/developmental glaucoma as <code>Glaucoma_Diagnosis</code> members, or leave them in <code>Other</code>?</li>
+<li><strong>GLEAM / GAMMA.</strong> What must the cleaned-up vocabulary provide so the GLEAM/GAMMA mappings land cleanly — notably GAMMA's <code>Moderate-to-Severe</code> band (§3.7) — without distorting the canonical definitions?</li>
+<li><strong>New-scale severity default — <code>Not Applicable</code> vs <code>Unspecified</code>.</strong> Dr. Xu noted that additional severity scales, once added, "default to <code>Not Applicable</code>" until populated (§3.1). But by the <code>Not Applicable</code> vs <code>Unspecified</code> rule, a <em>glaucoma</em> subject not yet assessed on a new scale arguably has an <em>unknown</em> severity → <code>Unspecified</code> (severity exists but unknown), not <code>Not Applicable</code> (no severity exists). Which default applies to glaucoma subjects on a newly added scale? (Team to reconcile — not resolved.)</li>
+<li><strong>"Referable Glaucoma" fold mapping.</strong> <em>Referable Glaucoma</em> was an umbrella (suspect ∪ confirmed glaucoma) in the original proposal, now only a legacy synonym on the coarse <code>Suspected Glaucoma</code> / <code>No Glaucoma</code> terms (§3.2 note, Appendix A.3). How do the current coarse <code>Suspected Glaucoma</code> (= <em>Referable</em>) image / visit / subject rows map onto the fine-grained folded <code>Glaucoma_Diagnosis</code> during the fold (change 2/4)? Do not assume a simple collapse to <code>Glaucoma Suspect</code>, since <em>Referable</em> also spanned confirmed glaucoma. (Team to decide — not resolved.)</li>
+</ol>
+<hr />
+<h2 id="appendix-a-current-state-as-in-the-catalog-2026-06-30">Appendix A — Current state (as in the catalog, 2026-06-30)</h2>
+<p>Snapshot from <code>www.eye-ai.org</code> / <code>eye-ai</code>. Descriptions and synonyms are
+reproduced <strong>verbatim</strong>; commentary is set off as notes. These are the <strong>pre-fold</strong>
+vocabularies; the proposed replacements are in Appendix B.</p>
+<h3 id="a1-condition_label-6-terms">A.1 <code>Condition_Label</code> — 6 terms</h3>
+<blockquote>
+<p>Catalog comment: <em>"Vocabulary of clinical condition labels used in chart-review
+diagnoses (e.g., glaucoma, diabetic retinopathy)."</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>RID</th>
+<th>Name</th>
+<th>Description (verbatim)</th>
+<th>Synonyms (verbatim)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2-NKSW</code></td>
+<td><strong>GS</strong></td>
+<td>Glaucoma Suspect</td>
+<td><code>H40.00*</code>, <code>H40.01*</code>, <code>H40.02*</code>, <code>H40.03*</code>, <code>H40.04*</code>, <code>H40.05*</code>, <code>H40.06*</code></td>
+</tr>
+<tr>
+<td><code>2-NKSY</code></td>
+<td><strong>POAG</strong></td>
+<td>Primary open angle glaucoma</td>
+<td><code>H40.10*</code>, <code>H40.11*</code>, <code>H40.12*</code>, <code>H40.13*</code>, <code>H40.14*</code>, <code>H40.15*</code></td>
+</tr>
+<tr>
+<td><code>2-NKT0</code></td>
+<td><strong>PACG</strong></td>
+<td>Primary angle closure glaucoma</td>
+<td><code>H40.2*</code></td>
+</tr>
+<tr>
+<td><code>2-NKT2</code></td>
+<td><strong>Other</strong></td>
+<td>All other conditions (For ICD derived condition label)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>5-26KY</code></td>
+<td><strong>Normal or No dx</strong></td>
+<td>No signs of glaucoma or No diagnosis made</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>6-0A34</code></td>
+<td><strong>Unspecified Glaucoma</strong></td>
+<td>Glaucoma present, subtype unspecified (from LAC patient-level chart review).</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note.</strong> The <code>Synonyms</code> of <code>GS</code>/<code>POAG</code>/<code>PACG</code> store ICD-10 code patterns
+(<code>H40.*</code>), not names — the key <code>compute_condition_label()</code>'s <code>icd_mapping</code>
+reverses (<code>H40.0x → GS</code>, <code>H40.1x → POAG</code>, <code>H40.2* → PACG</code>, else <code>Other</code>). §2
+item 2 / §3.4 address this.</p>
+</blockquote>
+<h3 id="a2-severity_label-6-terms">A.2 <code>Severity_Label</code> — 6 terms</h3>
+<blockquote>
+<p>Catalog comment: <em>"Vocabulary of severity levels for clinical conditions (e.g.,
+mild, moderate, severe, advanced). Used in chart-review and ICD-derived severity
+classifications."</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>RID</th>
+<th>Name</th>
+<th>Description (verbatim)</th>
+<th>Synonyms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>4-YFWT</code></td>
+<td><strong>Mild</strong></td>
+<td>Mild stage</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>4-YFWP</code></td>
+<td><strong>Moderate</strong></td>
+<td>Moderate stage</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>4-YFWR</code></td>
+<td><strong>Severe</strong></td>
+<td>Severe stage</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>4-YFWW</code></td>
+<td><strong>Unspecified/Indeterminate</strong></td>
+<td>Indeterminate stage or stage unspecified</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>4-YFWY</code></td>
+<td><strong>GS</strong></td>
+<td>Glaucoma Suspect</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>5-29BJ</code></td>
+<td><strong>Normal or No dx</strong></td>
+<td>No signs of glaucoma or No diagnosis made</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note.</strong> Three of these six are not stages: <code>GS</code> and <code>Normal or No dx</code> are
+conditions (duplicating <code>Condition_Label</code>), and <code>Unspecified/Indeterminate</code> packs
+a synonym into a slash. Only <code>Mild</code>/<code>Moderate</code>/<code>Severe</code> are genuine grades (§2
+items 3–4).</p>
+</blockquote>
+<h3 id="a3-glaucoma_diagnosis-3-terms-imagevisitsubject-diagnostic-vocabulary">A.3 <code>Glaucoma_Diagnosis</code> — 3 terms (image/visit/subject diagnostic vocabulary)</h3>
+<p>Created 2026-06-30 as the 3-term vocabulary shared by the image / observation /
+subject diagnosis tables. <strong>Not image-only</strong>, despite the catalog comment. (This
+is the <em>current</em> coarse vocabulary — distinct from the proposed folded
+<code>Glaucoma_Diagnosis</code> in §3.2 / Appendix B.1, which happens to reuse the name.)</p>
+<blockquote>
+<p>Catalog comment: <em>"Vocabulary of image-level diagnostic categories for retinal
+images (e.g., referable glaucoma, no glaucoma)."</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>RID</th>
+<th>Name</th>
+<th>Description (verbatim)</th>
+<th>Synonyms (verbatim)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>6-0EQR</code></td>
+<td><strong>No Glaucoma</strong></td>
+<td>No Glaucoma</td>
+<td>No Referable Glaucoma</td>
+</tr>
+<tr>
+<td><code>6-0EQP</code></td>
+<td><strong>Suspected Glaucoma</strong></td>
+<td>Suspected Glaucoma</td>
+<td>Referable Glaucoma</td>
+</tr>
+<tr>
+<td><code>6-0EQM</code></td>
+<td><strong>Unknown</strong></td>
+<td>Unknown</td>
+<td>Ungradable</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consumed by</strong> (all FK to <code>Glaucoma_Diagnosis.Name</code>, all populated):</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Rows</th>
+<th>Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Image_Diagnosis</code></td>
+<td>194,204</td>
+<td>image-level (per fundus image)</td>
+</tr>
+<tr>
+<td><code>Observation_Diagnosis</code></td>
+<td>7,020</td>
+<td>observation / visit-level</td>
+</tr>
+<tr>
+<td><code>Subject_Diagnosis</code></td>
+<td>7,020</td>
+<td>subject-level</td>
+</tr>
+</tbody>
+</table>
+<p>All 194,204 <code>Image_Diagnosis</code> rows resolve to exactly three terms — <strong>No Glaucoma</strong>
+155,279, <strong>Suspected Glaucoma</strong> 38,547, <strong>Unknown</strong> 378 (sum = 194,204).</p>
+<h3 id="a4-supporting-vocabularies-distinct-from-diagnosis-do-not-conflate">A.4 Supporting vocabularies (distinct from diagnosis — do not conflate)</h3>
+<p>Provenance / status / context of a diagnosis, not the diagnosis itself:</p>
+<ul>
+<li><strong><code>Diagnosis_Tag</code></strong> (11 terms) — provenance / study tags (<code>Initial Diagnosis</code>,
+  <code>CNN_Prediction</code>, <code>Expert_Consensus</code>, <code>Intragrader_Agreement</code>,
+  <code>GlaucomaSuspect-Training</code>/<code>-Validation</code>, <code>UI Annotation</code>, …). "Who/what produced
+  this label, in what study?" — the provenance carrier the fold (§3.2) relies on.</li>
+<li><strong><code>Diagnosis_Status</code></strong> (3 terms) — <code>Graded</code>, <code>Validated</code>, <code>Rejected</code>. "Review
+  state of this diagnosis?" — the status axis (§3.3).</li>
+<li><strong><code>ICD10_Eye</code></strong> — vocabulary of ICD-10 ophthalmic codes (1,209 terms); the source
+  feeding ICD-derived labels; source side of the cross-walk (§3.4).</li>
+<li><strong><code>Grading_Condition</code></strong> — <strong>empty (0 terms)</strong>. Intended to record USC vs LAC
+  grading context on the shared <code>Chart_Label</code> feature; a context axis the cleaned
+  model may need to populate.</li>
+</ul>
+<h3 id="a5-how-the-terms-are-used-today-the-evidence">A.5 How the terms are used today (the evidence)</h3>
+<p>The clinical chart-review label lives in the <strong><code>Chart_Label</code> feature on Subject</strong>
+(<code>Execution_Subject_Chart_Label</code>, <strong>2,302 rows</strong>), carrying <code>Condition_Label</code>
+<strong>and</strong> <code>Severity_Label</code> as two columns on the same row. Distinct
+<code>(Condition_Label, Severity_Label)</code> pairs present:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Count</th>
+<th>Condition_Label</th>
+<th>Severity_Label</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">698</td>
+<td>GS</td>
+<td><strong>GS</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">392</td>
+<td>POAG</td>
+<td>Unspecified/Indeterminate</td>
+</tr>
+<tr>
+<td style="text-align: right;">287</td>
+<td>GS</td>
+<td>Unspecified/Indeterminate</td>
+</tr>
+<tr>
+<td style="text-align: right;">219</td>
+<td>POAG</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td style="text-align: right;">215</td>
+<td>POAG</td>
+<td>Mild</td>
+</tr>
+<tr>
+<td style="text-align: right;">214</td>
+<td>POAG</td>
+<td>Severe</td>
+</tr>
+<tr>
+<td style="text-align: right;">107</td>
+<td>Other</td>
+<td>Unspecified/Indeterminate</td>
+</tr>
+<tr>
+<td style="text-align: right;">61</td>
+<td>Normal or No dx</td>
+<td>Unspecified/Indeterminate</td>
+</tr>
+<tr>
+<td style="text-align: right;">27</td>
+<td>Normal or No dx</td>
+<td><strong>Normal or No dx</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">21</td>
+<td>PACG</td>
+<td>Unspecified/Indeterminate</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td>PACG</td>
+<td>Mild</td>
+</tr>
+<tr>
+<td style="text-align: right;">17</td>
+<td>PACG</td>
+<td>Severe</td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td>Unspecified Glaucoma</td>
+<td>Unspecified/Indeterminate</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td>PACG</td>
+<td>Moderate</td>
+</tr>
+</tbody>
+</table>
+<p>Read off the data: genuine severity grades (Mild/Moderate/Severe) appear only on
+POAG (648 rows) and PACG (45 rows) — established glaucoma; everything else is
+<code>Unspecified/Indeterminate</code> or a condition-as-severity sentinel (698 <code>GS</code>/<code>GS</code>, 27
+<code>Normal</code>/<code>Normal</code>). ICD-derived severity stands alone in
+<code>Execution_Clinical_Records_Glaucoma_Severity</code> (<strong>3,674 rows</strong>;
+<code>ICD_Severity_Label</code>), whose target <code>Clinical_Records</code> carries the condition
+separately in <code>Clinical_Records.ICD_Condition_Label</code>.</p>
+<h2 id="appendix-b-proposed-vocabulary-tables-full">Appendix B — Proposed vocabulary tables (full)</h2>
+<blockquote>
+<p><strong>Provisional.</strong> Descriptions marked <strong>(confirm clinically)</strong> need Dr. Bolo /
+Dr. Xu sign-off; severity staging <em>thresholds</em> are <strong>TBD — clinical</strong>. Standard
+Deriva vocabulary shape only (<code>RID</code>, <code>Name</code>, <code>Description</code>, <code>Synonyms</code>, <code>ID</code>,
+<code>URI</code> + system columns) — no custom columns. Grounded-vs-local is the URI
+namespace (<code>id.who.int/…</code> = ICD-11; <code>eye-ai.org/…</code> = EyeAI-local).</p>
+</blockquote>
+<h3 id="b1-glaucoma_diagnosis-folded-diagnosis-vocabulary">B.1 <code>Glaucoma_Diagnosis</code> (folded diagnosis vocabulary)</h3>
+<p>The single source of truth for the proposed diagnosis terms. <code>ID</code>/<code>URI</code> is the
+identity (lookup by code); <code>Synonyms</code> are human-readable names (lookup by name).
+ICD-10 codes are <strong>not</strong> in these rows — they live in the <code>ICD10_Condition_Map</code>
+cross-walk (§3.4). Full ICD-11 URIs follow
+<code>http://id.who.int/icd/release/11/{version}/mms/{code}</code> (abbreviated below).</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Synonyms (human-readable)</th>
+<th><code>ID</code> / <code>URI</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GS</code></td>
+<td>Glaucoma suspect — findings suspicious for glaucoma (ocular hypertension / elevated IOP, suspicious optic disc or RNFL, narrow/occludable angle, or steroid response) <strong>without</strong> established glaucomatous damage. <em>(confirm clinically)</em></td>
+<td>"Glaucoma Suspect"; WHO <code>9C60</code> index terms (e.g. "Borderline glaucoma", "Ocular hypertension")</td>
+<td><code>ICD11:9C60</code> / <code>…/mms/9C60</code></td>
+</tr>
+<tr>
+<td><code>POAG</code></td>
+<td>Primary open-angle glaucoma — chronic glaucomatous optic neuropathy with an <strong>open</strong> angle, no secondary cause. <em>(confirm clinically)</em></td>
+<td>"Primary Open-Angle Glaucoma"</td>
+<td><code>ICD11:9C61.0</code> / <code>…/mms/9C61.0</code></td>
+</tr>
+<tr>
+<td><code>PACG</code></td>
+<td>Primary angle-closure glaucoma — glaucoma with appositional/synechial <strong>closure</strong> of the angle. <em>(confirm clinically)</em></td>
+<td>"Primary Angle-Closure Glaucoma"</td>
+<td><code>ICD11:9C61.1</code> / <code>…/mms/9C61.1</code></td>
+</tr>
+<tr>
+<td><code>Unspecified Glaucoma</code></td>
+<td>Glaucoma present, <strong>subtype not specified</strong>. <em>(confirm clinically)</em></td>
+<td>"Glaucoma, unspecified"; "Glaucoma NOS"</td>
+<td><code>ICD11:9C61.Z</code> / <code>…/mms/9C61.Z</code></td>
+</tr>
+<tr>
+<td><code>Non-Glaucoma</code></td>
+<td>Assessed; <strong>no glaucoma</strong> present (a genuine negative finding). Reconciles the earlier <code>Normal</code> proposal and the current-state <code>No Glaucoma</code> term into <strong>one</strong> term — do not create a duplicate. <em>(confirm clinically)</em></td>
+<td>"Normal"; "No Glaucoma"</td>
+<td><code>EYEAI:Non_Glaucoma</code> / <code>eye-ai.org/id/condition/Non_Glaucoma</code> — <strong>local; no ICD code</strong> (Dr. Xu)</td>
+</tr>
+<tr>
+<td><code>Other</code></td>
+<td>A condition <strong>outside the curated glaucoma subset</strong> (a non-glaucoma disease).</td>
+<td>"Other condition"</td>
+<td><code>EYEAI:Other</code> / <code>eye-ai.org/id/condition/Other</code></td>
+</tr>
+<tr>
+<td><code>No Diagnosis</code></td>
+<td><strong>No diagnosis made</strong> — no glaucoma determination on record (≡ the former <code>Unknown</code>).</td>
+<td>"No dx"; "Not assessed" <em>(synonyms of this diagnosis term — note <code>Not assessed</code> is </em><em>not</em><em> a separate <code>Diagnosis_Status</code> value, §3.3)</em></td>
+<td><code>EYEAI:No_Diagnosis</code> / <code>eye-ai.org/id/condition/No_Diagnosis</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong><code>Ungradable</code> and <code>Not assessed</code> are deliberately absent</strong> — gradability axis and (former) status idea respectively; the latter is covered by <code>No Diagnosis</code>.</li>
+<li><strong><code>Non-Glaucoma</code>'s identifier</strong> is settled: per Dr. Xu there is <strong>no ICD diagnosis</strong> for it, so it is a <strong>local EyeAI term</strong> (no ICD code; <code>Z01.00</code> is only a reason-for-visit encounter code and is not used).</li>
+<li><strong>No nulls on this axis (settled).</strong> Every subject/observation carries a <code>Glaucoma_Diagnosis</code> value; "no determination on record" is the explicit <code>No Diagnosis</code> term, never a null.</li>
+<li><strong>Naming reconciled (settled).</strong> <code>Glaucoma Suspect</code> <strong>is</strong> the existing <code>GS</code> term (<code>9C60</code>) and <code>Non-Glaucoma</code> <strong>is</strong> the reconciled <code>Normal</code>/<code>No Glaucoma</code> term — the fold adds neither as a new duplicate member.</li>
+</ul>
+<h3 id="b2-severity_label-cleaned">B.2 <code>Severity_Label</code> (cleaned)</h3>
+<p>Real stages apply <strong>only to a confirmed glaucoma subtype</strong> (§3.1). Severity is
+<strong>never null</strong>: non-glaucoma diagnoses take <strong><code>Not Applicable</code></strong> (no glaucoma → no
+severity exists), and glaucoma cases whose stage is not yet known take
+<strong><code>Unspecified</code></strong> (a severity exists but is unknown) — the two are <strong>distinct
+values, not interchangeable</strong> (settled — Carl, Dr. Bolo &amp; Dr. Xu; §3.1). <code>GS</code> and
+<code>Normal or No dx</code> are retired <em>as severity values</em> (they are diagnoses, not stages —
+Appendix A.2, §3.5). <code>Mild</code>/<code>Moderate</code>/<code>Severe</code>/<code>Indeterminate</code>/<code>Unspecified</code> are
+<strong>method-agnostic ordinal bands</strong>: the descriptions define the <em>concept</em> of each
+band, <strong>not</strong> thresholds. The concrete criteria (VF MD / RNFL / CDR cut-points) are
+<strong>method-dependent</strong> and belong with <code>Severity_Method</code> / the <code>(Severity, Method)</code>
+pair (§3.6, B.3), not on these terms.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Proposed description (method-agnostic)</th>
+<th>Applies when</th>
+<th>Proposed synonyms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Mild</code></td>
+<td>Early-stage glaucomatous damage — the least-affected band on the staging scale.</td>
+<td>confirmed glaucoma</td>
+<td>"Early"</td>
+</tr>
+<tr>
+<td><code>Moderate</code></td>
+<td>Intermediate-stage glaucomatous damage — between mild and severe.</td>
+<td>confirmed glaucoma</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Severe</code></td>
+<td>Advanced-stage glaucomatous damage — the most-affected band.</td>
+<td>confirmed glaucoma</td>
+<td>"Advanced"</td>
+</tr>
+<tr>
+<td><code>Indeterminate</code></td>
+<td>Glaucoma present, staging <strong>attempted but inconclusive</strong>.</td>
+<td>confirmed glaucoma</td>
+<td>"Indeterminate stage"</td>
+</tr>
+<tr>
+<td><code>Unspecified</code></td>
+<td>Glaucoma present and a severity <strong>exists</strong>, but it has <strong>not been determined</strong> ("severity unknown"). Per Carl: <em>"if you have glaucoma you have a severity, you just don't know it."</em> (Splits the old <code>Unspecified/Indeterminate</code> — removes the slash.)</td>
+<td>confirmed glaucoma</td>
+<td>"Severity unknown"; "Stage unspecified"</td>
+</tr>
+<tr>
+<td><code>Not Applicable</code></td>
+<td>The diagnosis is <strong>not</strong> a confirmed glaucoma subtype (<code>Non-Glaucoma</code>, <code>Glaucoma Suspect</code>, <code>Other</code>, <code>No Diagnosis</code>), so <strong>no severity exists to assign</strong> — severity does not apply. The anti-null sentinel; <strong>distinct from <code>Unspecified</code></strong> (§3.1).</td>
+<td>non-glaucoma diagnoses</td>
+<td>"N/A"</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>⚠️ <code>Not Applicable</code> ≠ <code>Unspecified</code> — separate values, never interchangeable.</strong>
+<code>Not Applicable</code> = <em>no glaucoma, so no severity exists to assign</em>.
+<code>Unspecified</code> = <em>glaucoma present, a severity exists but is unknown</em>. Conflating
+them loses exactly the information the split preserves. (Carl confirmed the
+distinction on Slack.) <code>Indeterminate</code> is narrower still: staging was <em>attempted</em>
+and came back inconclusive.</p>
+<p><strong>Criteria live with the method, not the grade.</strong> Because the agreed staging
+methods (visual-field MD/HPA, administrative coding/ICD, clinician assessment/CMS,
+…) define <code>Mild</code>/<code>Moderate</code>/<code>Severe</code> by <em>different</em> thresholds, the cut-points are
+a property of the <code>Severity_Method</code> (or the method×grade combination), not of the
+grade term. Each named method brings its <strong>own published cut-points</strong> (App. B.3) —
+Eye-AI does not re-derive them; only a future local/house method would need
+cut-points defined. Putting a single threshold on the <code>Severity_Label</code> term would
+silently mix staging systems, which is exactly what the method axis prevents.</p>
+</blockquote>
+<h3 id="b3-severity_method-new-the-staging-basis">B.3 <code>Severity_Method</code> (new — the staging basis)</h3>
+<p>New domain vocabulary; recorded per-row as a feature column beside the severity
+value (§3.6). Local vocabulary → EyeAI-routed URIs. The <strong>agreed member set</strong>
+(email thread, 2026-07-01) is below; the derivation may alternatively be captured
+by the <code>Workflow</code>/<code>Execution</code> that produced the value (for <code>Algorithmic</code> results
+especially), and the vocabulary <strong>can be expanded over time</strong> as new staging bases
+appear.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th><code>ID</code> / <code>URI</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Clinician_Assessment</code></td>
+<td>Clinician's staging judgment per <strong>CMS criteria</strong>. <em>(confirm clinically)</em></td>
+<td><code>EYEAI:Clinician_Assessment</code> / <code>eye-ai.org/id/severity-method/Clinician_Assessment</code></td>
+</tr>
+<tr>
+<td><code>Visual_Field_MD</code></td>
+<td>Stage from <strong>visual-field mean deviation</strong> (HPA — Hodapp-Parrish-Anderson — criteria).</td>
+<td><code>EYEAI:Visual_Field_MD</code> / <code>…/severity-method/Visual_Field_MD</code></td>
+</tr>
+<tr>
+<td><code>Administrative_Coding</code></td>
+<td>Stage taken from <strong>administrative ICD coding</strong> (e.g. the ICD-10 7th-character glaucoma-stage code).</td>
+<td><code>EYEAI:Administrative_Coding</code> / <code>…/severity-method/Administrative_Coding</code></td>
+</tr>
+<tr>
+<td><code>Algorithmic</code></td>
+<td>Stage produced by an <strong>algorithm / model</strong>; the specific derivation is recorded by the producing <code>Workflow</code>/<code>Execution</code>.</td>
+<td><code>EYEAI:Algorithmic</code> / <code>…/severity-method/Algorithmic</code></td>
+</tr>
+<tr>
+<td><code>Combination</code></td>
+<td>A <strong>combination</strong> of the above methods.</td>
+<td><code>EYEAI:Combination</code> / <code>…/severity-method/Combination</code></td>
+</tr>
+<tr>
+<td><code>Unspecified</code></td>
+<td>Staging basis <strong>not specified</strong>.</td>
+<td><code>EYEAI:Unspecified</code> / <code>…/severity-method/Unspecified</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-c-references-provenance">Appendix C — References / provenance</h2>
+<ul>
+<li>Consolidates the read-only investigation from the 2026-06-30 review of the
+  diagnosis/condition/severity landscape.</li>
+<li><strong>Catalog objects referenced</strong> (schema <code>eye-ai</code>): vocabularies <code>Condition_Label</code>,
+  <code>Severity_Label</code>, <code>Glaucoma_Diagnosis</code>, <code>Diagnosis_Tag</code>, <code>Diagnosis_Status</code>,
+  <code>ICD10_Eye</code>, <code>Grading_Condition</code>; feature/association tables
+  <code>Execution_Subject_Chart_Label</code> (Chart_Label on Subject),
+  <code>Execution_Clinical_Records_Glaucoma_Severity</code> (Glaucoma_Severity on
+  Clinical_Records), <code>Clinical_Records</code>, <code>Clinical_Records_ICD10_Eye</code>,
+  <code>Image_Diagnosis</code>, <code>Observation_Diagnosis</code>, <code>Subject_Diagnosis</code>.</li>
+<li><strong>Proposed new objects (not yet in catalog)</strong>:</li>
+<li><code>ICD10_Condition_Map</code> — association table cross-walking legacy ICD-10 → the
+    ICD-11 concept (<code>ICD10_Eye → Glaucoma_Diagnosis</code>, §3.4); data-driven
+    replacement for the hard-coded <code>icd_mapping</code> in <code>compute_condition_label()</code>.</li>
+<li><code>Severity_Method</code> — domain vocabulary of severity staging systems (App. B.3),
+    referenced by a method column on each severity-bearing feature (§3.6).</li>
+<li><strong>Library code referenced</strong> (<code>eye-ai-ml/eye_ai/eye_ai.py</code>):
+  <code>compute_condition_label()</code>, <code>insert_condition_label()</code>, <code>severity_analysis()</code>
+  (laterality — see the §1 note).</li>
+<li><strong>Clinical &amp; coding references:</strong></li>
+<li>AAO <em>Glaucoma ICD-10 Quick Reference Guide</em> — primary clinical reference for
+    the H40 glaucoma codes:
+    <a href="https://www.aao.org/Assets/5adb14a6-7e5d-42ea-af51-3db772c4b0c2/636713219263270000/bc-2568-update-icd-10-quick-reference-guides-glaucoma-final-v2-color-pdf?inline=1">https://www.aao.org/Assets/5adb14a6-7e5d-42ea-af51-3db772c4b0c2/636713219263270000/bc-2568-update-icd-10-quick-reference-guides-glaucoma-final-v2-color-pdf?inline=1</a></li>
+<li>icd10data.com — ICD-10-CM H40 glaucoma codes:
+    <a href="https://www.icd10data.com/ICD10CM/Codes/H00-H59/H40-H42/H40-">https://www.icd10data.com/ICD10CM/Codes/H00-H59/H40-H42/H40-</a></li>
+<li>WHO <strong>ICD-11 (MMS)</strong> — authoritative ICD-11 glaucoma codes and canonical URIs:
+    glaucoma block <code>9C61</code>, glaucoma suspect <code>9C60</code>; <a href="https://icd.who.int/browse11">https://icd.who.int/browse11</a>.</li>
+<li><strong>Process note — no catalog edits from this document.</strong> Any term rename,
+  removal, description change, or new term (§3–§4) is a catalog change requested
+  through <strong><code>data-curation</code></strong> via its <em>"Feature Registration Request"</em> template.
+  This document is the clinical rationale such requests cite; it does not mutate
+  the catalog.</li>
+</ul>
+<hr />
+<p><em>Draft for review. All clinical definitions provisional pending Dr. Bolo and
+Dr. Xu. Counts and term contents reflect the catalog state on 2026-06-30.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "search.suggest", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
