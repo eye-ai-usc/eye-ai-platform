@@ -848,107 +848,16 @@ fold landed. `--confirm-post-vocab-fold` on the migration script now serves as
 an explicit human sign-off rather than a block on an unmet precondition; see
 `docs/design/subject-observation-diagnosis-feature-migration.md`.
 
-**`create_feature`'s term columns default to NOT NULL — must pass `optional=[...]`
-explicitly, or every row with a null term fails validation.** (2026-07-07,
-caught before any real execution.) Read `deriva_ml.core.mixins.feature.create_feature`
-source directly (not assumed): any column named in `terms=`/`assets=`/`metadata=`
-but NOT also listed in `optional=` gets created `NOT NULL` on the new feature
-association table, and the returned Pydantic `FeatureRecord` class then
-requires it at construction. For the Subject/Observation diagnosis migration,
-a live-data check (both `dev.eye-ai.org` and `www.eye-ai.org`) found
-`Diagnosis_Status` is null in 100% of legacy rows (7,020/7,020 on both
-`Subject_Diagnosis` and `Observation_Diagnosis`, both hosts) — the original
-script call had no `optional=` argument at all, so it would have failed on
-literally the first row of every group on `--execute`. Fixed by passing
-`optional=["Diagnosis_Status"]`; confirmed correct against `Image_Diagnosis`'s
-own live schema, where `Diagnosis_Status` is `nullok=True` too — matches
-precedent. General lesson: a passing dry-run does NOT catch this class of bug,
-since dry-run never calls `create_feature`/`add_features` — it only proves the
-grouping logic runs, not that the resulting records satisfy the feature
-table's constraints. Before trusting a feature-migration script's dry-run,
-separately check the source table's actual null-rate per term column against
-what `optional=[...]` the script passes.
-
-**First `--execute` attempt on dev failed partway — wrong Workflow_Type term
-name, left one empty feature table behind (harmless, recovered).** (2026-07-08.)
-Real run against `dev.eye-ai.org` created the `Subject_Diagnosis` feature table
-successfully, then died in `ml.create_workflow(...)` before writing any values:
-the script used `WORKFLOW_TYPE = "Data_Model_Changes"` (underscores, copied
-from the historical `fix_diag_exec.ipynb` notebook's convention without
-checking it against THIS catalog's actual vocabulary), but the real
-`Workflow_Type` term on both `dev.eye-ai.org` and `www.eye-ai.org` is
-`"Data Model Changes"` (spaces). No feature values were lost or duplicated —
-the failure happened before `ml.create_execution` was ever entered, so the
-partial state was just one harmless empty feature table. Two fixes made: (1)
-corrected the term string (verified identical spelling exists on both hosts);
-(2) made `create_feature_table()` idempotent — check `ml.find_features(target_table)`
-for the feature name first and reuse `ml.feature_record_class(...)` if it
-already exists, since `ml.create_feature()` itself is NOT idempotent
-(`model.create_table()` conflicts on a duplicate name) and a second blind
-retry would have failed differently. General lesson: when copying a
-vocabulary-term string from a historical script/notebook into a new one for
-possibly a different catalog/host, verify it against the live vocabulary
-first (`get_table_as_dataframe`/`list_vocabulary_terms`) rather than trusting
-the old code's literal string — and design any create-then-populate migration
-step to be safely re-runnable, since real catalog calls can fail partway
-through for unrelated reasons.
-
-**Migration completed and verified on both hosts (2026-07-08).** After the
-Workflow_Type fix, dev succeeded (14,040 feature values). Prod then hit a
-third, unrelated failure: `sqlite3.OperationalError: no such column:
-download_duration` deep in DerivaML's local execution-bookkeeping store
-(`~/.deriva-ml/<host>/<catalog>/catalogs/<host>__<catalog>/working/main.db`,
-table `execution_state__executions`) -- confirmed by diffing schemas that
-prod's copy of this file predated a deriva-ml version that added `duration`/
-`download_duration`/`upload_duration` columns, while dev's had been created
-fresh and already had them. This file is PURE LOCAL bookkeeping (execution
-status/timing/config, not clinical data or feature values) and is entirely
-separate from DerivaML's dataset-bag cache (`eye-ai/databases/`,
-`eye-ai/cache/`) -- confirmed `get_table_as_dataframe()` (what this migration
-uses to read source rows) always hits the live catalog directly, never a
-local cache. Fixed by moving the stale `main.db`/`-wal`/`-shm` aside (not
-deleted) so deriva-ml created a fresh one matching the current schema; retry
-then succeeded (14,040 more feature values on prod, verified 1:1 against
-source with zero mismatches on both hosts). General lesson: a
-`no such column` error inside a `~/.deriva-ml/...` local sqlite path is a
-LOCAL cache/bookkeeping schema-drift bug, not a catalog data problem --
-check `~/.deriva-ml/<host>/<catalog>/catalogs/<host>__<catalog>/working/main.db`
-before assuming a data or script bug when this specific error shape appears.
-
-**Downstream consumability confirmed via 4-check verification script
-(2026-07-10); one dataset-denormalization anomaly flagged, not chased
-further.** Added `data-curation/migrations/20260703_.../verify_feature_consumability.py`
-(read-only, no catalog writes) testing: (1) discovery via `ml.find_features()`,
-(2) data retrieval with REAL FK correctness (anchor RIDs and term values
-checked against their actual referenced tables, not just string-equality
-with source), (3) Dataset denormalization (`get_denormalized_as_dataframe`)
-with the feature included, (4) schema-level FK definitions matching
-`Image_Diagnosis`'s existing pattern. Tests 1/2/4 passed cleanly on both
-hosts. Test 3 initially looked broken on dev too (dataset `1-EATE`,
-101,442 members, 0 populated after join) until the script was fixed to try
-ALL candidate datasets (not just the first from `find_datasets_referencing`)
-rather than accept a merely column-structural pass — the real bug was
-picking an unrelated-population dataset, not the join itself; dataset
-`2-1S12` (7,021 members, dev) then gave a genuine 7,020-row positive result.
-On PROD, however, `2-1S12` (same RID, same 7,021 member count) showed 0
-populated in the full 37-dataset scan, AND a standalone `ml.lookup_dataset("2-1S12")`
-call on prod reproducibly raises `DerivaMLException: Dataset 2-1S12 not
-found` -- yet the very same unguarded `lookup_dataset` call inside the full
-verification script's loop did NOT raise for the identical RID moments
-earlier (script exited 0, printed a normal row for it). This is an
-unresolved, reproducible-but-contradictory anomaly -- prime suspects are (a)
-`find_datasets_referencing`'s documented soft-delete visibility gap (its own
-docstring: "A soft delete keeps the membership junction rows, so an
-association-only query would otherwise report datasets that lookup_dataset
-then refuses (issue #355)") surfacing a dataset lookup_dataset won't
-resolve, or (b) a stale local schema-cache artifact from this session's
-heavy schema mutations (`~/.deriva-ml/www.eye-ai.org/eye-ai/schema-cache.json`,
-not yet checked). NOT investigated further -- deliberately deprioritized
-because tests 1/2/4 plus the earlier direct anchor-RID backfill verification
-(`verify_dev_backfill.py`/`verify_prod_backfill.py`) already independently
-and rigorously prove the feature is correctly wired and its values are
-referentially valid; the dataset-denormalization consumption pattern was a
-bonus demo, not the core proof. If picked up later: check
-`ds.list_dataset_members()` (used successfully on prod for another test)
-vs `ml.lookup_dataset()` for the same RID in the same process to isolate
-whether it's a soft-delete/ACL issue or a schema-cache staleness issue.
+**Migration executed and verified on both hosts (2026-07-08); technical
+details live in `data-curation`.** The Subject/Observation diagnosis feature
+migration ran successfully against both `dev.eye-ai.org` and `www.eye-ai.org`
+(14,040 feature values each, verified 1:1 against the legacy source tables),
+and downstream consumability was independently confirmed on 2026-07-10 via a
+4-check verification script. Three issues were found and fixed along the way
+(a `create_feature` nullability default, a `Workflow_Type` vocabulary term
+mismatch, and a stale local DerivaML execution-bookkeeping cache) plus one
+unresolved-but-deprioritized dataset-lookup anomaly during the consumability
+check. Per this repo's no-catalog-code boundary, that implementation/debugging
+detail is recorded in `data-curation/tacit-knowledge.md` (entries dated
+2026-07-07 through 2026-07-10), not here — this file keeps the design/scope
+narrative; that one keeps the script/catalog-technical narrative.
