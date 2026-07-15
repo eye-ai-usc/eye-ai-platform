@@ -800,3 +800,155 @@ vocabulary (no synonym shared across terms, no collision with another term's
 `Name`). If synonyms are used as a family-lookup key, that uniqueness becomes
 load-bearing and should be enforced/validated. Codes still live in the mapping
 table + `ID`/`URI`; the synonym only indexes, never stores them.
+
+**Subject_Diagnosis/Observation_Diagnosis feature migration scoped to both
+tables, prepared but execution-gated.** (2026-07-03.) Live-catalog check
+resolved the earlier open question about what populates `Subject_Diagnosis`
+vs the `Chart_Label` feature (§ note above): they don't overlap — `Chart_Label`
+(2,302 rows) is the genuine clinical chart-review determination, while
+`Subject_Diagnosis`/`Observation_Diagnosis` (7,020 rows each) are algorithmic/
+bulk-provenance signals (`Diagnosis_Tag` values like `CNN_Prediction`,
+`Expert_Consensus`, `Initial Diagnosis`). The real gap: unlike `Image_Diagnosis`,
+neither has an `Execution`/`Feature_Name` FK, so neither carries provenance.
+Scope was widened from "just Subject_Diagnosis" (the original ask) to both
+tables once `Observation_Diagnosis` turned out to be structurally identical —
+fixing one and leaving the other orphaned would split one three-level
+(image/observation/subject) diagnosis hierarchy into two different shapes for
+no reason. The migration itself (`data-curation/migrations/
+20260703_000000_zhiweiii_subject-observation-diagnosis-feature/`) is written
+and dry-run-tested but deliberately **not run**: it's gated behind
+`--confirm-post-vocab-fold` because it intersects with the in-flight
+vocabulary fold (open items Q6/Q8/Q9, see the diagnosis/severity notes above)
+— the structural change (add provenance) doesn't depend on which vocabulary
+terms are in play, so preparing it now costs nothing, but running the real
+backfill before the fold risks touching the same ~14,000 rows twice. Also
+settled as a general rule going forward, not just for this migration: catalog-
+mutating scripts must default to `--dry-run` and require a human to explicitly
+request an `--execute` run — dev (`dev.eye-ai.org`) before prod
+(`www.eye-ai.org`), never the other order, never self-authorized by an agent.
+See `docs/design/subject-observation-diagnosis-feature-migration.md`.
+
+**Vocabulary fold verified landed on both dev and prod (2026-07-07) — the
+Subject/Observation diagnosis migration's gate is now satisfied.** Live-catalog
+check (not assumed) on both `dev.eye-ai.org` and `www.eye-ai.org`: `Glaucoma_Diagnosis`
+carries the folded 7-term set (`GS`, `POAG`, `PACG`, `Unspecified Glaucoma`,
+`Non-Glaucoma`, `Other`, `No Diagnosis`), `Condition_Label` no longer exists as
+a table on either host, `Severity_Label` carries the cleaned 6-term set, and
+`Severity_Method` exists with its 6 agreed members — identical on both hosts,
+matching Appendix B of `diagnosis-severity-definitions.md` exactly. Also
+confirmed: legacy `Subject_Diagnosis` rows already reference the NEW term
+names (e.g. `"Non-Glaucoma"`, sampled directly), meaning whoever ran the fold
+also repointed the FK'd values in the legacy diagnosis tables, not just the
+vocabulary table itself — so the feature-migration script's backfill (which
+copies values through by column, never by hardcoded term) needed no changes
+for this. Two design-doc open items, Q6 (`9C61.2/.3/.4` disposition) and Q8
+(new-scale severity default), are NOT verifiable from vocabulary structure
+alone and are left open — don't assume they're resolved just because the core
+fold landed. `--confirm-post-vocab-fold` on the migration script now serves as
+an explicit human sign-off rather than a block on an unmet precondition; see
+`docs/design/subject-observation-diagnosis-feature-migration.md`.
+
+**`create_feature`'s term columns default to NOT NULL — must pass `optional=[...]`
+explicitly, or every row with a null term fails validation.** (2026-07-07,
+caught before any real execution.) Read `deriva_ml.core.mixins.feature.create_feature`
+source directly (not assumed): any column named in `terms=`/`assets=`/`metadata=`
+but NOT also listed in `optional=` gets created `NOT NULL` on the new feature
+association table, and the returned Pydantic `FeatureRecord` class then
+requires it at construction. For the Subject/Observation diagnosis migration,
+a live-data check (both `dev.eye-ai.org` and `www.eye-ai.org`) found
+`Diagnosis_Status` is null in 100% of legacy rows (7,020/7,020 on both
+`Subject_Diagnosis` and `Observation_Diagnosis`, both hosts) — the original
+script call had no `optional=` argument at all, so it would have failed on
+literally the first row of every group on `--execute`. Fixed by passing
+`optional=["Diagnosis_Status"]`; confirmed correct against `Image_Diagnosis`'s
+own live schema, where `Diagnosis_Status` is `nullok=True` too — matches
+precedent. General lesson: a passing dry-run does NOT catch this class of bug,
+since dry-run never calls `create_feature`/`add_features` — it only proves the
+grouping logic runs, not that the resulting records satisfy the feature
+table's constraints. Before trusting a feature-migration script's dry-run,
+separately check the source table's actual null-rate per term column against
+what `optional=[...]` the script passes.
+
+**First `--execute` attempt on dev failed partway — wrong Workflow_Type term
+name, left one empty feature table behind (harmless, recovered).** (2026-07-08.)
+Real run against `dev.eye-ai.org` created the `Subject_Diagnosis` feature table
+successfully, then died in `ml.create_workflow(...)` before writing any values:
+the script used `WORKFLOW_TYPE = "Data_Model_Changes"` (underscores, copied
+from the historical `fix_diag_exec.ipynb` notebook's convention without
+checking it against THIS catalog's actual vocabulary), but the real
+`Workflow_Type` term on both `dev.eye-ai.org` and `www.eye-ai.org` is
+`"Data Model Changes"` (spaces). No feature values were lost or duplicated —
+the failure happened before `ml.create_execution` was ever entered, so the
+partial state was just one harmless empty feature table. Two fixes made: (1)
+corrected the term string (verified identical spelling exists on both hosts);
+(2) made `create_feature_table()` idempotent — check `ml.find_features(target_table)`
+for the feature name first and reuse `ml.feature_record_class(...)` if it
+already exists, since `ml.create_feature()` itself is NOT idempotent
+(`model.create_table()` conflicts on a duplicate name) and a second blind
+retry would have failed differently. General lesson: when copying a
+vocabulary-term string from a historical script/notebook into a new one for
+possibly a different catalog/host, verify it against the live vocabulary
+first (`get_table_as_dataframe`/`list_vocabulary_terms`) rather than trusting
+the old code's literal string — and design any create-then-populate migration
+step to be safely re-runnable, since real catalog calls can fail partway
+through for unrelated reasons.
+
+**Migration completed and verified on both hosts (2026-07-08).** After the
+Workflow_Type fix, dev succeeded (14,040 feature values). Prod then hit a
+third, unrelated failure: `sqlite3.OperationalError: no such column:
+download_duration` deep in DerivaML's local execution-bookkeeping store
+(`~/.deriva-ml/<host>/<catalog>/catalogs/<host>__<catalog>/working/main.db`,
+table `execution_state__executions`) -- confirmed by diffing schemas that
+prod's copy of this file predated a deriva-ml version that added `duration`/
+`download_duration`/`upload_duration` columns, while dev's had been created
+fresh and already had them. This file is PURE LOCAL bookkeeping (execution
+status/timing/config, not clinical data or feature values) and is entirely
+separate from DerivaML's dataset-bag cache (`eye-ai/databases/`,
+`eye-ai/cache/`) -- confirmed `get_table_as_dataframe()` (what this migration
+uses to read source rows) always hits the live catalog directly, never a
+local cache. Fixed by moving the stale `main.db`/`-wal`/`-shm` aside (not
+deleted) so deriva-ml created a fresh one matching the current schema; retry
+then succeeded (14,040 more feature values on prod, verified 1:1 against
+source with zero mismatches on both hosts). General lesson: a
+`no such column` error inside a `~/.deriva-ml/...` local sqlite path is a
+LOCAL cache/bookkeeping schema-drift bug, not a catalog data problem --
+check `~/.deriva-ml/<host>/<catalog>/catalogs/<host>__<catalog>/working/main.db`
+before assuming a data or script bug when this specific error shape appears.
+
+**Downstream consumability confirmed via 4-check verification script
+(2026-07-10); one dataset-denormalization anomaly flagged, not chased
+further.** Added `data-curation/migrations/20260703_.../verify_feature_consumability.py`
+(read-only, no catalog writes) testing: (1) discovery via `ml.find_features()`,
+(2) data retrieval with REAL FK correctness (anchor RIDs and term values
+checked against their actual referenced tables, not just string-equality
+with source), (3) Dataset denormalization (`get_denormalized_as_dataframe`)
+with the feature included, (4) schema-level FK definitions matching
+`Image_Diagnosis`'s existing pattern. Tests 1/2/4 passed cleanly on both
+hosts. Test 3 initially looked broken on dev too (dataset `1-EATE`,
+101,442 members, 0 populated after join) until the script was fixed to try
+ALL candidate datasets (not just the first from `find_datasets_referencing`)
+rather than accept a merely column-structural pass — the real bug was
+picking an unrelated-population dataset, not the join itself; dataset
+`2-1S12` (7,021 members, dev) then gave a genuine 7,020-row positive result.
+On PROD, however, `2-1S12` (same RID, same 7,021 member count) showed 0
+populated in the full 37-dataset scan, AND a standalone `ml.lookup_dataset("2-1S12")`
+call on prod reproducibly raises `DerivaMLException: Dataset 2-1S12 not
+found` -- yet the very same unguarded `lookup_dataset` call inside the full
+verification script's loop did NOT raise for the identical RID moments
+earlier (script exited 0, printed a normal row for it). This is an
+unresolved, reproducible-but-contradictory anomaly -- prime suspects are (a)
+`find_datasets_referencing`'s documented soft-delete visibility gap (its own
+docstring: "A soft delete keeps the membership junction rows, so an
+association-only query would otherwise report datasets that lookup_dataset
+then refuses (issue #355)") surfacing a dataset lookup_dataset won't
+resolve, or (b) a stale local schema-cache artifact from this session's
+heavy schema mutations (`~/.deriva-ml/www.eye-ai.org/eye-ai/schema-cache.json`,
+not yet checked). NOT investigated further -- deliberately deprioritized
+because tests 1/2/4 plus the earlier direct anchor-RID backfill verification
+(`verify_dev_backfill.py`/`verify_prod_backfill.py`) already independently
+and rigorously prove the feature is correctly wired and its values are
+referentially valid; the dataset-denormalization consumption pattern was a
+bonus demo, not the core proof. If picked up later: check
+`ds.list_dataset_members()` (used successfully on prod for another test)
+vs `ml.lookup_dataset()` for the same RID in the same process to isolate
+whether it's a soft-delete/ACL issue or a schema-cache staleness issue.

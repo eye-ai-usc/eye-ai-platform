@@ -51,4 +51,5 @@ nav:
     - Architecture: design/architecture.md
     - Implementation Spec: design/implementation-spec.md
     - Diagnosis & Severity Definitions: design/diagnosis-severity-definitions.md
+    - Subject/Observation Diagnosis Feature Migration: design/subject-observation-diagnosis-feature-migration.md
   - Maintenance: MAINTENANCE.md
